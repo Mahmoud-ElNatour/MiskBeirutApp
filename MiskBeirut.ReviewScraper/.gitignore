@@ -1,0 +1,2 @@
+# Contains a live Google account session - treat as a credential, never commit.
+auth-storage-state.json

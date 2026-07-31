@@ -1,0 +1,31 @@
+@model IReadOnlyList<EmployeeDto>
+@using MiskBeirut.Application.Dtos.Employees
+@{
+    ViewData["Title"] = "Payroll";
+}
+
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Payroll</h2>
+
+<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
+            <tr>
+                <th class="px-6 py-3">Employee</th>
+                <th class="px-6 py-3">Position</th>
+                <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @foreach (var e in Model)
+            {
+                <tr>
+                    <td class="px-6 py-3 font-semibold text-slate-900 dark:text-white">@e.Name</td>
+                    <td class="px-6 py-3">@e.Position</td>
+                    <td class="px-6 py-3 text-right">
+                        <a asp-action="Details" asp-route-employeeId="@e.Id" class="text-primary hover:underline">View Records</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

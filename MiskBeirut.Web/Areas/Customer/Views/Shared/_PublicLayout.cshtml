@@ -1,0 +1,342 @@
+@{
+    var dir = ViewData["Dir"] as string == "rtl" ? "rtl" : null;
+    var lang = ViewData["Lang"] as string ?? "en";
+    var metaDescription = ViewData["MetaDescription"] as string;
+}
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="@lang" dir="@dir">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<title>@ViewData["Title"]</title>
+@if (!string.IsNullOrWhiteSpace(metaDescription))
+{
+    <meta name="description" content="@metaDescription" />
+}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@@0,400..800;1,400..800&family=Hanken+Grotesk:ital,wght@@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                "colors": {
+                    "primary": "#355970",
+                    "tertiary-fixed": "#e2e2e3",
+                    "on-error": "#ffffff",
+                    "outline": "#72787d",
+                    "on-secondary-fixed-variant": "#7d2a2d",
+                    "primary-fixed-dim": "#a6cbe5",
+                    "primary-fixed": "#c6e7ff",
+                    "on-tertiary-container": "#f1f1f2",
+                    "on-primary-container": "#e5f3ff",
+                    "secondary": "#9b4143",
+                    "surface-container": "#eeeeef",
+                    "on-background": "#1a1c1d",
+                    "slate-blue": "#4E7289",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#1a1c1d",
+                    "surface-container-low": "#f4f3f5",
+                    "on-secondary": "#ffffff",
+                    "on-surface-variant": "#42474c",
+                    "on-secondary-fixed": "#410007",
+                    "secondary-fixed-dim": "#ffb3b1",
+                    "inverse-primary": "#a6cbe5",
+                    "on-secondary-container": "#762528",
+                    "marble-white": "#F5F5F6",
+                    "on-primary": "#ffffff",
+                    "secondary-container": "#fd8e8d",
+                    "surface-container-high": "#e8e8ea",
+                    "primary-container": "#4e7289",
+                    "error-container": "#ffdad6",
+                    "surface": "#f9f9fb",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed": "#001e2d",
+                    "surface-tint": "#3e6379",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#f1f0f2",
+                    "on-primary-fixed-variant": "#254b60",
+                    "inverse-surface": "#2f3132",
+                    "on-tertiary-fixed-variant": "#454748",
+                    "outline-variant": "#c2c7cd",
+                    "surface-container-highest": "#e2e2e4",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "background": "#f9f9fb",
+                    "secondary-fixed": "#ffdad8",
+                    "surface-dim": "#dadadc",
+                    "tertiary-container": "#6c6e6f",
+                    "on-surface": "#1a1c1d",
+                    "surface-variant": "#e2e2e4",
+                    "surface-bright": "#f9f9fb",
+                    "onyx-text": "#1A1A1A",
+                    "brick-red": "#8F383A",
+                    "error": "#ba1a1a",
+                    "tertiary": "#545657"
+                },
+                "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+                },
+                "spacing": {
+                    "margin-desktop": "80px",
+                    "stack-md": "16px",
+                    "stack-lg": "48px",
+                    "stack-sm": "8px",
+                    "margin-mobile": "20px",
+                    "section-gap": "120px",
+                    "gutter": "24px"
+                },
+                "fontFamily": {
+                    "headline-lg-mobile": ["EB Garamond"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "headline-lg": ["EB Garamond"],
+                    "headline-md": ["EB Garamond"],
+                    "display-lg": ["EB Garamond"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "label-lg": ["Hanken Grotesk"]
+                },
+                "fontSize": {
+                    "headline-lg-mobile": ["clamp(22px,2.8vw,32px)", {"lineHeight": "1.25", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["clamp(28px,4vw,48px)", {"lineHeight": "1.17", "fontWeight": "500"}],
+                    "headline-md": ["clamp(22px,2.8vw,32px)", {"lineHeight": "1.25", "fontWeight": "400"}],
+                    "display-lg": ["clamp(36px,5vw,64px)", {"lineHeight": "1.125", "letterSpacing": "-0.02em", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.1em", "fontWeight": "600"}]
+                }
+            }
+        }
+    }
+</script>
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+    }
+    .hero-gradient {
+        background: linear-gradient(to bottom, rgba(53, 89, 112, 0.4), rgba(53, 89, 112, 0.6));
+    }
+    @@keyframes scroll-indicator {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
+    }
+    .animate-scroll {
+        animation: scroll-indicator 2s infinite;
+    }
+    .reveal-on-scroll {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-on-scroll.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .form-input-focus:focus {
+        border-color: #8F383A;
+        border-bottom-width: 2px;
+        outline: none;
+    }
+    .transition-form {
+        transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out;
+    }
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .insta-carousel, .space-carousel { scrollbar-width: thin; scrollbar-color: #8F383A rgba(78,114,137,0.12); }
+    .insta-carousel::-webkit-scrollbar, .space-carousel::-webkit-scrollbar { height: 4px; }
+    .insta-carousel::-webkit-scrollbar-track, .space-carousel::-webkit-scrollbar-track { background: rgba(78,114,137,0.12); }
+    .insta-carousel::-webkit-scrollbar-thumb, .space-carousel::-webkit-scrollbar-thumb { background: #8F383A; }
+    .space-carousel > div { transition: box-shadow .3s, transform .3s; }
+    .space-carousel > div:hover { box-shadow: 0 8px 24px rgba(53,89,112,0.15); transform: translateY(-4px); }
+
+    html[dir="rtl"] body { text-align: right; }
+    html[dir="rtl"] .text-center { text-align: center; }
+    html[dir="rtl"] .border-l-2 { border-left-width: 0; border-right-width: 2px; }
+    html[dir="rtl"] .border-l { border-left-width: 0; border-right-width: 1px; }
+    html[dir="rtl"] .pl-6 { padding-left: 0; padding-right: 1.5rem; }
+    html[dir="rtl"] .md\:text-right { text-align: left; }
+    html[dir="rtl"] #mobile-drawer { right: auto; left: 0; border-left: none; border-right: 1px solid rgba(114,120,125,0.1); }
+    html[dir="rtl"] #mobile-drawer.translate-x-full { transform: translateX(-100%); }
+    html[dir="rtl"] .group-hover\:translate-x-1,
+    html[dir="rtl"] .hover\:translate-x-2 { --tw-translate-x: -0.25rem; }
+    html[dir="rtl"] .hero-decorative { right: auto; left: 0; }
+</style>
+@await RenderSectionAsync("Head", required: false)
+</head>
+<body class="bg-marble-white text-on-surface font-body-md overflow-x-hidden">
+@await Html.PartialAsync("_PublicNav")
+@RenderBody()
+@await Html.PartialAsync("_PublicFooter")
+@await Html.PartialAsync("_DiscountPopup")
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentYear = new Date().getFullYear();
+        const yearElement = document.getElementById('current-year');
+        if (yearElement) {
+            yearElement.textContent = currentYear;
+        }
+    });
+
+    function toggleMobileMenu() {
+        const drawer = document.getElementById('mobile-drawer');
+        const backdrop = document.getElementById('mobile-backdrop');
+        if (drawer.classList.contains('translate-x-full')) {
+            drawer.classList.remove('translate-x-full');
+            backdrop.classList.remove('hidden');
+            setTimeout(() => backdrop.classList.add('opacity-100'), 10);
+            document.body.style.overflow = 'hidden';
+        } else {
+            drawer.classList.add('translate-x-full');
+            backdrop.classList.remove('opacity-100');
+            setTimeout(() => backdrop.classList.add('hidden'), 300);
+            document.body.style.overflow = '';
+        }
+    }
+
+    function toggleLanguage() {
+        const next = document.documentElement.getAttribute('lang') === 'ar' ? 'en' : 'ar';
+        document.cookie = 'lang=' + next + ';path=/;max-age=31536000';
+        location.reload();
+    }
+
+    window.addEventListener('scroll', () => {
+        const nav = document.querySelector('nav');
+        if (!nav) return;
+        if (window.scrollY > 20) {
+            nav.classList.add('py-2', 'bg-surface/95');
+            nav.classList.remove('py-4', 'bg-surface/80');
+        } else {
+            nav.classList.add('py-4', 'bg-surface/80');
+            nav.classList.remove('py-2', 'bg-surface/95');
+        }
+    });
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
+
+    function scrollCarousel(btn, dir) {
+        const track = btn.closest('.carousel-head').nextElementSibling;
+        track.scrollBy({ left: dir * 360, behavior: 'smooth' });
+    }
+</script>
+<script>
+(function () {
+    const GALLERY_SELECTOR = '.space-carousel, .insta-carousel';
+    let items = [];
+    let index = 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'photo-lightbox';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:100;background:rgba(26,26,26,0.95);display:none;align-items:center;justify-content:center;';
+
+    const stage = document.createElement('div');
+    stage.style.cssText = 'max-width:90vw;max-height:85vh;display:flex;align-items:center;justify-content:center;';
+    overlay.appendChild(stage);
+
+    function lbButton(label, icon, css) {
+        const btn = document.createElement('button');
+        btn.setAttribute('aria-label', label);
+        btn.style.cssText = 'position:absolute;width:56px;height:56px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.08);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s;' + css;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:28px;">' + icon + '</span>';
+        btn.onmouseenter = () => btn.style.background = 'rgba(255,255,255,0.22)';
+        btn.onmouseleave = () => btn.style.background = 'rgba(255,255,255,0.08)';
+        overlay.appendChild(btn);
+        return btn;
+    }
+    const closeBtn = lbButton('Close full screen view', 'close', 'top:24px;right:24px;');
+    const prevBtn = lbButton('Previous photo', 'arrow_back', 'left:16px;top:50%;transform:translateY(-50%);');
+    const nextBtn = lbButton('Next photo', 'arrow_forward', 'right:16px;top:50%;transform:translateY(-50%);');
+
+    const counter = document.createElement('p');
+    counter.style.cssText = 'position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:#fff;opacity:.7;letter-spacing:.2em;font-size:13px;margin:0;';
+    overlay.appendChild(counter);
+
+    function imageUrlOf(item) {
+        const img = item.querySelector('img');
+        if (img && img.src) return img.src;
+        const host = [item].concat(Array.from(item.querySelectorAll('*'))).find(function (e) {
+            const bg = getComputedStyle(e).backgroundImage;
+            return bg && bg.indexOf('url(') === 0;
+        });
+        if (host) {
+            const bg = getComputedStyle(host).backgroundImage;
+            return bg.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+        }
+        return null;
+    }
+
+    function render() {
+        stage.innerHTML = '';
+        const item = items[index];
+        const url = imageUrlOf(item);
+        if (url) {
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = (item.querySelector('img') && item.querySelector('img').alt) || item.getAttribute('data-alt') || '';
+            img.style.cssText = 'max-width:90vw;max-height:85vh;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
+            stage.appendChild(img);
+        } else {
+            const clone = item.cloneNode(true);
+            clone.style.cssText = 'width:min(80vw,560px);height:min(80vw,560px);transform:none;cursor:default;';
+            stage.appendChild(clone);
+        }
+        counter.textContent = (index + 1) + ' / ' + items.length;
+    }
+
+    function openLightbox() {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    function step(dir) {
+        index = (index + dir + items.length) % items.length;
+        render();
+    }
+
+    closeBtn.addEventListener('click', closeLightbox);
+    prevBtn.addEventListener('click', function (e) { e.stopPropagation(); step(-1); });
+    nextBtn.addEventListener('click', function (e) { e.stopPropagation(); step(1); });
+    overlay.addEventListener('click', function (e) { if (e.target === overlay || e.target === stage) closeLightbox(); });
+    document.addEventListener('keydown', function (e) {
+        if (overlay.style.display === 'none' || !overlay.style.display) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') step(-1);
+        if (e.key === 'ArrowRight') step(1);
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.appendChild(overlay);
+        document.querySelectorAll(GALLERY_SELECTOR).forEach(function (gallery) {
+            Array.from(gallery.children).forEach(function (tile) {
+                tile.style.cursor = 'zoom-in';
+                tile.addEventListener('click', function () {
+                    items = Array.from(gallery.children);
+                    index = items.indexOf(tile);
+                    render();
+                    openLightbox();
+                });
+            });
+        });
+    });
+})();
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

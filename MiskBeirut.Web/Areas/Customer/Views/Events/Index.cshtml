@@ -1,0 +1,112 @@
+@model MiskBeirut.Web.Support.PageContent
+@{
+    ViewData["Active"] = "events";
+    Layout = "_PublicLayout";
+    var footballCaptions = new[] { "Match Day 1", "Match Day 2", "Match Day 3", "Match Day 4" };
+    var privateCaptions = new[] { "Weddings", "Corporate Events", "Birthday Parties", "Special Occasions" };
+}
+<!-- PAGE HEADER -->
+<section class="relative mt-24 bg-primary-container/10 pt-[80px] pb-stack-lg px-6 md:px-margin-desktop" id="header">
+<div class="max-w-[1280px] mx-auto">
+<h1 class="font-headline-lg text-headline-lg md:text-display-lg text-onyx-text mb-6">@Model.Text("hero_title", "Events at Misk Beirut")</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">@Model.Text("hero_subtitle", "Experience unforgettable moments with us")</p>
+</div>
+<!-- Decorative Element -->
+<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
+<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
+</div>
+</section>
+
+<!-- FOOTBALL & LIVE MATCH SCREENINGS -->
+<section class="py-[80px] scroll-mt-24" id="football">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("football_title", "Football & Live Match Screenings")</h2>
+<!-- PLACEHOLDER: final copy pending from client -->
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]">@Model.Text("football_body", "Placeholder description — experience the thrill of live sports in our premium viewing spaces with world-class amenities. Final copy to be provided by the client.")</p>
+<div class="carousel-head flex items-center justify-between mb-[16px]">
+<div class="w-16 h-0.5 bg-brick-red"></div>
+<div class="flex gap-[8px]">
+<button onclick="scrollCarousel(this,-1)" aria-label="Scroll gallery back" class="w-10 h-10 bg-white text-slate-blue border border-slate-blue hover:bg-slate-blue hover:text-white transition-all flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-sm">arrow_back</span></button>
+<button onclick="scrollCarousel(this,1)" aria-label="Scroll gallery forward" class="w-10 h-10 bg-white text-slate-blue border border-slate-blue hover:bg-slate-blue hover:text-white transition-all flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-sm">arrow_forward</span></button>
+</div>
+</div>
+<div class="flex gap-[16px] overflow-x-auto pb-4 snap-x space-carousel">
+@for (var i = 1; i <= 30; i++)
+{
+    var tileImage = Model.Image($"football_gallery_{i}_image");
+    var hasTile = i <= 3 || !string.IsNullOrEmpty(tileImage);
+    if (!hasTile) { continue; }
+    var captionDefault = i <= footballCaptions.Length ? footballCaptions[i - 1] : $"Photo {i}";
+    var tileCaption = Model.Text($"football_gallery_{i}_caption", captionDefault);
+    <div class="w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center" style="@(string.IsNullOrEmpty(tileImage) ? "" : $"background-image:url('{tileImage}')")">
+        @if (string.IsNullOrEmpty(tileImage))
+        {
+            <span class="text-center"><span class="material-symbols-outlined text-4xl mb-2 block opacity-50">sports_soccer</span><p class="font-label-lg text-xs">PLACEHOLDER</p><p class="text-xs opacity-60">@tileCaption</p></span>
+        }
+        else
+        {
+            <span class="sr-only">@tileCaption</span>
+        }
+    </div>
+}
+</div>
+<div class="mt-[48px]">
+<a asp-controller="Contact" asp-action="Index" class="bg-brick-red text-white px-12 py-5 font-label-lg text-label-lg uppercase tracking-widest hover:bg-opacity-90 transition-all inline-block">@Model.Text("football_cta_label", "Reserve Your Spot")</a>
+</div>
+</div>
+</section>
+
+<!-- Divider -->
+<hr class="max-w-[1280px] mx-auto border-t border-outline/20 mx-[20px] md:mx-auto">
+
+<!-- PRIVATE EVENTS & CELEBRATIONS -->
+<section class="py-[80px] scroll-mt-24" id="private-events">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("private_title", "Private Events & Celebrations")</h2>
+<!-- PLACEHOLDER: final copy pending from client -->
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]">@Model.Text("private_body", "Placeholder description — create unforgettable memories with our bespoke event planning services and luxurious venues. Final copy to be provided by the client.")</p>
+<div class="carousel-head flex items-center justify-between mb-[16px]">
+<div class="w-16 h-0.5 bg-brick-red"></div>
+
+</div>
+<div class="flex gap-[16px] overflow-x-auto pb-4 snap-x space-carousel">
+@for (var i = 1; i <= 30; i++)
+{
+    var tileImage = Model.Image($"private_gallery_{i}_image");
+    var hasTile = i <= 3 || !string.IsNullOrEmpty(tileImage);
+    if (!hasTile) { continue; }
+    var captionDefault = i <= privateCaptions.Length ? privateCaptions[i - 1] : $"Photo {i}";
+    var tileCaption = Model.Text($"private_gallery_{i}_caption", captionDefault);
+    <div class="w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center" style="@(string.IsNullOrEmpty(tileImage) ? "" : $"background-image:url('{tileImage}')")">
+        @if (string.IsNullOrEmpty(tileImage))
+        {
+            <span class="text-center"><span class="material-symbols-outlined text-4xl mb-2 block opacity-50">celebration</span><p class="font-label-lg text-xs">PLACEHOLDER</p><p class="text-xs opacity-60">@tileCaption</p></span>
+        }
+        else
+        {
+            <span class="sr-only">@tileCaption</span>
+        }
+    </div>
+}
+</div>
+<div class="mt-[48px]">
+<a asp-controller="Contact" asp-action="Index" class="bg-slate-blue text-white px-12 py-5 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-all inline-block">@Model.Text("private_cta_label", "Get in Touch")</a>
+</div>
+</div>
+</section>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const hash = window.location.hash.replace('#', '');
+        if (hash === 'football' || hash === 'private-events') {
+            const target = document.getElementById(hash);
+            if (target) {
+                setTimeout(function() {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
+        }
+    });
+</script>
+}

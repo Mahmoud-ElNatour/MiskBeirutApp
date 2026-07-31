@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="MiskBeirut.Application/MiskBeirut.Application.csproj" />
+  <Project Path="MiskBeirut.Core/MiskBeirut.Core.csproj" />
+  <Project Path="MiskBeirut.Infrastructure/MiskBeirut.Infrastructure.csproj" />
+  <Project Path="MiskBeirut.Web/MiskBeirut.Web.csproj" />
+  <Project Path="MiskBeirut.ReviewScraper/MiskBeirut.ReviewScraper.csproj" />
+</Solution>

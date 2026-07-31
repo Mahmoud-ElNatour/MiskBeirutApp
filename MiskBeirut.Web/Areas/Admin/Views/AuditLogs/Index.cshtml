@@ -1,0 +1,60 @@
+@model IReadOnlyList<AuditLogDto>
+@using MiskBeirut.Application.Dtos.Audit
+@{
+    ViewData["Title"] = "Audit Logs";
+    var entityTypes = (string[])ViewData["EntityTypes"]!;
+    var actions = (string[])ViewData["Actions"]!;
+    var currentEntityType = ViewData["EntityType"] as string;
+    var currentAction = ViewData["Action"] as string;
+}
+
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Audit Logs</h2>
+
+<form method="get" class="flex flex-wrap gap-3 mb-6">
+    <select name="entityType" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" onchange="this.form.submit()">
+        <option value="">All entity types</option>
+        @foreach (var t in entityTypes)
+        {
+            <option value="@t" selected="@(t == currentEntityType ? "selected" : null)">@t</option>
+        }
+    </select>
+    <select name="auditAction" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" onchange="this.form.submit()">
+        <option value="">All actions</option>
+        @foreach (var a in actions)
+        {
+            <option value="@a" selected="@(a == currentAction ? "selected" : null)">@a</option>
+        }
+    </select>
+</form>
+
+<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
+            <tr>
+                <th class="px-4 py-2">When</th>
+                <th class="px-4 py-2">User</th>
+                <th class="px-4 py-2">Entity</th>
+                <th class="px-4 py-2">Action</th>
+                <th class="px-4 py-2">Description</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @foreach (var log in Model)
+            {
+                <tr>
+                    <td class="px-4 py-2 whitespace-nowrap">@log.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="px-4 py-2">@log.Username</td>
+                    <td class="px-4 py-2">@log.EntityType #@log.EntityId</td>
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold @(log.Action == "Delete" ? "bg-rose-100 text-rose-700" : log.Action == "Add" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")">@log.Action</span>
+                    </td>
+                    <td class="px-4 py-2 text-slate-500">@log.Description</td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td class="px-4 py-3 text-slate-400" colspan="5">No audit log entries yet.</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,71 @@
+@using MiskBeirut.Web.Support
+@{
+    var content = (PageContent)ViewData["Content"]!;
+    var brandName = content.Global("brand_name", "MISK BEIRUT");
+    var logoImage = content.Global("logo_image", "/img/logo.png");
+    var navHome = content.Global("nav_home", "Home");
+    var navAbout = content.Global("nav_about", "About Misk");
+    var navSpaces = content.Global("nav_spaces", "Our Spaces");
+    var navMenu = content.Global("nav_menu", "Menu");
+    var navEvents = content.Global("nav_events", "Events");
+    var navContact = content.Global("nav_contact", "Reservations");
+    var footerNavTitle = content.Global("footer_nav_title", "Navigation");
+    var footerConnectTitle = content.Global("footer_connect_title", "Connect");
+    var footerCareersLabel = content.Global("footer_careers_label", "Careers");
+    var footerFollowTitle = content.Global("footer_follow_title", "Follow Us");
+    var footerVisitTitle = content.Global("footer_visit_title", "Ready to Visit?");
+    var footerCtaLabel = content.Global("footer_cta_label", "Reserve a Table");
+    var footerPhone = content.Global("footer_phone", "+961 1 234 567");
+    var footerEmail = content.Global("footer_email", "concierge@miskbeirut.com");
+    var copyrightName = content.Global("copyright_name", "Misk Beirut");
+    var copyrightSuffix = content.Global("copyright_suffix", "All rights reserved.");
+    var instagramUrl = content.Global("social_instagram_url", "#");
+    var facebookUrl = content.Global("social_facebook_url", "#");
+}
+<footer class="bg-marble-white border-t border-slate-blue/10">
+    <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px] py-[60px]">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-[48px] mb-[48px]">
+            <div class="md:col-span-1">
+                <img src="@logoImage" alt="@brandName" class="max-w-[120px] h-auto mb-[16px]">
+            </div>
+
+            <div class="md:col-span-1">
+                <h4 class="font-label-lg text-label-lg uppercase tracking-widest text-primary mb-[16px]">@footerNavTitle</h4>
+                <ul class="space-y-[8px]">
+                    <li><a asp-controller="Home" asp-action="Index" class="text-sm text-on-surface-variant hover:text-primary transition-colors">@navHome</a></li>
+                    <li><a asp-controller="About" asp-action="Index" class="text-sm text-on-surface-variant hover:text-primary transition-colors">@navAbout</a></li>
+                    <li><a asp-controller="Spaces" asp-action="Index" class="text-sm text-on-surface-variant hover:text-primary transition-colors">@navSpaces</a></li>
+                    <li><a asp-controller="Menu" asp-action="Index" class="text-sm text-on-surface-variant hover:text-primary transition-colors">@navMenu</a></li>
+                    <li><a asp-controller="Events" asp-action="Index" class="text-sm text-on-surface-variant hover:text-primary transition-colors">@navEvents</a></li>
+                    <li><a asp-controller="Contact" asp-action="Index" class="text-sm text-on-surface-variant hover:text-primary transition-colors">@navContact</a></li>
+                </ul>
+            </div>
+
+            <div class="md:col-span-1">
+                <h4 class="font-label-lg text-label-lg uppercase tracking-widest text-primary mb-[16px]">@footerConnectTitle</h4>
+                <ul class="space-y-[8px] mb-[24px]">
+                    <li><a asp-controller="Careers" asp-action="Index" class="text-sm text-on-surface-variant hover:text-primary transition-colors">@footerCareersLabel</a></li>
+                </ul>
+                <h4 class="font-label-lg text-label-lg uppercase tracking-widest text-primary mb-[16px] mt-[24px]">@footerFollowTitle</h4>
+                <div class="flex gap-[16px]">
+                    <a aria-label="Instagram" class="hover:text-brick-red transition-colors" href="@instagramUrl" target="_blank" rel="noopener noreferrer">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                    </a>
+                    <a aria-label="Facebook" class="hover:text-brick-red transition-colors" href="@facebookUrl" target="_blank" rel="noopener noreferrer">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="md:col-span-1">
+                <h4 class="font-label-lg text-label-lg uppercase tracking-widest text-primary mb-[16px]">@footerVisitTitle</h4>
+                <a asp-controller="Contact" asp-action="Index" class="block w-full bg-brick-red text-white px-6 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:bg-opacity-90 transition-all text-center shadow-md mb-[24px]">@footerCtaLabel</a>
+                <p class="text-xs text-on-surface-variant opacity-60">@footerPhone<br>@footerEmail</p>
+            </div>
+        </div>
+
+        <div class="border-t border-slate-blue/10 pt-[32px] flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-on-surface-variant opacity-60">&copy; <span id="current-year">2026</span> @copyrightName. @copyrightSuffix</p>
+        </div>
+    </div>
+</footer>

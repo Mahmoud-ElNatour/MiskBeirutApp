@@ -1,0 +1,85 @@
+@model CustomerDetailsViewModel
+@using MiskBeirut.Web.Areas.Admin.Models.Customers
+@using MiskBeirut.Core.Enums
+@{
+    ViewData["Title"] = Model.Customer.Name;
+}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">@Model.Customer.Name</h2>
+        <p class="text-slate-500">@Model.Customer.PhoneNumber</p>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="text-right">
+            <p class="text-xs text-slate-500 uppercase font-semibold">Balance</p>
+            <p class="text-2xl font-bold @(Model.Customer.Balance < 0 ? "text-rose-600" : "text-emerald-600")">@Model.Customer.Balance.ToString("N2")</p>
+        </div>
+        <a asp-action="Edit" asp-route-id="@Model.Customer.Id" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">Edit</a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Ledger</h3>
+        <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-hidden">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-2">Date</th>
+                        <th class="px-4 py-2">Type</th>
+                        <th class="px-4 py-2">Amount</th>
+                        <th class="px-4 py-2">Note</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach (var entry in Model.Ledger)
+                    {
+                        <tr>
+                            <td class="px-4 py-2">@entry.Date.ToString("yyyy-MM-dd")</td>
+                            <td class="px-4 py-2">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold @(entry.Type == CustomerLedgerType.Credit ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700")">@entry.Type</span>
+                            </td>
+                            <td class="px-4 py-2">@entry.Amount.ToString("N2")</td>
+                            <td class="px-4 py-2 text-slate-500">@entry.Note</td>
+                        </tr>
+                    }
+                    @if (!Model.Ledger.Any())
+                    {
+                        <tr><td class="px-4 py-3 text-slate-400" colspan="4">No ledger entries yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Add Entry</h3>
+        <form asp-action="AddLedgerEntry" method="post" class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4 space-y-3">
+            <input type="hidden" asp-for="NewEntry.CustomerId" />
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Daily Closing</label>
+                <select asp-for="NewEntry.DailyClosingId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm">
+                    <option value="">Select date...</option>
+                    @foreach (var closing in Model.RecentClosings)
+                    {
+                        <option value="@closing.Id">@closing.Date.ToString("yyyy-MM-dd")</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Type</label>
+                <select asp-for="NewEntry.Type" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm">
+                    <option value="Credit">Credit (customer owes)</option>
+                    <option value="Cashback">Cashback (customer is owed)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Amount</label>
+                <input asp-for="NewEntry.Amount" type="number" step="0.01" min="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+            </div>
+            <input asp-for="NewEntry.Note" placeholder="Note (optional)" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ Add Entry</button>
+        </form>
+    </div>
+</div>

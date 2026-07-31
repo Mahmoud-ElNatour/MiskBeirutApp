@@ -1,0 +1,127 @@
+@model DailyClosingDetailsViewModel
+@{
+    ViewData["Title"] = $"Daily Closing — {Model.Closing.Date:yyyy-MM-dd}";
+}
+
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Daily Closing — @Model.Closing.Date.ToString("yyyy-MM-dd")</h2>
+    @if (Model.CanManageHeader)
+    {
+        <div class="flex gap-2">
+            <a asp-action="Index" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-300">Back to List</a>
+            <a asp-action="Edit" asp-route-id="@Model.Closing.Id" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">Edit</a>
+        </div>
+    }
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
+        <p class="text-xs text-slate-500 uppercase font-semibold">Main Reading</p>
+        <p class="text-xl font-bold text-slate-900 dark:text-white">@Model.Closing.MainReading.ToString("N2")</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
+        <p class="text-xs text-slate-500 uppercase font-semibold">Adjusted Reading</p>
+        <p class="text-xl font-bold text-slate-900 dark:text-white">@(Model.Closing.AdjustedReading?.ToString("N2") ?? "-")</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
+        <p class="text-xs text-slate-500 uppercase font-semibold">Actual Cash</p>
+        <p class="text-xl font-bold text-slate-900 dark:text-white">@(Model.Closing.ActualCash?.ToString("N2") ?? "-")</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
+        <p class="text-xs text-slate-500 uppercase font-semibold">Total Expenses</p>
+        <p class="text-xl font-bold text-slate-900 dark:text-white">@(Model.Summary?.TotalExpenses.ToString("N2") ?? "0.00")</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Expenses</h3>
+        <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-hidden mb-4">
+            <table class="w-full text-sm text-left">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach (var e in Model.Expenses)
+                    {
+                        var receiver = Model.Receivers.FirstOrDefault(r => r.Id == e.ReceiverId);
+                        <tr>
+                            <td class="px-4 py-2">@(receiver?.Name ?? $"#{e.ReceiverId}")</td>
+                            <td class="px-4 py-2">@e.Amount.ToString("N2")</td>
+                            <td class="px-4 py-2 text-slate-500">@e.Note</td>
+                            @if (Model.CanManageHeader)
+                            {
+                                <td class="px-4 py-2 text-right">
+                                    <form asp-action="DeleteExpense" method="post" class="inline">
+                                        <input type="hidden" name="id" value="@e.Id" />
+                                        <input type="hidden" name="dailyClosingId" value="@Model.Closing.Id" />
+                                        <button type="submit" class="text-rose-600 hover:underline text-xs">Delete</button>
+                                    </form>
+                                </td>
+                            }
+                        </tr>
+                    }
+                    @if (!Model.Expenses.Any())
+                    {
+                        <tr><td class="px-4 py-3 text-slate-400" colspan="4">No expenses yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <form asp-action="AddExpense" method="post" class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4 space-y-3">
+            <input type="hidden" asp-for="NewExpense.DailyClosingId" />
+            <div class="grid grid-cols-2 gap-3">
+                <select asp-for="NewExpense.ReceiverId" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm">
+                    <option value="">Receiver...</option>
+                    @foreach (var r in Model.Receivers)
+                    {
+                        <option value="@r.Id">@r.Name</option>
+                    }
+                </select>
+                <input asp-for="NewExpense.Amount" type="number" step="0.01" placeholder="Amount" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+            </div>
+            <input asp-for="NewExpense.Note" placeholder="Note (optional)" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ Add Expense</button>
+        </form>
+    </div>
+
+    <div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Non-Cash Payments</h3>
+        <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-hidden mb-4">
+            <table class="w-full text-sm text-left">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach (var p in Model.NonCashPayments)
+                    {
+                        <tr>
+                            <td class="px-4 py-2">@p.PaymentMethod</td>
+                            <td class="px-4 py-2">@p.Amount.ToString("N2")</td>
+                            <td class="px-4 py-2 text-slate-500">@p.Note</td>
+                            @if (Model.CanManageHeader)
+                            {
+                                <td class="px-4 py-2 text-right">
+                                    <form asp-action="DeleteNonCashPayment" method="post" class="inline">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <input type="hidden" name="dailyClosingId" value="@Model.Closing.Id" />
+                                        <button type="submit" class="text-rose-600 hover:underline text-xs">Delete</button>
+                                    </form>
+                                </td>
+                            }
+                        </tr>
+                    }
+                    @if (!Model.NonCashPayments.Any())
+                    {
+                        <tr><td class="px-4 py-3 text-slate-400" colspan="4">No non-cash payments yet.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <form asp-action="AddNonCashPayment" method="post" class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4 space-y-3">
+            <input type="hidden" asp-for="NewNonCashPayment.DailyClosingId" />
+            <div class="grid grid-cols-2 gap-3">
+                <input asp-for="NewNonCashPayment.PaymentMethod" placeholder="Method (e.g. Card)" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+                <input asp-for="NewNonCashPayment.Amount" type="number" step="0.01" placeholder="Amount" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+            </div>
+            <input asp-for="NewNonCashPayment.Note" placeholder="Note (optional)" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ Add Payment</button>
+        </form>
+    </div>
+</div>

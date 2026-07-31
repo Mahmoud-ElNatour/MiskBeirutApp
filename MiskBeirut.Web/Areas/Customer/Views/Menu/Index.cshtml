@@ -1,0 +1,19 @@
+@model MiskBeirut.Web.Support.PageContent
+@{
+    ViewData["Active"] = "menu";
+    Layout = "_PublicLayout";
+    var menuPdfUrl = Model.Global("menu_pdf_url", "");
+    var pdfSrc = string.IsNullOrEmpty(menuPdfUrl) ? "" : menuPdfUrl + "#toolbar=0&navpanes=0&scrollbar=0";
+}
+<main class="h-screen box-border pt-24 px-4 pb-4 md:px-6 md:pb-6">
+@if (string.IsNullOrEmpty(menuPdfUrl))
+{
+    <div class="h-full flex items-center justify-center border border-outline/10 bg-surface">
+        <p class="font-body-lg text-body-lg text-on-surface-variant">@Model.Text("menu_unavailable", "Our menu will be available here shortly.")</p>
+    </div>
+}
+else
+{
+    <iframe src="@pdfSrc" title="@Model.Text("menu_title", "Our Menu")" class="w-full h-full border-0"></iframe>
+}
+</main>

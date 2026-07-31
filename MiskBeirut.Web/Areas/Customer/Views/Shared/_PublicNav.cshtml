@@ -1,0 +1,68 @@
+@using MiskBeirut.Web.Support
+@{
+    var active = ViewData["Active"] as string ?? "";
+    var content = (PageContent)ViewData["Content"]!;
+    const string baseLink = "font-label-lg text-label-lg uppercase tracking-widest transition-colors";
+    const string activeLink = baseLink + " text-secondary border-b border-secondary pb-1";
+    const string inactiveLink = baseLink + " text-on-surface-variant hover:text-primary";
+    const string activeMobileLink = baseLink + " text-secondary border-b border-secondary pb-1 self-start py-2";
+    const string inactiveMobileLink = baseLink + " text-on-surface-variant hover:text-primary py-2 border-b border-outline/5";
+
+    string LinkClass(string key) => active == key ? activeLink : inactiveLink;
+    string MobileLinkClass(string key) => active == key ? activeMobileLink : inactiveMobileLink;
+
+    var brandName = content.Global("brand_name", "MISK BEIRUT");
+    var logoImage = content.Global("logo_image", "/img/logo.png");
+    var navHome = content.Global("nav_home", "Home");
+    var navAbout = content.Global("nav_about", "About Misk");
+    var navSpaces = content.Global("nav_spaces", "Our Spaces");
+    var navMenu = content.Global("nav_menu", "Menu");
+    var navEvents = content.Global("nav_events", "Events");
+    var navContact = content.Global("nav_contact", "Reservations");
+    var instagramUrl = content.Global("social_instagram_url", "#");
+    var facebookUrl = content.Global("social_facebook_url", "#");
+}
+<nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline/10 shadow-sm transition-all duration-300">
+    <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px] flex justify-between items-center py-4">
+        <a class="font-headline-md text-headline-md text-primary italic uppercase tracking-tighter" asp-controller="Home" asp-action="Index">@brandName</a>
+        <div class="hidden md:flex items-center gap-[24px]">
+            <a class="@LinkClass("home")" asp-controller="Home" asp-action="Index">@navHome</a>
+            <a class="@LinkClass("about")" asp-controller="About" asp-action="Index">@navAbout</a>
+            <a class="@LinkClass("spaces")" asp-controller="Spaces" asp-action="Index">@navSpaces</a>
+            <a class="@LinkClass("menu")" asp-controller="Menu" asp-action="Index">@navMenu</a>
+            <a class="@LinkClass("events")" asp-controller="Events" asp-action="Index">@navEvents</a>
+            <a class="@LinkClass("contact")" asp-controller="Contact" asp-action="Index">@navContact</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="font-label-lg text-label-lg uppercase tracking-widest text-primary hover:opacity-80 transition-opacity" onclick="toggleLanguage()">EN/AR</button>
+            <button class="md:hidden flex items-center justify-center p-2 text-primary hover:opacity-80 transition-opacity" onclick="toggleMobileMenu()" aria-label="Toggle Menu">
+                <span class="material-symbols-outlined text-2xl">menu</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div id="mobile-drawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-[300px] bg-surface/95 backdrop-blur-md shadow-2xl border-l border-outline/10 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col p-6 md:hidden">
+    <div class="flex justify-between items-center mb-10">
+        <img src="@logoImage" alt="@brandName" class="h-8 object-contain">
+        <button class="text-primary hover:opacity-80 transition-opacity" onclick="toggleMobileMenu()" aria-label="Close Menu">
+            <span class="material-symbols-outlined text-3xl">close</span>
+        </button>
+    </div>
+    <div class="flex flex-col gap-6">
+        <a class="@MobileLinkClass("home")" asp-controller="Home" asp-action="Index" onclick="toggleMobileMenu()">@navHome</a>
+        <a class="@MobileLinkClass("about")" asp-controller="About" asp-action="Index" onclick="toggleMobileMenu()">@navAbout</a>
+        <a class="@MobileLinkClass("spaces")" asp-controller="Spaces" asp-action="Index" onclick="toggleMobileMenu()">@navSpaces</a>
+        <a class="@MobileLinkClass("menu")" asp-controller="Menu" asp-action="Index" onclick="toggleMobileMenu()">@navMenu</a>
+        <a class="@MobileLinkClass("events")" asp-controller="Events" asp-action="Index" onclick="toggleMobileMenu()">@navEvents</a>
+        <a class="@MobileLinkClass("contact")" asp-controller="Contact" asp-action="Index" onclick="toggleMobileMenu()">@navContact</a>
+    </div>
+    <div class="mt-auto pt-6 flex flex-col gap-4">
+        <button class="font-label-lg text-label-lg uppercase tracking-widest text-primary hover:opacity-80 transition-opacity py-2 border border-primary/20 w-full text-center" onclick="toggleLanguage()">EN/AR</button>
+        <div class="flex gap-4 justify-center text-sm opacity-60 mt-4">
+            <a aria-label="Instagram" class="hover:text-brick-red transition-colors" href="@instagramUrl" target="_blank" rel="noopener noreferrer"><div class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg></div></a>
+            <a aria-label="Facebook" class="hover:text-brick-red transition-colors" href="@facebookUrl" target="_blank" rel="noopener noreferrer"><div class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg></div></a>
+        </div>
+    </div>
+</div>
+<div id="mobile-backdrop" class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 md:hidden" onclick="toggleMobileMenu()"></div>

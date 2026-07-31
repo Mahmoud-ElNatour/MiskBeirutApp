@@ -1,0 +1,10 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="max-w-md mx-auto bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800/50 rounded-xl p-8 shadow-sm text-center">
+    <span class="material-symbols-outlined text-5xl text-rose-500">block</span>
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-4">Access Denied</h2>
+    <p class="text-slate-500 mt-2">Your account doesn't have permission to view that page.</p>
+    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="inline-block mt-6 px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">Back to Dashboard</a>
+</div>

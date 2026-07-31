@@ -1,0 +1,166 @@
+@model MiskBeirut.Web.Support.PageContent
+@{
+    ViewData["Active"] = "careers";
+    Layout = "_PublicLayout";
+
+    var vacancies = new[]
+    {
+        (Slug: "head-chef", Icon: "restaurant_menu", Title: "Head Chef", Dept: "Culinary", Location: "Beirut", Type: "Full-Time"),
+        (Slug: "fb-consultant", Icon: "business_center", Title: "F&B Consultant", Dept: "Consulting", Location: "Remote", Type: "Full-Time"),
+        (Slug: "events-coord", Icon: "celebration", Title: "Events Coordinator", Dept: "Events", Location: "Beirut", Type: "Full-Time"),
+        (Slug: "res-manager", Icon: "apartment", Title: "Restaurant Manager", Dept: "Operations", Location: "Beirut", Type: "Full-Time")
+    };
+    var valueStrip = new[]
+    {
+        ("trending_up", "Career Growth"),
+        ("diversity_3", "Diverse Culture"),
+        ("payments", "Competitive Benefits"),
+        ("restaurant", "Culinary Excellence")
+    };
+}
+<main class="pt-24">
+<!-- Hero Header -->
+<section class="relative bg-primary-container/10 pt-[80px] pb-stack-lg px-6 md:px-margin-desktop">
+<div class="max-w-[1280px] mx-auto">
+    <h1 class="font-headline-lg text-headline-lg md:text-display-lg text-onyx-text mb-6">@Model.Text("hero_title", "Careers at Misk Beirut")</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                    @Model.Text("hero_subtitle", "Join a team dedicated to redefining Mediterranean hospitality. We seek visionaries, artisans, and professionals who share our passion for excellence and Levantine culture.")
+                </p>
+</div>
+<!-- Decorative Element -->
+<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
+<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
+</div>
+</section>
+<!-- Value Strip -->
+<section class="py-stack-lg border-b border-on-surface/10 px-6 md:px-margin-desktop">
+<div class="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+@for (var i = 1; i <= valueStrip.Length; i++)
+{
+    var (icon, defaultLabel) = valueStrip[i - 1];
+    <div class="flex flex-col items-center text-center p-6 backdrop-blur transition-colors duration-300">
+        <span class="material-symbols-outlined text-brick-red text-4xl mb-4">@icon</span>
+        <h3 class="font-label-lg text-label-lg uppercase">@Model.Text($"value_strip_{i}_label", defaultLabel)</h3>
+    </div>
+}
+</div>
+</section>
+<!-- Vacancies -->
+<section class="py-section-gap px-6 md:px-margin-desktop bg-marble-white">
+<div class="max-w-[1280px] mx-auto">
+<div class="flex items-center gap-6 mb-stack-lg">
+<h2 class="font-headline-md text-headline-md whitespace-nowrap">@Model.Text("vacancies_title", "Open Positions")</h2>
+<div class="h-[1px] w-full bg-brick-red/20"></div>
+</div>
+<div class="grid grid-cols-1 gap-6">
+@for (var i = 1; i <= vacancies.Length; i++)
+{
+    var v = vacancies[i - 1];
+    var title = Model.Text($"vacancy_{i}_title", v.Title);
+    <div class="vacancy-item group">
+        <div class="bg-white p-8 md:p-12 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition-shadow">
+            <div>
+                <h3 class="font-headline-md text-headline-md mb-2">@title</h3>
+                <div class="flex flex-wrap gap-4 text-on-surface-variant font-label-sm uppercase tracking-wider">
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">@v.Icon</span> @Model.Text($"vacancy_{i}_department", v.Dept)</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">location_on</span> @Model.Text($"vacancy_{i}_location", v.Location)</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> @Model.Text($"vacancy_{i}_type", v.Type)</span>
+                </div>
+            </div>
+            <button class="bg-slate-blue text-white px-8 py-3 font-label-lg text-label-lg uppercase tracking-widest hover:bg-brick-red transition-colors w-full md:w-auto" onclick="toggleApplication('@v.Slug')">@Model.Text("apply_now_label", "Apply Now")</button>
+        </div>
+        <div class="max-height-0 overflow-hidden opacity-0 transition-form bg-white px-8 md:px-12 border-t border-slate-blue/10" id="form-@v.Slug">
+            <form class="py-stack-lg space-y-8 max-w-3xl mx-auto">
+                <h4 class="font-headline-md text-headline-md mb-4">@Model.Text("apply_prefix_label", "Application for") @title</h4>
+                @if (i == 1)
+                {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="relative">
+                            <label class="font-label-lg text-label-lg uppercase block mb-1">@Model.Text("form_field_full_name", "Full Name")</label>
+                            <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" placeholder="@Model.Text("form_placeholder_name", "YOUR NAME")" type="text"/>
+                        </div>
+                        <div class="relative">
+                            <label class="font-label-lg text-label-lg uppercase block mb-1">@Model.Text("form_field_phone", "Phone Number")</label>
+                            <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" placeholder="@Model.Text("form_placeholder_phone", "+961 00 000 000")" type="tel"/>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <label class="font-label-lg text-label-lg uppercase block mb-1">@Model.Text("form_field_email", "Email Address")</label>
+                        <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" placeholder="@Model.Text("form_placeholder_email", "EMAIL@EXAMPLE.COM")" type="email"/>
+                    </div>
+                    <div class="relative">
+                        <label class="font-label-lg text-label-lg uppercase block mb-1">@Model.Text("form_field_cover_message", "Cover Message")</label>
+                        <textarea class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all resize-none" placeholder="@Model.Text("form_placeholder_cover", "TELL US ABOUT YOUR EXPERIENCE")" rows="3"></textarea>
+                    </div>
+                    <div class="relative">
+                        <label class="font-label-lg text-label-lg uppercase block mb-2">@Model.Text("form_field_upload_cv", "Upload CV (PDF)")</label>
+                        <input class="block w-full text-sm text-slate-blue file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-label-lg file:bg-slate-blue/10 file:text-slate-blue hover:file:bg-slate-blue/20 cursor-pointer" type="file"/>
+                    </div>
+                }
+                else if (i == 2)
+                {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="relative">
+                            <label class="font-label-lg text-label-lg uppercase block mb-1">@Model.Text("form_field_full_name", "Full Name")</label>
+                            <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" placeholder="@Model.Text("form_placeholder_name", "YOUR NAME")" type="text"/>
+                        </div>
+                        <div class="relative">
+                            <label class="font-label-lg text-label-lg uppercase block mb-1">@Model.Text("form_field_phone", "Phone Number")</label>
+                            <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" placeholder="@Model.Text("form_placeholder_phone", "+961 00 000 000")" type="tel"/>
+                        </div>
+                    </div>
+                }
+                <button class="bg-brick-red text-white px-12 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-opacity" type="button">@Model.Text("submit_label", "Submit Application")</button>
+            </form>
+        </div>
+    </div>
+}
+</div>
+</div>
+</section>
+<!-- Newsletter / Culture Teaser -->
+<section class="grid grid-cols-1 md:grid-cols-2 items-stretch">
+<div class="bg-slate-blue text-white p-12 md:p-24 flex flex-col justify-center">
+<h2 class="font-headline-lg text-headline-lg mb-6">@Model.Text("culture_title", "Our Culture")</h2>
+<p class="font-body-lg text-body-lg mb-8 opacity-90">@Model.Text("culture_body", "At Misk Beirut, we believe the best experiences are built by those who value hospitality as an art form. We provide a space where talent is nurtured and culinary dreams are realized.")</p>
+</div>
+<div class="min-h-[400px]">
+<img class="w-full h-full object-cover" alt="Culinary team collaborating in a modern luxury kitchen" src="@Model.Image("culture_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuBm3jJoNgH5s_rjzKLIalc1OKH9G55ORI52lhD7OeGph-n2gcT5dekQLAYWRpwCa12EvucvrjYgo0cCAG4lDJlj96TyCKzg8f1jJQZQ3VlcJa6BHfZ5cU85A4Z6drunWobaEUcuTeigHzlJKfNOwoW1JK5Th93ZwxpQU9N_SGCu9992NM3FTarqoG2q5zLSNpDJ3MPGjG_8XcUdxCpAFMUPJy0lgcKypJMN5tDH2ca6Av5415pdZeIZGYMYl7u9kVHG2ppuQ0DY5vI")"/>
+</div>
+</section>
+</main>
+
+@section Scripts {
+<script>
+    function toggleApplication(id) {
+        const form = document.getElementById('form-' + id);
+        const allForms = document.querySelectorAll('.transition-form');
+
+        allForms.forEach(f => {
+            if (f.id !== 'form-' + id) {
+                f.style.maxHeight = '0px';
+                f.style.opacity = '0';
+                f.classList.remove('py-stack-lg');
+            }
+        });
+
+        if (form.style.maxHeight === '0px' || !form.style.maxHeight) {
+            form.style.maxHeight = '2000px';
+            form.style.opacity = '1';
+            form.classList.add('py-stack-lg');
+        } else {
+            form.style.maxHeight = '0px';
+            form.style.opacity = '0';
+            form.classList.remove('py-stack-lg');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const forms = document.querySelectorAll('.transition-form');
+        forms.forEach(f => {
+            f.style.maxHeight = '0px';
+            f.style.opacity = '0';
+        });
+    });
+</script>
+}

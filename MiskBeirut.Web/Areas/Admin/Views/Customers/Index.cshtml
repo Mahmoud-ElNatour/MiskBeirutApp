@@ -1,0 +1,37 @@
+@model IReadOnlyList<CustomerDto>
+@using MiskBeirut.Application.Dtos.Customers
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Customers</h2>
+    <a asp-action="Create" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ New Customer</a>
+</div>
+
+<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
+            <tr>
+                <th class="px-6 py-3">Name</th>
+                <th class="px-6 py-3">Phone</th>
+                <th class="px-6 py-3">Balance</th>
+                <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td class="px-6 py-3 font-semibold text-slate-900 dark:text-white">@c.Name</td>
+                    <td class="px-6 py-3">@c.PhoneNumber</td>
+                    <td class="px-6 py-3 @(c.Balance < 0 ? "text-rose-600" : "text-emerald-600")">@c.Balance.ToString("N2")</td>
+                    <td class="px-6 py-3 text-right space-x-2">
+                        <a asp-action="Details" asp-route-id="@c.Id" class="text-primary hover:underline">View</a>
+                        <a asp-action="Edit" asp-route-id="@c.Id" class="text-slate-500 hover:underline">Edit</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

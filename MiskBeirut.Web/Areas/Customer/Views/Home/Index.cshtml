@@ -1,0 +1,390 @@
+@model MiskBeirut.Web.Support.PageContent
+@using MiskBeirut.Application.Dtos.Reviews
+@{
+    ViewData["Active"] = "home";
+    Layout = "_PublicLayout";
+    var googleReviews = ViewData["GoogleReviews"] as IReadOnlyList<GoogleReviewDto> ?? Array.Empty<GoogleReviewDto>();
+}
+@{
+    var heroImageDesktop = Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuBk0plMgb1g9EiKBfiJ_w7OfeWYJyvxPRduMltuI77vrXzTOcxZKxlksbUDZkNLBwiwtUIHoQMcEfvL0vY-iEGXbSOZEpzZ5tmmCnhLNeDwqV-Djx4j1Af8ic7nYPoqZvdv2e6nk1WToioNoh1Q585d9XjIO2ySbMEqqQk-MwdGdjFb4w1tkSH48xAxOC4v5V2n8NkxHH5T1C6GJkWOkq7gKi_i_slmIdRb3CFcQKKTtoKJ0JuUAVCRSosNfa6zYPEv-I78l5bqY3k");
+    var heroImageTablet = Model.Image("hero_image_tablet", heroImageDesktop);
+    var heroImageMobile = Model.Image("hero_image_mobile", heroImageDesktop);
+}
+<!-- 1. HERO SECTION -->
+<style>
+    #home-hero-bg { background-image: url("@heroImageMobile"); }
+    @@media (min-width: 768px) { #home-hero-bg { background-image: url("@heroImageTablet"); } }
+    @@media (min-width: 1024px) { #home-hero-bg { background-image: url("@heroImageDesktop"); } }
+</style>
+<section class="relative h-screen flex items-center justify-center overflow-hidden py-[96px]" id="home">
+<div class="absolute inset-0 z-0">
+<div id="home-hero-bg" class="w-full h-full bg-cover bg-center"></div>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="relative z-10 max-w-[1280px] mx-auto px-[20px] md:px-[80px] text-center text-white">
+<h1 class="font-display-lg text-display-lg mb-[16px]">@Model.Text("hero_title", "Welcome to Misk Beirut")</h1>
+<p class="font-headline-md text-headline-md italic mb-[48px]">@Model.Text("hero_subtitle", "Where heritage meets culinary excellence")</p>
+<div class="flex flex-col md:flex-row items-center justify-center gap-[24px]">
+<a href="#visit-misk" class="bg-brick-red text-white px-12 py-5 font-label-lg text-label-lg uppercase tracking-widest hover:bg-opacity-90 transition-all shadow-2xl text-lg font-bold transform hover:scale-105">@Model.Text("hero_cta_reserve_label", "Reserve a Table")</a>
+<a href="#about" class="border-2 border-white text-white px-10 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:bg-white hover:text-primary transition-all flex items-center gap-2 group">
+                    @Model.Text("hero_cta_discover_label", "Discover Misk")
+                    <span class="material-symbols-outlined group-hover:translate-y-1 transition-transform">south</span>
+</a>
+</div>
+</div>
+
+</section>
+<!-- 2. ABOUT US SECTION -->
+<section class="bg-marble-white py-[120px] pt-[80px]" id="about">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px] grid grid-cols-1 md:grid-cols-12 gap-[24px] items-center">
+<div class="md:col-span-6 relative group overflow-hidden">
+<img alt="About Misk Beirut" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="@Model.Image("about_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuDPzt89bFCPorHZemKwIfi48TgN5a19ZcfWGqzi1jX9c_N_0rIEnuUOhpnA77y5P1XNiVxM036yGmMlreCR4zzTks3JewaXxQWMmd9PlVpIAW7kiSficYMU3qMstRD8M5v6xFaLoTHMvLBCsh_HI52IGzUSkl0X4wUfpRUY36QAttHphl8TplHR5gpd_HxPXsUh9JJYnzhKH_xR85TvrCmH4vSR0UmLNJ_A2HoJaUAt_e1bEzHjGEV3w86-qtQozuF3u3kiV8wWi3A")">
+<div class="absolute inset-0 border-[20px] border-white/20 pointer-events-none"></div>
+</div>
+<div class="md:col-span-6 md:col-start-7">
+<div class="mb-[8px]">
+<span class="text-brick-red font-label-lg text-label-lg uppercase tracking-widest">@Model.Text("about_eyebrow", "Since 1982")</span>
+</div>
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("about_title", "Our Story")</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-[48px]">
+                    @Model.Text("about_body", "fallback family kitchen in the heart of the Levant, driven by a singular vision: to preserve the soul of Mediterranean hospitality while elevating it for the modern epicurean. Today, we stand as a beacon of luxury, where every ingredient is sourced with editorial precision and every recipe tells a story of generational mastery.")
+                </p>
+<div class="grid grid-cols-3 gap-[24px] mb-[48px]">
+<div class="flex flex-col items-center text-center space-y-2">
+<span class="material-symbols-outlined text-brick-red text-3xl">temple_hindu</span>
+<span class="font-label-sm text-label-sm uppercase">@Model.Text("about_pillar_1_label", "Heritage")</span>
+</div>
+<div class="flex flex-col items-center text-center space-y-2">
+<span class="material-symbols-outlined text-brick-red text-3xl">verified</span>
+<span class="font-label-sm text-label-sm uppercase">@Model.Text("about_pillar_2_label", "Quality")</span>
+</div>
+<div class="flex flex-col items-center text-center space-y-2">
+<span class="material-symbols-outlined text-brick-red text-3xl">groups</span>
+<span class="font-label-sm text-label-sm uppercase">@Model.Text("about_pillar_3_label", "Community")</span>
+</div>
+</div>
+<p class="font-headline-md text-headline-md italic text-brick-red border-l-2 border-brick-red pl-6 leading-snug mb-[48px]">
+                    @Model.Text("about_quote", "\"An honest approach to food, focusing on the integrity of ingredients and the warmth of Lebanese tradition.\"")
+                </p>
+<a asp-controller="About" asp-action="Index" class="bg-slate-blue text-white px-10 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-all shadow-md inline-block text-center">@Model.Text("about_cta_label", "Learn More About Us")</a>
+</div>
+</div>
+</section>
+<!-- 3. A TASTE OF MISK SECTION -->
+<section class="bg-surface py-[120px]" id="menu">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
+<div class="text-center mb-[48px]">
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("menu_title", "A Taste of Misk")</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">@Model.Text("menu_subtitle", "Discover our curated selection of Mediterranean cuisine, expertly prepared with the finest ingredients.")</p>
+<div class="w-24 h-0.5 bg-brick-red mx-auto mt-[16px]"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-[24px] mb-[48px]">
+@for (var i = 1; i <= 3; i++)
+{
+    var itemImage = Model.Image($"menu_item_{i}_image");
+    var itemLabel = Model.Text($"menu_item_{i}_label", $"Menu Item {i}");
+    <div class="h-[300px] bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center" style="@(string.IsNullOrEmpty(itemImage) ? "" : $"background-image:url('{itemImage}')")">
+        @if (string.IsNullOrEmpty(itemImage))
+        {
+            <span class="text-center">
+                <p class="font-label-lg mb-2">PLACEHOLDER</p>
+                <p class="text-sm opacity-60">@itemLabel</p>
+            </span>
+        }
+        else
+        {
+            <span class="sr-only">@itemLabel</span>
+        }
+    </div>
+}
+</div>
+<div class="text-center">
+<a asp-controller="Menu" asp-action="Index" class="bg-slate-blue text-white px-10 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-all inline-block">@Model.Text("menu_cta_label", "View Full Menu")</a>
+</div>
+</div>
+</section>
+
+<!-- 4. OUR SPACES SECTION -->
+<section class="bg-marble-white py-[120px]" id="spaces">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
+<div class="text-center mb-[48px]">
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("spaces_title", "Our Spaces")</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">@Model.Text("spaces_subtitle", "Explore our diverse venues designed for every occasion and experience.")</p>
+<div class="w-24 h-0.5 bg-brick-red mx-auto mt-[16px]"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-[24px]">
+@{ var spacesCard1Image = Model.Image("spaces_card_1_image"); }
+<!-- Space Card 1: Dining & Shisha -->
+<a class="group relative h-[400px] overflow-hidden bg-primary flex flex-col justify-end p-8 transition-all hover:shadow-xl" asp-controller="Spaces" asp-action="Index" asp-fragment="dining-shisha">
+@if (!string.IsNullOrEmpty(spacesCard1Image))
+{
+    <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image:url('@spacesCard1Image')"></div>
+}
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-slate-blue/40 to-primary/70">
+@if (string.IsNullOrEmpty(spacesCard1Image))
+{
+    <div class="w-full h-full flex items-center justify-center text-white/20">
+    <span class="material-symbols-outlined text-7xl">restaurant</span>
+    </div>
+}
+</div>
+<div class="relative z-10">
+<h3 class="font-headline-md text-white mb-[12px]">@Model.Text("spaces_card_1_title", "Dining & Shisha")</h3>
+<p class="text-primary-fixed text-body-md text-sm max-w-xs mb-[12px]">@Model.Text("spaces_card_1_body", "Elegant dining spaces with authentic Lebanese hospitality.")</p>
+<div class="flex items-center gap-1 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                            @Model.Text("spaces_cta_label", "Learn More") <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+</a>
+@{ var spacesCard2Image = Model.Image("spaces_card_2_image"); }
+<!-- Space Card 2: Indoor & Outdoor Spaces -->
+<a class="group relative h-[400px] overflow-hidden bg-slate-blue flex flex-col justify-end p-8 transition-all hover:shadow-xl" asp-controller="Spaces" asp-action="Index" asp-fragment="indoor-outdoor">
+@if (!string.IsNullOrEmpty(spacesCard2Image))
+{
+    <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image:url('@spacesCard2Image')"></div>
+}
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-primary/40 to-slate-blue/70">
+@if (string.IsNullOrEmpty(spacesCard2Image))
+{
+    <div class="w-full h-full flex items-center justify-center text-white/20">
+    <span class="material-symbols-outlined text-7xl">location_city</span>
+    </div>
+}
+</div>
+<div class="relative z-10">
+<h3 class="font-headline-md text-white mb-[12px]">@Model.Text("spaces_card_2_title", "Indoor & Outdoor Spaces")</h3>
+<p class="text-primary-fixed text-body-md text-sm max-w-xs mb-[12px]">@Model.Text("spaces_card_2_body", "Versatile venues for any gathering, with stunning ambiance.")</p>
+<div class="flex items-center gap-1 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                            @Model.Text("spaces_cta_label", "Learn More") <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+</a>
+@{ var spacesCard3Image = Model.Image("spaces_card_3_image"); }
+<!-- Space Card 3: Work & Casual Meetings -->
+<a class="group relative h-[400px] overflow-hidden bg-marble-white flex flex-col justify-end p-8 transition-all hover:shadow-xl border-2 border-outline/20" asp-controller="Spaces" asp-action="Index" asp-fragment="work-casual">
+@if (!string.IsNullOrEmpty(spacesCard3Image))
+{
+    <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image:url('@spacesCard3Image')"></div>
+}
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-primary/10 to-slate-blue/30">
+@if (string.IsNullOrEmpty(spacesCard3Image))
+{
+    <div class="w-full h-full flex items-center justify-center text-primary/20">
+    <span class="material-symbols-outlined text-7xl">business_center</span>
+    </div>
+}
+</div>
+<div class="relative z-10">
+<h3 class="font-headline-md text-primary mb-[12px]">@Model.Text("spaces_card_3_title", "Work & Casual Meetings")</h3>
+<p class="text-on-surface-variant text-body-md text-sm max-w-xs mb-[12px]">@Model.Text("spaces_card_3_body", "Perfect environment for productive meetings and informal gatherings.")</p>
+<div class="flex items-center gap-1 text-primary font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                            @Model.Text("spaces_cta_label", "Learn More") <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+</a>
+</div>
+</div>
+</section>
+
+<!-- 5. EVENTS SECTION -->
+<section class="bg-surface py-[120px]" id="events-section">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
+<div class="text-center mb-[48px]">
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("events_title", "Events at Misk")</h2>
+<div class="w-24 h-0.5 bg-brick-red mx-auto"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+@{ var eventsCard1Image = Model.Image("events_card_1_image"); }
+<!-- Events Card 1: Football & Live Match Screenings -->
+<a class="group relative h-[450px] overflow-hidden bg-primary flex flex-col justify-end p-10 transition-all hover:shadow-xl" asp-controller="Events" asp-action="Index" asp-fragment="football">
+@if (!string.IsNullOrEmpty(eventsCard1Image))
+{
+    <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image:url('@eventsCard1Image')"></div>
+}
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-slate-blue/40 to-primary/60">
+@if (string.IsNullOrEmpty(eventsCard1Image))
+{
+    <div class="w-full h-full flex items-center justify-center text-white/30">
+    <span class="material-symbols-outlined text-8xl">sports_soccer</span>
+    </div>
+}
+</div>
+<div class="relative z-10">
+<h3 class="font-display-lg text-headline-md text-white mb-[16px]">@Model.Text("events_card_1_title", "Football & Live Match Screenings")</h3>
+<p class="text-primary-fixed text-body-md max-w-sm mb-[16px]">@Model.Text("events_card_1_body", "Experience the thrill of live sports in our premium viewing spaces with world-class amenities.")</p>
+<div class="flex items-center gap-2 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
+                            Explore Events <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+</a>
+@{ var eventsCard2Image = Model.Image("events_card_2_image"); }
+<!-- Events Card 2: Private Events & Celebrations -->
+<a class="group relative h-[450px] overflow-hidden bg-slate-blue flex flex-col justify-end p-10 transition-all hover:shadow-xl" asp-controller="Events" asp-action="Index" asp-fragment="private-events">
+@if (!string.IsNullOrEmpty(eventsCard2Image))
+{
+    <div class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style="background-image:url('@eventsCard2Image')"></div>
+}
+<div class="absolute inset-0 z-0 bg-gradient-to-b from-primary/40 to-slate-blue/60">
+@if (string.IsNullOrEmpty(eventsCard2Image))
+{
+    <div class="w-full h-full flex items-center justify-center text-white/30">
+    <span class="material-symbols-outlined text-8xl">celebration</span>
+    </div>
+}
+</div>
+<div class="relative z-10">
+<h3 class="font-display-lg text-headline-md text-white mb-[16px]">@Model.Text("events_card_2_title", "Private Events & Celebrations")</h3>
+<p class="text-primary-fixed text-body-md max-w-sm mb-[16px]">@Model.Text("events_card_2_body", "Create unforgettable moments with our bespoke event planning and luxurious venue spaces.")</p>
+<div class="flex items-center gap-2 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
+                            Plan Event <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+</a>
+</div>
+</div>
+</section>
+
+<!-- 6. INSTAGRAM / SOCIAL GALLERY SECTION -->
+<section class="bg-marble-white py-[120px]" id="gallery">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
+<div class="text-center mb-[48px]">
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("gallery_title", "Follow Our Journey")</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">@Model.Text("gallery_subtitle", "Discover moments from Misk Beirut on our social media channels.")</p>
+<div class="w-24 h-0.5 bg-brick-red mx-auto mt-[16px]"></div>
+</div>
+<div class="flex gap-[16px] overflow-x-auto pb-4 snap-x insta-carousel mb-[48px]">
+@for (var i = 1; i <= 8; i++)
+{
+    var photoImage = Model.Image($"gallery_photo_{i}_image");
+    var photoCaption = Model.Text($"gallery_photo_{i}_caption", $"Photo {i}");
+    <div class="w-[220px] h-[220px] md:w-[280px] md:h-[280px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center" style="@(string.IsNullOrEmpty(photoImage) ? "" : $"background-image:url('{photoImage}')")">
+        @if (string.IsNullOrEmpty(photoImage))
+        {
+            <span class="text-center">
+                <p class="font-label-lg text-sm mb-2">PLACEHOLDER</p>
+                <p class="text-xs opacity-60">@photoCaption</p>
+            </span>
+        }
+        else
+        {
+            <span class="sr-only">@photoCaption</span>
+        }
+    </div>
+}
+</div>
+<div class="text-center">
+<a href="@Model.Link("gallery_instagram_url", "#")" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-brick-red hover:text-secondary font-label-lg text-label-lg uppercase tracking-widest transition-colors">
+<span class="material-symbols-outlined">link</span>
+@Model.Text("gallery_instagram_label", "Follow @MiskBeirut on Instagram")
+</a>
+</div>
+</div>
+</section>
+
+<!-- 7. TESTIMONIALS (Google Maps reviews) -->
+@if (googleReviews.Count > 0)
+{
+    <section class="py-[120px] bg-surface">
+    <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
+    <h2 class="font-display-lg text-headline-lg text-primary text-center mb-[48px]">@Model.Text("testimonials_title", "What Our Guests Say")</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-[24px] relative">
+    <div class="absolute -top-12 left-0 text-slate-blue/10 font-display-lg text-[200px] leading-none pointer-events-none select-none">"</div>
+    @{
+        var testimonialClasses = new[]
+        {
+            "bg-white p-8 border border-outline/5 relative z-10 shadow-sm hover:shadow-md transition-shadow",
+            "bg-white p-8 border border-outline/5 relative z-10 transform md:translate-y-8 shadow-sm hover:shadow-md transition-shadow",
+            "bg-white p-8 border border-outline/5 relative z-10 shadow-sm hover:shadow-md transition-shadow"
+        };
+    }
+    @for (var i = 0; i < googleReviews.Count; i++)
+    {
+        var review = googleReviews[i];
+        <div class="@testimonialClasses[i % testimonialClasses.Length]">
+            <div class="flex gap-1 mb-[16px]">
+                @for (var s = 1; s <= 5; s++)
+                {
+                    <span class="material-symbols-outlined text-sm @(s <= review.Rating ? "text-brick-red fill-[1]" : "text-outline/30")">star</span>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(review.ReviewText))
+            {
+                <p class="font-headline-md italic mb-[48px] leading-relaxed">"@review.ReviewText"</p>
+            }
+            <div class="flex items-center gap-4">
+                @if (!string.IsNullOrEmpty(review.ProfilePhotoUrl))
+                {
+                    <img src="@review.ProfilePhotoUrl" alt="@review.AuthorName" class="w-10 h-10 rounded-full object-cover" />
+                }
+                else
+                {
+                    <div class="w-10 h-10 rounded-full bg-slate-blue/20"></div>
+                }
+                <div>
+                    <p class="font-label-lg text-label-lg uppercase">@review.AuthorName</p>
+                    @if (!string.IsNullOrEmpty(review.RelativeTime))
+                    {
+                        <p class="text-xs text-on-surface-variant">@review.RelativeTime</p>
+                    }
+                </div>
+            </div>
+        </div>
+       
+    }
+    </div>
+    </div>
+    </section>
+}
+
+<!-- 8. VISIT US / CONTACT SECTION -->
+<section class="bg-marble-white py-16 px-margin-desktop" id="visit-misk">
+<div class="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-10 gap-gutter items-center">
+<!-- Left 40% Editorial Content -->
+<div class="md:col-span-4 space-y-8 pr-4">
+<h2 class="font-display-lg text-headline-lg text-primary leading-tight">@Model.Text("visit_title", "Visit Misk Beirut")</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+<!-- Address -->
+<a href="@Model.Link("visit_address_map_url", "https://www.google.com/maps/search/123+Rue+de+Gourmet,+Beirut,+Lebanon")" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-brick-red text-lg">location_on</span>
+<p class="font-body-md text-sm text-on-surface-variant">@Model.Text("visit_address", "123 Rue de Gourmet, Beirut")</p>
+</a>
+<!-- Hours -->
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-brick-red text-lg">schedule</span>
+<p class="font-body-md text-sm text-on-surface-variant">@Model.Text("visit_hours", "12:00 PM - 12:00 AM")</p>
+</div>
+<!-- Phone -->
+<a href="tel:@Model.Text("visit_phone_link", "+9611234567")" class="flex items-center gap-3 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-brick-red text-lg">phone</span>
+<p class="font-body-md text-sm text-on-surface-variant">@Model.Text("visit_phone", "+961 1 234 567")</p>
+</a>
+<!-- Email -->
+<a href="mailto:@Model.Text("visit_email", "concierge@miskbeirut.com")" class="flex items-center gap-3 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-brick-red text-lg">mail</span>
+<p class="font-body-md text-sm text-on-surface-variant break-words min-w-0">@Model.Text("visit_email", "concierge@miskbeirut.com")</p>
+</a>
+</div>
+<a asp-controller="Contact" asp-action="Index" class="inline-block bg-brick-red text-white px-8 py-3.5 font-label-lg text-label-lg uppercase tracking-[0.2em] hover:bg-opacity-90 transition-all shadow-lg !rounded-none text-center">
+                @Model.Text("visit_cta_label", "Reserve a Table")
+            </a>
+</div>
+<!-- Right 60% Map -->
+<div class="md:col-span-6 h-[320px] border border-outline/20">
+<div class="w-full h-full overflow-hidden grayscale contrast-[0.9] hover:grayscale-0 transition-all duration-700">
+<iframe allowfullscreen="" height="100%" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="@Model.Link("visit_map_embed_url", "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3311.834712345678!2d35.5017!3d33.8938!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f17215880a787%3A0x49621703add375d!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2slb!4v1710000000000!5m2!1sen!2slb")" style="border:0;" width="100%">
+</iframe>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 9. CAREERS BANNER SECTION -->
+<section class="bg-primary text-white py-[60px]" id="careers-banner">
+<div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px] flex flex-col md:flex-row items-center justify-between gap-[32px]">
+<div>
+<h3 class="font-headline-lg text-headline-lg mb-[12px]">@Model.Text("careers_banner_title", "Join Our Team")</h3>
+<p class="font-body-lg text-body-lg text-primary-fixed max-w-2xl">@Model.Text("careers_banner_body", "Build your career with us and become part of Misk Beirut's legacy of excellence.")</p>
+</div>
+<a asp-controller="Careers" asp-action="Index" class="bg-brick-red text-white px-10 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:bg-opacity-90 transition-all whitespace-nowrap shadow-md">@Model.Text("careers_banner_cta_label", "View Careers")</a>
+</div>
+</section>

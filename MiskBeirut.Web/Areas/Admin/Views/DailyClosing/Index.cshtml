@@ -1,0 +1,38 @@
+@model IReadOnlyList<DailyClosingDto>
+@using MiskBeirut.Application.Dtos.DailyClosings
+@{
+    ViewData["Title"] = "Daily Closing";
+}
+
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Daily Closing</h2>
+    <a asp-action="Create" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ New Closing</a>
+</div>
+
+<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
+    <table class="w-full text-sm text-left">
+        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
+            <tr>
+                <th class="px-6 py-3">Date</th>
+                <th class="px-6 py-3">Main Reading</th>
+                <th class="px-6 py-3">Adjusted</th>
+                <th class="px-6 py-3">Actual Cash</th>
+                <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td class="px-6 py-3 font-semibold text-slate-900 dark:text-white">@c.Date.ToString("yyyy-MM-dd")</td>
+                    <td class="px-6 py-3">@c.MainReading.ToString("N2")</td>
+                    <td class="px-6 py-3">@(c.AdjustedReading?.ToString("N2") ?? "-")</td>
+                    <td class="px-6 py-3">@(c.ActualCash?.ToString("N2") ?? "-")</td>
+                    <td class="px-6 py-3 text-right">
+                        <a asp-action="Details" asp-route-id="@c.Id" class="text-primary hover:underline">View</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
