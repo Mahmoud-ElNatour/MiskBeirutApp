@@ -133,12 +133,23 @@
     @RenderSection("ExtraHead", required: false)
 </head>
 <body class="bg-marble-white text-on-surface font-body-md text-body-md overflow-x-hidden min-h-screen">
-    <!-- Sidebar -->
-    <nav class="w-sidebar-width h-screen fixed left-0 top-0 bg-primary flex flex-col py-stack-lg z-50">
-        <a asp-area="Cms" asp-controller="Home" asp-action="Index" class="px-container-padding mb-12 block hover:opacity-90 transition-opacity">
-            <h1 class="font-headline-sm text-headline-sm text-marble-white">Misk Beirut</h1>
-            <p class="font-body-md text-body-md text-on-primary opacity-70">Content Management</p>
-        </a>
+    <!-- Mobile backdrop: only rendered over the content when the sidebar is open below md. -->
+    <div id="cms-sidebar-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden" onclick="toggleCmsSidebar(false)"></div>
+
+    <!-- Sidebar: off-canvas below md (260px would eat ~2/3 of a phone screen), always visible from md up. -->
+    <nav id="cms-sidebar"
+         class="w-sidebar-width h-screen fixed left-0 top-0 bg-primary flex flex-col py-stack-lg z-50 overflow-y-auto
+                -translate-x-full md:translate-x-0 transition-transform duration-300 ease-out">
+        <div class="flex items-start justify-between px-container-padding mb-12">
+            <a asp-area="Cms" asp-controller="Home" asp-action="Index" class="block hover:opacity-90 transition-opacity min-w-0">
+                <h1 class="font-headline-sm text-headline-sm text-marble-white">Misk Beirut</h1>
+                <p class="font-body-md text-body-md text-on-primary opacity-70">Content Management</p>
+            </a>
+            <button type="button" onclick="toggleCmsSidebar(false)" aria-label="Close menu"
+                    class="md:hidden flex-shrink-0 w-9 h-9 -mr-1 flex items-center justify-center rounded text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container transition-all">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
         <ul class="flex flex-col flex-grow">
             <li>
                 <a asp-area="Cms" asp-controller="Home" asp-action="Index"
@@ -179,13 +190,19 @@
     </nav>
 
     <!-- Main Content Area -->
-    <div class="ml-sidebar-width min-h-screen flex flex-col">
-        <header class="h-row-height-default w-full sticky top-0 bg-surface-bright border-b border-border-subtle flex justify-between items-center px-container-padding z-40">
-            <form asp-controller="Pages" asp-action="Index" method="get" class="relative text-on-surface-variant flex items-center">
-                <span class="material-symbols-outlined absolute left-3">search</span>
-                <input name="q" value="@ViewData["SearchQuery"]" class="pl-10 pr-4 py-2 border border-border-subtle rounded bg-surface-container-lowest focus:outline-none focus:border-slate-blue font-body-md text-body-md text-on-surface w-64 transition-colors" placeholder="Search pages..." type="search" />
-            </form>
-            <div class="flex items-center space-x-6">
+    <div class="ml-0 md:ml-sidebar-width min-h-screen flex flex-col">
+        <header class="h-row-height-default w-full sticky top-0 bg-surface-bright border-b border-border-subtle flex justify-between items-center gap-3 px-container-padding z-30">
+            <div class="flex items-center gap-2 min-w-0">
+                <button type="button" onclick="toggleCmsSidebar(true)" aria-label="Open menu" aria-controls="cms-sidebar"
+                        class="md:hidden flex-shrink-0 w-10 h-10 -ml-2 flex items-center justify-center rounded text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <form asp-controller="Pages" asp-action="Index" method="get" class="relative text-on-surface-variant flex items-center min-w-0">
+                    <span class="material-symbols-outlined absolute left-3">search</span>
+                    <input name="q" value="@ViewData["SearchQuery"]" class="pl-10 pr-4 py-2 border border-border-subtle rounded bg-surface-container-lowest focus:outline-none focus:border-slate-blue font-body-md text-body-md text-on-surface w-full sm:w-64 min-w-0 transition-colors" placeholder="Search pages..." type="search" />
+                </form>
+            </div>
+            <div class="flex items-center space-x-6 flex-shrink-0">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <div class="text-right hidden sm:block">
@@ -370,6 +387,35 @@
                 });
             });
         })();
+    </script>
+
+    <script>
+        // Off-canvas sidebar, mobile only. Above md the sidebar is always on screen and these
+        // classes are overridden by md:translate-x-0, so toggling is a no-op there.
+        function toggleCmsSidebar(open) {
+            var sidebar = document.getElementById('cms-sidebar');
+            var backdrop = document.getElementById('cms-sidebar-backdrop');
+            if (!sidebar || !backdrop) return;
+
+            sidebar.classList.toggle('-translate-x-full', !open);
+            backdrop.classList.toggle('hidden', !open);
+            // Stop the page behind the overlay from scrolling while the menu is open.
+            document.body.classList.toggle('overflow-hidden', open);
+        }
+
+        // Following a nav link leaves the menu open behind the new page otherwise.
+        document.querySelectorAll('#cms-sidebar a').forEach(function (link) {
+            link.addEventListener('click', function () { toggleCmsSidebar(false); });
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') toggleCmsSidebar(false);
+        });
+
+        // Resizing past the breakpoint with the menu open would otherwise leave body scroll locked.
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 768) toggleCmsSidebar(false);
+        });
     </script>
 
     @RenderSection("Scripts", required: false)
