@@ -22,3 +22,11 @@ Thumbs.db
 ## Uploaded applicant CVs / scan temp files — personal data, never committed
 **/App_Data/careers/
 **/App_Data/scan-temp/
+
+## Cms-uploaded content (page images, menu PDF) — runtime uploads, not source.
+## The folders themselves stay tracked (via .gitkeep) since the app writes into them at their
+## existing path; only what gets uploaded into them is ignored.
+**/wwwroot/img/cms/*
+!**/wwwroot/img/cms/.gitkeep
+**/wwwroot/pdf/cms/*
+!**/wwwroot/pdf/cms/.gitkeep
