@@ -1,129 +1,555 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MiskBeirut Admin</title>
+    <title>@ViewData["Title"] - MiskBeirut Backoffice</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#1e3fae",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#121520",
+                        "surface-bright": "#f9f9fa",
+                        "surface": "#f9f9fa",
+                        "border-subtle": "#E2E2E4",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#264b61",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e2e2e3",
+                        "primary-fixed": "#c7e7ff",
+                        "on-surface": "#1a1c1d",
+                        "surface-tint": "#3f627a",
+                        "surface-variant": "#e2e2e3",
+                        "slate-blue": "#4E7289",
+                        "inverse-primary": "#a7cbe6",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e8e8e9",
+                        "on-tertiary-container": "#c9cacb",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#ffdad8",
+                        "outline-variant": "#c2c7cd",
+                        "secondary": "#9b4143",
+                        "surface-dim": "#dadadb",
+                        "primary": "#1c4258",
+                        "outline": "#72787d",
+                        "on-primary-fixed": "#001e2e",
+                        "on-primary-container": "#aacfea",
+                        "marble-white": "#F5F5F6",
+                        "surface-container": "#eeeeef",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#762529",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f3f3f4",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f9f9fa",
+                        "on-secondary-fixed-variant": "#7d2a2e",
+                        "primary-container": "#355970",
+                        "on-background": "#1a1c1d",
+                        "tertiary": "#3c3e3f",
+                        "on-secondary-fixed": "#410008",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "tertiary-fixed": "#e2e2e3",
+                        "inverse-surface": "#2f3132",
+                        "error": "#ba1a1a",
+                        "onyx-text": "#1A1A1A",
+                        "secondary-container": "#fd8e8e",
+                        "secondary-fixed-dim": "#ffb3b1",
+                        "on-surface-variant": "#42474c",
+                        "tertiary-container": "#535556",
+                        "status-pending": "#D97706",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "status-urgent": "#BA1A1A",
+                        "on-tertiary-fixed": "#1a1c1d",
+                        "status-success": "#2D6A4F",
+                        "brick-red": "#8F383A",
+                        "primary-fixed-dim": "#a7cbe6"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "stack-lg": "24px",
+                        "container-padding": "32px",
+                        "stack-sm": "8px",
+                        "row-height-dense": "48px",
+                        "stack-md": "16px",
+                        "sidebar-width": "260px",
+                        "gutter": "24px",
+                        "row-height-default": "64px",
+                        "stack-xs": "4px"
                     },
                     fontFamily: {
-                        "display": ["Inter", "sans-serif"]
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["EB Garamond"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["EB Garamond"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "headline-sm": ["EB Garamond"],
+                        "label-lg": ["Hanken Grotesk"],
+                        "data-tabular": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"]
                     },
-                },
-            },
-        }
-    </script>
-    <script>
-        (function () {
-            try {
-                var stored = localStorage.getItem('theme');
-                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (stored === 'dark' || (!stored && prefersDark)) {
-                    document.documentElement.classList.add('dark');
+                    fontSize: {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "500" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "data-tabular": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
                 }
-            } catch (e) { }
-        })();
+            }
+        }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Sidebar nav category accordion (Operations / Administration): hide the default disclosure
+           marker, rotate our own chevron. */
+        .admin-nav-category summary {
+            list-style: none;
+        }
+
+        .admin-nav-category summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .admin-nav-category[open] .admin-nav-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Minimal Bootstrap modal shim, reskinned to the Cms design tokens above — the modal
+           trigger/dismiss wiring itself (data-bs-*, bootstrap.bundle.min.js below) is untouched,
+           only its chrome's colors/radius/fonts changed. */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1055;
+            overflow-x: hidden;
+            overflow-y: auto;
+            outline: 0;
+        }
+
+        .modal.show {
+            display: block;
+            background-color: rgba(26, 28, 29, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: auto;
+            margin: 1.75rem auto;
+            pointer-events: none;
+            max-width: 500px;
+        }
+
+        .modal-dialog.modal-lg {
+            max-width: 800px;
+        }
+
+        .modal-dialog.modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 3.5rem);
+        }
+
+        .modal.fade .modal-dialog {
+            transition: transform .3s ease-out;
+            transform: translate(0, -50px);
+        }
+
+        .modal.show .modal-dialog {
+            transform: none;
+        }
+
+        .modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            pointer-events: auto;
+            background-color: #ffffff;
+            background-clip: padding-box;
+            border: 1px solid #E2E2E4;
+            border-radius: 0.125rem;
+            outline: 0;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            font-family: 'Hanken Grotesk', sans-serif;
+        }
+
+        .modal-header {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid #E2E2E4;
+        }
+
+        .modal-title {
+            margin-bottom: 0;
+            line-height: 1.5;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #1a1c1d;
+        }
+
+        .btn-close {
+            box-sizing: content-box;
+            width: 1em;
+            height: 1em;
+            padding: .25em .25em;
+            color: #42474c;
+            background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2342474c'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+            border: 0;
+            border-radius: .375rem;
+            opacity: .5;
+            cursor: pointer;
+        }
+
+        .btn-close:hover {
+            opacity: .75;
+            background-color: #f3f3f4;
+        }
+
+        .modal-body {
+            position: relative;
+            flex: 1 1 auto;
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 1.5rem;
+            background-color: #f9f9fa;
+            border-top: 1px solid #E2E2E4;
+            gap: 0.75rem;
+        }
     </style>
+    @RenderSection("ExtraHead", required: false)
 </head>
-<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
-    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-8">
-                    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="flex items-center gap-2 group cursor-pointer hover:opacity-90 transition-opacity">
-                        <div class="bg-primary p-1.5 rounded-lg text-white">
-                            <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
-                        </div>
-                        <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden sm:inline">MiskBeirut Admin</span>
-                    </a>
-                    <nav class="hidden md:flex items-center gap-1">
-                        @if (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Supervisor))
-                        {
-                            <a asp-area="Admin" asp-controller="DailyClosing" asp-action="Index" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Daily Closing</a>
-                        }
-                        else if (User.IsInRole(RoleNames.Employee))
-                        {
-                            <a asp-area="Admin" asp-controller="DailyClosing" asp-action="Create" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Submit Closing</a>
-                        }
-                        @if (User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Supervisor))
-                        {
-                            <a asp-area="Admin" asp-controller="Customers" asp-action="Index" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Customers</a>
-                            <a asp-area="Admin" asp-controller="Payroll" asp-action="Index" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Payroll</a>
-                        }
-                        @if (User.IsInRole(RoleNames.Admin))
-                        {
-                            <a asp-area="Admin" asp-controller="Employees" asp-action="Index" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Employees</a>
-                            <a asp-area="Admin" asp-controller="Receivers" asp-action="Index" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Receivers</a>
-                        }
-                        @if (User.IsInRole(RoleNames.Admin))
-                        {
-                            <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Users</a>
-                            <a asp-area="Admin" asp-controller="AuditLogs" asp-action="Index" class="px-3 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">Audit Logs</a>
-                        }
-                    </nav>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <button type="button" id="themeToggle" aria-label="Toggle dark mode" class="size-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <span class="material-symbols-outlined hidden dark:inline">light_mode</span>
-                        <span class="material-symbols-outlined inline dark:hidden">dark_mode</span>
-                    </button>
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
-                            <div class="text-right hidden sm:block">
-                                <p class="text-sm font-bold leading-none text-slate-900 dark:text-white">@User.Identity.Name</p>
-                                <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</p>
-                            </div>
-                            <a asp-area="Admin" asp-controller="Auth" asp-action="Logout" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors">
-                                <span class="material-symbols-outlined text-lg">logout</span>
-                                Logout
-                            </a>
-                        </div>
-                    }
-                </div>
+<body class="bg-marble-white text-on-surface font-body-md text-body-md overflow-x-hidden min-h-screen">
+    <!-- Sidebar -->
+    <nav class="w-sidebar-width h-screen fixed left-0 top-0 bg-primary flex flex-col py-stack-lg z-50 overflow-y-auto">
+        <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="px-container-padding mb-12 flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <img src="~/img/logo.png" alt="Misk Beirut" class="h-8 w-8 object-contain rounded-full bg-white/10" />
+            <div>
+                <h1 class="font-headline-sm text-headline-sm text-marble-white">Misk Beirut</h1>
+                <p class="font-body-md text-body-md text-on-primary opacity-70">Backoffice</p>
             </div>
+        </a>
+        <ul class="flex flex-col flex-grow">
+            @await Component.InvokeAsync("AdminNav")
+        </ul>
+        <div class="mt-auto">
+            <a asp-area="Admin" asp-controller="Auth" asp-action="Logout" class="flex items-center gap-3 px-container-padding py-stack-sm text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container transition-all">
+                <span class="material-symbols-outlined text-lg">logout</span>
+                Logout
+            </a>
         </div>
-    </header>
+    </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
-        @if (TempData["Success"] != null)
-        {
-            <div class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-sm">@TempData["Success"]</div>
-        }
-        @if (TempData["Error"] != null)
-        {
-            <div class="mb-6 p-4 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 rounded-xl text-sm">@TempData["Error"]</div>
-        }
-        @RenderBody()
-    </main>
+    <!-- Main Content Area -->
+    <div class="ml-sidebar-width min-h-screen flex flex-col">
+        <header class="h-row-height-default w-full sticky top-0 bg-surface-bright border-b border-border-subtle flex justify-end items-center px-container-padding z-40">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <p class="font-label-md text-label-md text-on-surface leading-none">@User.Identity.Name</p>
+                        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1">@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</p>
+                    </div>
+                    <div class="h-8 w-8 rounded-full overflow-hidden border border-border-subtle bg-primary text-on-primary font-bold flex items-center justify-center">
+                        @(User.Identity.Name?[..1].ToUpper() ?? "U")
+                    </div>
+                </div>
+            }
+        </header>
 
-    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500">
-            &copy; @DateTime.UtcNow.Year MiskBeirut Management System. All rights reserved.
-        </div>
-    </footer>
+        <main class="flex-grow p-container-padding">
+            @await Html.PartialAsync("_Toast")
+            @RenderBody()
+        </main>
+    </div>
 
+    <!-- Hardens every number input against non-numeric keystrokes, app-wide: type="number" alone
+         still lets "e"/"+" through on desktop, and on several mobile keyboards it doesn't stop
+         letters from being typed at all (the browser only guarantees the DOM .value ends up "" if
+         what's typed isn't a valid number — it doesn't stop the keystroke). Delegated on document
+         rather than bound per-element, so it also covers inputs added after page load without any
+         extra wiring — e.g. the Daily Closing Create/Edit forms' repeatable expense/credit/cashback
+         rows cloned by their own "Add Row" scripts. -->
     <script>
-        document.getElementById('themeToggle')?.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) { }
-        });
+        (function () {
+            function isNumberInput(el) {
+                return !!el && el.tagName === 'INPUT' && el.type === 'number';
+            }
+
+            function allowsMinus(input) {
+                return input.min === '' || parseFloat(input.min) < 0;
+            }
+
+            var passThroughKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'Home', 'End',
+                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+
+            document.addEventListener('keydown', function (e) {
+                if (!isNumberInput(e.target)) return;
+                if (passThroughKeys.indexOf(e.key) !== -1) return;
+                if (e.ctrlKey || e.metaKey) return; // copy/paste/cut/select-all/undo shortcuts
+
+                var input = e.target;
+
+                if (e.key === '-') {
+                    if (allowsMinus(input) && input.selectionStart === 0 && input.value.indexOf('-') === -1) return;
+                    e.preventDefault();
+                    return;
+                }
+
+                if (e.key === '.') {
+                    if (input.value.indexOf('.') === -1) return;
+                    e.preventDefault();
+                    return;
+                }
+
+                // Plain digits pass; everything else — letters, "e"/"E" (scientific notation isn't
+                // useful for money/counts here), "+", symbols — is blocked.
+                if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+
+            // A single keystroke isn't the only way text lands in a field — pasting bypasses keydown
+            // entirely, so sanitize pasted content down to digits/one "."/one leading "-" (if the
+            // field allows negatives) before it's inserted, instead of letting the browser reject the
+            // whole paste and leave the field looking untouched.
+            document.addEventListener('paste', function (e) {
+                if (!isNumberInput(e.target)) return;
+
+                var input = e.target;
+                var text = (e.clipboardData || window.clipboardData).getData('text');
+                var sign = allowsMinus(input) && text.trim().charAt(0) === '-' ? '-' : '';
+                var digitsAndDot = text.replace(/[^0-9.]/g, '');
+                var firstDot = digitsAndDot.indexOf('.');
+                var cleaned = firstDot === -1
+                    ? digitsAndDot
+                    : digitsAndDot.slice(0, firstDot + 1) + digitsAndDot.slice(firstDot + 1).replace(/\./g, '');
+
+                e.preventDefault();
+                var start = input.selectionStart, end = input.selectionEnd;
+                input.value = input.value.slice(0, start) + sign + cleaned + input.value.slice(end);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+
+            // Requests a numeric-only on-screen keyboard on phones/tablets, which otherwise often
+            // show a full alphanumeric layout for type="number" fields.
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('input[type="number"]').forEach(function (el) {
+                    el.setAttribute('inputmode', 'decimal');
+                });
+            });
+        })();
     </script>
+
+    <!-- Generic click-to-sort for any table on any Admin page: mark the <table> with data-sortable and
+         each sortable <th> with data-sort="text|number|date". A <td> can override what actually gets
+         compared via data-sort-value (e.g. a status badge whose visible text includes an icon
+         ligature) — otherwise its own trimmed text is used. -->
+    <script>
+        (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                function cellValue(row, index) {
+                    var cell = row.children[index];
+                    if (!cell) return '';
+                    return cell.dataset.sortValue !== undefined ? cell.dataset.sortValue : cell.textContent.trim();
+                }
+
+                function compare(a, b, type) {
+                    if (type === 'number') {
+                        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
+                    }
+                    if (type === 'date') {
+                        return (new Date(a).getTime() || 0) - (new Date(b).getTime() || 0);
+                    }
+                    return a.localeCompare(b, undefined, { sensitivity: 'base' });
+                }
+
+                document.querySelectorAll('table[data-sortable]').forEach(function (table) {
+                    var tbody = table.tBodies[0];
+                    if (!tbody) return;
+                    var headers = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+
+                    headers.forEach(function (th, index) {
+                        var type = th.dataset.sort;
+                        if (!type) return;
+
+                        th.classList.add('cursor-pointer', 'select-none');
+                        var indicator = document.createElement('span');
+                        indicator.className = 'ml-1 inline-block text-[10px] opacity-0';
+                        indicator.textContent = '▲';
+                        th.appendChild(indicator);
+
+                        var direction = null;
+
+                        th.addEventListener('click', function () {
+                            direction = direction === 'asc' ? 'desc' : 'asc';
+
+                            headers.forEach(function (other) {
+                                if (other === th) return;
+                                var otherIndicator = other.querySelector('span');
+                                if (otherIndicator) otherIndicator.style.opacity = '0';
+                            });
+
+                            var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'))
+                                .filter(function (r) { return r.children.length > index; });
+
+                            rows.sort(function (rowA, rowB) {
+                                var result = compare(cellValue(rowA, index), cellValue(rowB, index), type);
+                                return direction === 'asc' ? result : -result;
+                            });
+
+                            rows.forEach(function (row) { tbody.appendChild(row); });
+
+                            indicator.textContent = direction === 'asc' ? '▲' : '▼';
+                            indicator.style.opacity = '1';
+
+                            table.dispatchEvent(new CustomEvent('cms-table-sorted'));
+                        });
+                    });
+                });
+            });
+        })();
+    </script>
+
+    <!-- Generic client-side pagination for any table on any Admin page: mark the <table> with
+         data-paginate="10" (the page size) and this shows 10 rows at a time with a "Showing X–Y of Z"
+         + Prev/page-number/Next bar underneath. A single <td colspan> "empty state" row is left alone
+         rather than counted/hidden as a data row. Cooperates with the sort behavior above via the
+         "cms-table-sorted" event.
+
+         Exposed as window.wireTablePagination(table) so a page whose rows arrive later — a modal's
+         history table, the Reports page's fetch-generated results — can (re-)run this itself right
+         after it injects rows, instead of only working for tables already populated at page load.
+         Safe to call more than once on the same table (e.g. "Load" clicked again with different
+         rows): any previous bar/state for that table is torn down first. -->
+    <script>
+        (function () {
+            var wiredBars = new WeakMap(); // table element -> its pagination bar element, so a re-run can remove the old one
+
+            window.wireTablePagination = function (table) {
+                var existingBar = wiredBars.get(table);
+                if (existingBar && existingBar.parentNode) existingBar.parentNode.removeChild(existingBar);
+                wiredBars.delete(table);
+
+                var pageSize = parseInt(table.dataset.paginate, 10) || 10;
+                var tbody = table.tBodies[0];
+                if (!tbody) return;
+
+                function dataRows() {
+                    return Array.prototype.slice.call(tbody.rows).filter(function (row) {
+                        return !(row.cells.length === 1 && row.cells[0].hasAttribute('colspan'));
+                    });
+                }
+
+                if (dataRows().length <= pageSize) return; // nothing to paginate
+
+                var currentPage = 1;
+
+                var bar = document.createElement('div');
+                bar.className = 'flex flex-col sm:flex-row items-center justify-between gap-3 px-stack-md py-3 border-t border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant';
+
+                var rangeEl = document.createElement('span');
+                var nav = document.createElement('div');
+                nav.className = 'flex items-center gap-1';
+
+                function pageButton(label, page, disabled, active) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = label;
+                    btn.disabled = !!disabled;
+                    btn.className = 'min-w-[28px] h-7 px-2 rounded-DEFAULT font-label-sm text-label-sm font-medium transition-colors ' +
+                        (active ? 'bg-primary text-white' : disabled ? 'opacity-40 cursor-default' : 'hover:bg-surface-container-high text-on-surface-variant');
+                    if (!disabled && !active) btn.addEventListener('click', function () { setPage(page); });
+                    return btn;
+                }
+
+                function render() {
+                    var rows = dataRows(); // re-read: data-sortable moves the actual <tr> nodes
+                    var totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+                    if (currentPage > totalPages) currentPage = totalPages;
+
+                    rows.forEach(function (row, i) {
+                        row.style.display = (Math.floor(i / pageSize) + 1 === currentPage) ? '' : 'none';
+                    });
+
+                    var start = rows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                    var end = Math.min(currentPage * pageSize, rows.length);
+                    rangeEl.textContent = 'Showing ' + start + '–' + end + ' of ' + rows.length;
+
+                    nav.innerHTML = '';
+                    nav.appendChild(pageButton('Prev', currentPage - 1, currentPage === 1, false));
+
+                    var lastRendered = null;
+                    for (var p = 1; p <= totalPages; p++) {
+                        if (p !== 1 && p !== totalPages && Math.abs(p - currentPage) > 1) {
+                            if (lastRendered !== '…') {
+                                var ellipsis = document.createElement('span');
+                                ellipsis.textContent = '…';
+                                ellipsis.className = 'px-1';
+                                nav.appendChild(ellipsis);
+                                lastRendered = '…';
+                            }
+                            continue;
+                        }
+                        nav.appendChild(pageButton(String(p), p, false, p === currentPage));
+                        lastRendered = p;
+                    }
+
+                    nav.appendChild(pageButton('Next', currentPage + 1, currentPage === totalPages, false));
+                }
+
+                function setPage(page) {
+                    currentPage = page;
+                    render();
+                }
+
+                bar.appendChild(rangeEl);
+                bar.appendChild(nav);
+                (table.closest('.overflow-x-auto') || table).insertAdjacentElement('afterend', bar);
+                wiredBars.set(table, bar);
+
+                render();
+                table.addEventListener('cms-table-sorted', function () { setPage(1); });
+            };
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('table[data-paginate]').forEach(window.wireTablePagination);
+            });
+        })();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

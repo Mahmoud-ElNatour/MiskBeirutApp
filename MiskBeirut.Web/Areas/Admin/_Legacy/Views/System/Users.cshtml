@@ -1,0 +1,462 @@
+@model IEnumerable<MiskBeirut.Core.Entities.User>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Users Management";
+    var availableRoles = ViewBag.Roles as List<string> ?? new List<string> { "admin", "user", "customer" };
+}
+
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Users Management</h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-1">Manage system user accounts and permissions.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto pb-2">
+        <button type="button" data-bs-toggle="modal" data-bs-target="#addUserModal"
+            class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary/30 w-full sm:w-auto">
+            <span class="material-symbols-outlined text-sm">person_add</span>
+            Add User
+        </button>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden mb-6 flex flex-col h-full">
+    <div class="overflow-x-auto flex-1">
+        <table class="w-full text-left text-sm whitespace-nowrap h-full">
+            <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
+                <tr>
+                    <th class="px-6 py-4 font-semibold w-24" data-sort="number">ID</th>
+                    <th class="px-6 py-4 font-semibold" data-sort="text">User Details</th>
+                    <th class="px-6 py-4 font-semibold hidden md:table-cell" data-sort="text">Role</th>
+                    <th class="px-6 py-4 font-semibold hidden sm:table-cell" data-sort="date">Created Date</th>
+                    <th class="px-6 py-4 font-semibold text-center w-28">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 font-medium align-top">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var user in Model)
+                    {
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400 font-mono">#@user.Id.ToString("D4")</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0">
+                                        @if (user.UserName?.ToLower() == "admin")
+                                        {
+                                            <span class="material-symbols-outlined text-amber-500" title="Administrator">shield_person</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="material-symbols-outlined text-lg">person</span>
+                                        }
+                                    </div>
+                                    <div>
+                                        <div class="text-slate-900 dark:text-white font-bold flex items-center gap-2">
+                                            @user.UserName
+                                            @if (user.UserName?.ToLower() == "admin")
+                                            {
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 uppercase tracking-widest leading-none">Admin</span>
+                                            }
+                                        </div>
+                                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-[14px]">mail</span>
+                                            @(user.Email ?? "No email provided")
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 hidden md:table-cell">
+                                @{
+                                    var roleClass = user.Role?.ToLower() switch {
+                                        "admin" => "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800/50",
+                                        "customer" => "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800/50",
+                                        _ => "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                                    };
+                                }
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border uppercase tracking-wider @roleClass">
+                                    @(user.Role ?? "user")
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400 hidden sm:table-cell">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[16px] text-slate-400">calendar_month</span>
+                                    @user.CreatedAt.ToString("yyyy-MM-dd")
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="editUser('@user.Id')"
+                                        class="p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                        title="Edit User">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button onclick="deleteUser('@user.Id')"
+                                        class="p-1.5 rounded transition-colors @(user.UserName?.ToLower() == "admin" ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20")"
+                                        title="@(user.UserName?.ToLower() == "admin" ? "Cannot delete Admin" : "Delete User")"
+                                        @(user.UserName?.ToLower() == "admin" ? "disabled" : "")>
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="material-symbols-outlined text-4xl mb-3 text-slate-300 dark:text-slate-600">group_off</span>
+                                <p class="text-base font-medium">No users found</p>
+                                <p class="text-sm mt-1">Register a new system user to grant system access.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-white dark:bg-slate-900 border-none rounded-2xl shadow-2xl overflow-hidden">
+            <div class="modal-header border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 px-6 py-4">
+                <h5 class="modal-title text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2" id="addUserModalLabel">
+                    <span class="material-symbols-outlined text-primary">person_add</span>
+                    Add New User
+                </h5>
+                <button type="button" class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-0 p-0" data-bs-dismiss="modal" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="addUserForm">
+                <div class="modal-body px-6 py-6 opacity-100">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">person</span>
+                                </div>
+                                <input type="text" name="username"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    placeholder="e.g. jdoe" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">mail</span>
+                                </div>
+                                <input type="email" name="email"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    placeholder="jdoe@example.com" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
+                            <select name="role"
+                                class="block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors">
+                                @foreach (var role in availableRoles)
+                                {
+                                    <option value="@role">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(role)</option>
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                                </div>
+                                <input type="password" name="password"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    placeholder="••••••••" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm Password</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                                </div>
+                                <input type="password" name="confirm_password"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    placeholder="••••••••" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 px-6 py-4 flex gap-3">
+                    <button type="button"
+                        class="inline-flex justify-center items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit"
+                        class="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-primary/30 transition-colors">
+                        Add User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-white dark:bg-slate-900 border-none rounded-2xl shadow-2xl overflow-hidden">
+            <div class="modal-header border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 px-6 py-4">
+                <h5 class="modal-title text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2" id="editUserModalLabel">
+                    <span class="material-symbols-outlined text-primary">edit</span>
+                    Edit User
+                </h5>
+                <button type="button" class="text-slate-400 hover:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-0 p-0" data-bs-dismiss="modal" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="editUserForm">
+                <input type="hidden" name="id" id="edit-user-id">
+                <div class="modal-body px-6 py-6 opacity-100">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">person</span>
+                                </div>
+                                <input type="text" name="username" id="edit-user-username"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">mail</span>
+                                </div>
+                                <input type="email" name="email" id="edit-user-email"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
+                            <select name="role" id="edit-user-role"
+                                class="block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors">
+                                @foreach (var role in availableRoles)
+                                {
+                                    <option value="@role">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(role)</option>
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password (optional)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                                </div>
+                                <input type="password" name="password"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    placeholder="Leave blank to keep current">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm New Password</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                                    <span class="material-symbols-outlined text-[18px]">lock</span>
+                                </div>
+                                <input type="password" name="confirm_password"
+                                    class="block w-full pl-10 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-800 text-sm focus:ring-primary focus:border-primary text-slate-900 dark:text-white py-2.5 transition-colors"
+                                    placeholder="Leave blank to keep current">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 px-6 py-4 flex gap-3">
+                    <button type="button"
+                        class="inline-flex justify-center items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit"
+                        class="inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-primary/30 transition-colors">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const bootstrapExists = typeof bootstrap !== 'undefined';
+
+    // Add User Form Handler
+    document.getElementById('addUserForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        if (data.password !== data.confirm_password) {
+            if (typeof showAlert === 'function') showAlert('Passwords do not match!', 'error');
+            else alert('Passwords do not match!');
+            return;
+        }
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">refresh</span> Processing...';
+        submitBtn.disabled = true;
+
+        fetch('/api/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    if (typeof showAlert === 'function') showAlert('Error adding user: ' + (data.message || data.error), 'error');
+                    else alert('Error adding user: ' + (data.message || data.error));
+                    submitBtn.innerHTML = originalContent;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof showAlert === 'function') showAlert('Error adding user', 'error');
+                else alert('Error adding user');
+                submitBtn.innerHTML = originalContent;
+                submitBtn.disabled = false;
+            });
+    });
+
+    function editUser(id) {
+        fetch(`/api/users/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('edit-user-id').value = data.id;
+                document.getElementById('edit-user-username').value = data.username;
+                document.getElementById('edit-user-email').value = data.email || '';
+                if (data.role) {
+                    document.getElementById('edit-user-role').value = data.role;
+                }
+
+                // Clear password fields
+                document.querySelector('#editUserForm input[name="password"]').value = '';
+                document.querySelector('#editUserForm input[name="confirm_password"]').value = '';
+
+                if (bootstrapExists) {
+                    const modalEl = document.getElementById('editUserModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modal.show();
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching user', err);
+                if (typeof showAlert === 'function') showAlert('Error loading user data', 'error');
+                else alert('Error loading user data');
+            });
+    }
+
+    document.getElementById('editUserForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const id = document.getElementById('edit-user-id').value;
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        if (data.password && data.password !== data.confirm_password) {
+            if (typeof showAlert === 'function') showAlert('Passwords do not match!', 'error');
+            else alert('Passwords do not match!');
+            return;
+        }
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm mr-2">refresh</span> Saving...';
+        submitBtn.disabled = true;
+
+        fetch(`/api/users/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    if (typeof showAlert === 'function') showAlert('Error updating user: ' + (data.message || data.error), 'error');
+                    else alert('Error updating user: ' + (data.message || data.error));
+                    submitBtn.innerHTML = originalContent;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof showAlert === 'function') showAlert('Error updating user', 'error');
+                else alert('Error updating user');
+                submitBtn.innerHTML = originalContent;
+                submitBtn.disabled = false;
+            });
+    });
+
+    async function deleteUser(id) {
+        if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+            try {
+                const response = await fetch(`/api/users/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+
+                if (response.status === 409 || result.toast) {
+                    if (typeof showToast === 'function') {
+                        showToast(result.toast?.title || 'Error', result.toast?.message || result.error?.message, result.toast?.type || 'error');
+                    } else if (typeof showAlert === 'function') {
+                        showAlert(result.toast?.message || result.error?.message, result.toast?.type || 'error');
+                    } else {
+                        alert(result.toast?.message || result.error?.message || 'Delete blocked');
+                    }
+                } else if (result.status === 'success' || result.ok) {
+                    if (typeof showToast === 'function') {
+                        showToast('Success', result.message, 'success');
+                    } else if (typeof showAlert === 'function') {
+                        showAlert(result.message, 'success');
+                    }
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    if (typeof showAlert === 'function') {
+                        showAlert(result.error || 'Failed to delete user', 'error');
+                    } else {
+                        alert(result.error || 'Failed to delete user');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                if (typeof showAlert === 'function') {
+                    showAlert('An error occurred', 'error');
+                } else {
+                    alert('An error occurred');
+                }
+            }
+        }
+    }
+</script>
+}

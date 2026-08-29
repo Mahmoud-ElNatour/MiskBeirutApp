@@ -1,0 +1,220 @@
+@model PageEditViewModel
+@{
+    ViewData["Title"] = Model.PageName;
+    var attributeTypes = new[] { "Text", "RichText", "Image", "Link", "Video", "Number", "Date", "Boolean" };
+}
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-md">
+    <div class="flex items-center gap-3">
+        <div>
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">@Model.PageName</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant">Content in <strong>@Model.LangCode.ToUpper()</strong>.</p>
+        </div>
+        <span id="pageModeBadge" class="px-2 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wider bg-surface-container-high text-on-surface-variant">Preview</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <button type="button" id="editPageBtn" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-colors">
+            <span class="material-symbols-outlined text-sm">edit</span>
+            Edit
+        </button>
+        <button type="button" id="cancelPageBtn" class="hidden inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            Cancel
+        </button>
+        <button type="button" id="savePageBtn" class="hidden inline-flex justify-center items-center gap-2 px-4 py-2 bg-status-success hover:opacity-90 text-white rounded-DEFAULT font-label-md text-label-md transition-colors">
+            <span class="material-symbols-outlined text-sm">save</span>
+            Save
+        </button>
+        <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">list</span>
+            All Pages
+        </a>
+    </div>
+</div>
+
+<style>
+    /* Preview mode: disabled fields read like plain content instead of a form. */
+    #pageEditForm.cms-form-preview input:disabled,
+    #pageEditForm.cms-form-preview textarea:disabled,
+    #pageEditForm.cms-form-preview select:disabled {
+        background: transparent;
+        border-color: transparent;
+        color: inherit;
+        opacity: 1;
+        cursor: default;
+        padding-left: 0;
+        padding-right: 0;
+    }
+</style>
+
+<!-- Language tabs -->
+<div class="flex gap-2 mb-stack-lg border-b border-surface-container-high">
+    @foreach (var lang in Model.Languages)
+    {
+        var isActive = lang.Id == Model.LangId;
+        <a asp-action="Edit" asp-route-id="@Model.PageId" asp-route-lang="@lang.Code"
+           class="px-4 py-2 font-label-lg text-label-lg uppercase border-b-2 -mb-px transition-colors @(isActive ? "border-brick-red text-primary" : "border-transparent text-on-surface-variant hover:text-primary")">
+            @lang.Name (@lang.Code)
+        </a>
+    }
+</div>
+
+<form asp-action="Save" method="post" id="pageEditForm" class="space-y-stack-lg">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="PageId" />
+    <input type="hidden" asp-for="LangId" />
+    <input type="hidden" asp-for="LangCode" />
+
+    <!-- SEO Meta -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Page Meta (SEO)</h3>
+        </div>
+        <div class="p-stack-lg space-y-stack-md">
+            <div>
+                <label class="block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs">Meta Title</label>
+                <input asp-for="MetaTitle" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue" />
+            </div>
+            <div>
+                <label class="block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs">Meta Description</label>
+                <textarea asp-for="MetaDesc" rows="2" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue"></textarea>
+            </div>
+            <div>
+                <label class="block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs">Meta Keywords</label>
+                <input asp-for="MetaKeyword" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Attributes -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright flex items-center justify-between">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Content (@Model.LangCode.ToUpper())</h3>
+            <button type="button" id="addAttributeBtn" class="cms-edit-only flex items-center gap-2 px-4 py-2 rounded-DEFAULT bg-primary/10 text-primary font-label-md text-label-md hover:bg-primary/20 transition-all" style="display:none">
+                <span class="material-symbols-outlined text-lg">add</span>
+                Add Attribute
+            </button>
+        </div>
+        <div class="p-stack-lg space-y-stack-md" id="attributeRows">
+            @for (var i = 0; i < Model.Attributes.Count; i++)
+            {
+                <partial name="_AttributeRow" model="@(Model.Attributes[i], i, attributeTypes)" />
+            }
+        </div>
+    </div>
+</form>
+
+<!-- Template for JS-added rows -->
+<template id="attributeRowTemplate">
+    <partial name="_AttributeRow" model="@(new PageAttributeRowViewModel(), -1, attributeTypes)" />
+</template>
+
+@section Scripts {
+<script>
+    // View/edit toggle: page loads in read-only preview; Edit unlocks every field in the form and
+    // reveals Save/Cancel up top. Cancel just reloads (nothing was submitted, so there's nothing to
+    // undo). Save does a normal full-form POST to the existing Save action.
+    (function () {
+        const form = document.getElementById('pageEditForm');
+        const modeBadge = document.getElementById('pageModeBadge');
+        const editBtn = document.getElementById('editPageBtn');
+        const cancelBtn = document.getElementById('cancelPageBtn');
+        const saveBtn = document.getElementById('savePageBtn');
+        let editing = false;
+
+        function setEditing(on) {
+            editing = on;
+            form.querySelectorAll('input, textarea, select').forEach(function (el) {
+                if (el.type === 'hidden') return;
+                el.disabled = !on;
+            });
+            document.querySelectorAll('.cms-edit-only').forEach(function (el) {
+                el.style.display = on ? '' : 'none';
+            });
+            form.classList.toggle('cms-form-preview', !on);
+            modeBadge.textContent = on ? 'Editing' : 'Preview';
+            editBtn.classList.toggle('hidden', on);
+            cancelBtn.classList.toggle('hidden', !on);
+            saveBtn.classList.toggle('hidden', !on);
+            window.onbeforeunload = on ? function () { return 'You have unsaved changes.'; } : null;
+        }
+
+        editBtn.addEventListener('click', function () { setEditing(true); });
+        cancelBtn.addEventListener('click', function () {
+            window.onbeforeunload = null;
+            location.reload();
+        });
+        saveBtn.addEventListener('click', function () {
+            window.onbeforeunload = null;
+            form.requestSubmit();
+        });
+
+        setEditing(false);
+    })();
+
+    let nextAttributeIndex = @Model.Attributes.Count;
+
+    function wireRow(row) {
+        const typeSelect = row.querySelector('.attr-type');
+        const imageFields = row.querySelector('.attr-image-fields');
+        const fileInput = row.querySelector('.attr-image-file');
+        const valueInput = row.querySelector('.attr-value');
+        const preview = row.querySelector('.attr-image-preview');
+
+        function toggleImageFields() {
+            const isImage = typeSelect.value === 'Image';
+            imageFields.classList.toggle('hidden', !isImage);
+            updatePreview();
+        }
+
+        function updatePreview() {
+            if (typeSelect.value === 'Image' && valueInput.value) {
+                preview.src = valueInput.value;
+                preview.classList.remove('hidden');
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
+
+        typeSelect.addEventListener('change', toggleImageFields);
+        valueInput.addEventListener('input', updatePreview);
+
+        if (fileInput) {
+            fileInput.addEventListener('change', async function () {
+                if (!fileInput.files.length) return;
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (tokenInput) formData.append('__RequestVerificationToken', tokenInput.value);
+
+                const uploadStatus = row.querySelector('.attr-upload-status');
+                uploadStatus.textContent = 'Uploading...';
+                try {
+                    const response = await fetch('@Url.Action("UploadImage", "Pages")', { method: 'POST', body: formData });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Upload failed');
+                    valueInput.value = result.url;
+                    updatePreview();
+                    uploadStatus.textContent = 'Uploaded.';
+                } catch (err) {
+                    uploadStatus.textContent = err.message || 'Upload failed.';
+                }
+            });
+        }
+
+        toggleImageFields();
+    }
+
+    document.querySelectorAll('#attributeRows > .attribute-row').forEach(wireRow);
+
+    document.getElementById('addAttributeBtn').addEventListener('click', function () {
+        const templateHtml = document.getElementById('attributeRowTemplate').innerHTML.replace(/__INDEX__/g, nextAttributeIndex);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = templateHtml.trim();
+        const row = wrapper.firstElementChild;
+        row.querySelectorAll('.cms-edit-only').forEach(function (el) { el.style.display = ''; });
+        document.getElementById('attributeRows').appendChild(row);
+        wireRow(row);
+        nextAttributeIndex++;
+    });
+</script>
+}

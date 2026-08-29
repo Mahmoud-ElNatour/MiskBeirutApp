@@ -8,50 +8,57 @@
 <!-- PAGE HEADER -->
 <section class="relative mt-24 bg-primary-container/10 pt-[80px] pb-stack-lg px-6 md:px-margin-desktop" id="header">
 <div class="max-w-[1280px] mx-auto">
-<h1 class="font-headline-lg text-headline-lg md:text-display-lg text-onyx-text mb-6">@Model.Text("hero_title", "Events at Misk Beirut")</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">@Model.Text("hero_subtitle", "Experience unforgettable moments with us")</p>
+<h1 class="font-headline-lg text-headline-lg md:text-display-lg text-onyx-text mb-6" data-cms-field="hero_title" data-cms-type="Text">@Model.Text("hero_title", "Events at Misk Beirut")</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl" data-cms-field="hero_subtitle" data-cms-type="Text">@Model.Text("hero_subtitle", "Experience unforgettable moments with us")</p>
 </div>
 <!-- Decorative Element -->
 <div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
-<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
+<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
 </div>
 </section>
 
 <!-- FOOTBALL & LIVE MATCH SCREENINGS -->
 <section class="py-[80px] scroll-mt-24" id="football">
 <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
-<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("football_title", "Football & Live Match Screenings")</h2>
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]" data-cms-field="football_title" data-cms-type="Text">@Model.Text("football_title", "Football & Live Match Screenings")</h2>
 <!-- PLACEHOLDER: final copy pending from client -->
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]">@Model.Text("football_body", "Placeholder description — experience the thrill of live sports in our premium viewing spaces with world-class amenities. Final copy to be provided by the client.")</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]" data-cms-field="football_body" data-cms-type="Text">@Model.Text("football_body", "Placeholder description — experience the thrill of live sports in our premium viewing spaces with world-class amenities. Final copy to be provided by the client.")</p>
 <div class="carousel-head flex items-center justify-between mb-[16px]">
 <div class="w-16 h-0.5 bg-brick-red"></div>
-<div class="flex gap-[8px]">
-<button onclick="scrollCarousel(this,-1)" aria-label="Scroll gallery back" class="w-10 h-10 bg-white text-slate-blue border border-slate-blue hover:bg-slate-blue hover:text-white transition-all flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-sm">arrow_back</span></button>
-<button onclick="scrollCarousel(this,1)" aria-label="Scroll gallery forward" class="w-10 h-10 bg-white text-slate-blue border border-slate-blue hover:bg-slate-blue hover:text-white transition-all flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-sm">arrow_forward</span></button>
+
 </div>
-</div>
-<div class="flex gap-[16px] overflow-x-auto pb-4 snap-x space-carousel">
-@for (var i = 1; i <= 30; i++)
+<div class="flex gap-[16px] overflow-x-auto pb-4 snap-x space-carousel" id="footballGalleryRow">
+@{ var footballMaxIndex = Math.Max(3, Model.MaxIndex("football_gallery_", "_image")); }
+@for (var i = 1; i <= footballMaxIndex; i++)
 {
     var tileImage = Model.Image($"football_gallery_{i}_image");
-    var hasTile = i <= 3 || !string.IsNullOrEmpty(tileImage);
-    if (!hasTile) { continue; }
     var captionDefault = i <= footballCaptions.Length ? footballCaptions[i - 1] : $"Photo {i}";
     var tileCaption = Model.Text($"football_gallery_{i}_caption", captionDefault);
-    <div class="w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center" style="@(string.IsNullOrEmpty(tileImage) ? "" : $"background-image:url('{tileImage}')")">
-        @if (string.IsNullOrEmpty(tileImage))
+    var tileField = $"football_gallery_{i}_image";
+    var tileCaptionField = $"football_gallery_{i}_caption";
+    var tileIsPlaceholder = !Model.Has(tileField);
+    var tileImageOrPlaceholder = tileIsPlaceholder ? "/img/cms-placeholder.svg" : tileImage;
+    <div class="cms-gallery-slot w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center relative" data-gallery="football" data-cms-field="@tileField" data-cms-type="BackgroundImage" style="background-image:url('@tileImageOrPlaceholder')">
+        @if (tileIsPlaceholder)
         {
-            <span class="text-center"><span class="material-symbols-outlined text-4xl mb-2 block opacity-50">sports_soccer</span><p class="font-label-lg text-xs">PLACEHOLDER</p><p class="text-xs opacity-60">@tileCaption</p></span>
+            <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
         }
-        else
-        {
-            <span class="sr-only">@tileCaption</span>
-        }
+        <span class="@(tileIsPlaceholder ? "" : "sr-only")" data-cms-field="@tileCaptionField" data-cms-type="Text">@tileCaption</span>
     </div>
 }
+<button type="button" class="cms-add-gallery-slot cms-preview-edit-only w-[100px] h-[280px] md:h-[320px] flex-shrink-0 snap-start border-2 border-dashed border-outline/40 items-center justify-center gap-2 text-on-surface-variant hover:border-brick-red hover:text-brick-red transition-colors" data-gallery="football">
+    <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+    <span class="text-xs font-label-sm uppercase tracking-wider">Add Photo</span>
+</button>
 </div>
+<template id="footballGallerySlotTemplate">
+    <div class="cms-gallery-slot w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center relative" data-gallery="football" data-cms-field="football_gallery___INDEX___image" data-cms-type="BackgroundImage" style="background-image:url('/img/cms-placeholder.svg')">
+        <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
+        <span data-cms-field="football_gallery___INDEX___caption" data-cms-type="Text">Photo __INDEX__</span>
+    </div>
+</template>
 <div class="mt-[48px]">
-<a asp-controller="Contact" asp-action="Index" class="bg-brick-red text-white px-12 py-5 font-label-lg text-label-lg uppercase tracking-widest hover:bg-opacity-90 transition-all inline-block">@Model.Text("football_cta_label", "Reserve Your Spot")</a>
+<a asp-controller="Contact" asp-action="Index" class="bg-brick-red text-white px-12 py-5 font-label-lg text-label-lg uppercase tracking-widest hover:bg-opacity-90 transition-all inline-block" data-cms-field="football_cta_label" data-cms-type="Text">@Model.Text("football_cta_label", "Reserve Your Spot")</a>
 </div>
 </div>
 </section>
@@ -62,35 +69,45 @@
 <!-- PRIVATE EVENTS & CELEBRATIONS -->
 <section class="py-[80px] scroll-mt-24" id="private-events">
 <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
-<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]">@Model.Text("private_title", "Private Events & Celebrations")</h2>
+<h2 class="font-display-lg text-headline-lg text-primary mb-[16px]" data-cms-field="private_title" data-cms-type="Text">@Model.Text("private_title", "Private Events & Celebrations")</h2>
 <!-- PLACEHOLDER: final copy pending from client -->
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]">@Model.Text("private_body", "Placeholder description — create unforgettable memories with our bespoke event planning services and luxurious venues. Final copy to be provided by the client.")</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]" data-cms-field="private_body" data-cms-type="Text">@Model.Text("private_body", "Placeholder description — create unforgettable memories with our bespoke event planning services and luxurious venues. Final copy to be provided by the client.")</p>
 <div class="carousel-head flex items-center justify-between mb-[16px]">
 <div class="w-16 h-0.5 bg-brick-red"></div>
 
 </div>
-<div class="flex gap-[16px] overflow-x-auto pb-4 snap-x space-carousel">
-@for (var i = 1; i <= 30; i++)
+<div class="flex gap-[16px] overflow-x-auto pb-4 snap-x space-carousel" id="privateGalleryRow">
+@{ var privateMaxIndex = Math.Max(3, Model.MaxIndex("private_gallery_", "_image")); }
+@for (var i = 1; i <= privateMaxIndex; i++)
 {
     var tileImage = Model.Image($"private_gallery_{i}_image");
-    var hasTile = i <= 3 || !string.IsNullOrEmpty(tileImage);
-    if (!hasTile) { continue; }
     var captionDefault = i <= privateCaptions.Length ? privateCaptions[i - 1] : $"Photo {i}";
     var tileCaption = Model.Text($"private_gallery_{i}_caption", captionDefault);
-    <div class="w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center" style="@(string.IsNullOrEmpty(tileImage) ? "" : $"background-image:url('{tileImage}')")">
-        @if (string.IsNullOrEmpty(tileImage))
+    var tileField = $"private_gallery_{i}_image";
+    var tileCaptionField = $"private_gallery_{i}_caption";
+    var tileIsPlaceholder = !Model.Has(tileField);
+    var tileImageOrPlaceholder = tileIsPlaceholder ? "/img/cms-placeholder.svg" : tileImage;
+    <div class="cms-gallery-slot w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center relative" data-gallery="private" data-cms-field="@tileField" data-cms-type="BackgroundImage" style="background-image:url('@tileImageOrPlaceholder')">
+        @if (tileIsPlaceholder)
         {
-            <span class="text-center"><span class="material-symbols-outlined text-4xl mb-2 block opacity-50">celebration</span><p class="font-label-lg text-xs">PLACEHOLDER</p><p class="text-xs opacity-60">@tileCaption</p></span>
+            <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
         }
-        else
-        {
-            <span class="sr-only">@tileCaption</span>
-        }
+        <span class="@(tileIsPlaceholder ? "" : "sr-only")" data-cms-field="@tileCaptionField" data-cms-type="Text">@tileCaption</span>
     </div>
 }
+<button type="button" class="cms-add-gallery-slot cms-preview-edit-only w-[100px] h-[280px] md:h-[320px] flex-shrink-0 snap-start border-2 border-dashed border-outline/40 items-center justify-center gap-2 text-on-surface-variant hover:border-brick-red hover:text-brick-red transition-colors" data-gallery="private">
+    <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+    <span class="text-xs font-label-sm uppercase tracking-wider">Add Photo</span>
+</button>
 </div>
+<template id="privateGallerySlotTemplate">
+    <div class="cms-gallery-slot w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center relative" data-gallery="private" data-cms-field="private_gallery___INDEX___image" data-cms-type="BackgroundImage" style="background-image:url('/img/cms-placeholder.svg')">
+        <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
+        <span data-cms-field="private_gallery___INDEX___caption" data-cms-type="Text">Photo __INDEX__</span>
+    </div>
+</template>
 <div class="mt-[48px]">
-<a asp-controller="Contact" asp-action="Index" class="bg-slate-blue text-white px-12 py-5 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-all inline-block">@Model.Text("private_cta_label", "Get in Touch")</a>
+<a asp-controller="Contact" asp-action="Index" class="bg-slate-blue text-white px-12 py-5 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-all inline-block" data-cms-field="private_cta_label" data-cms-type="Text">@Model.Text("private_cta_label", "Get in Touch")</a>
 </div>
 </div>
 </section>
@@ -107,6 +124,27 @@
                 }, 100);
             }
         }
+
+        // CMS edit mode only (see .cms-preview-edit-only in _CmsPreviewOverlay.cshtml): there's no
+        // fixed slot count — "Add Photo" clones a blank tile from the matching <template>, numbered
+        // one past however many tiles are currently in that gallery, and inserts it just before the
+        // button. Its pencil shows up on the next overlay relayout, ready to be filled in like any
+        // other field. Click it as many times as you like; MaxIndex() on the next page load picks up
+        // wherever the numbering ended.
+        document.querySelectorAll('.cms-add-gallery-slot').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var gallery = btn.dataset.gallery;
+                var template = document.getElementById(gallery + 'GallerySlotTemplate');
+                if (!template) return;
+                var nextIndex = document.querySelectorAll('.cms-gallery-slot[data-gallery="' + gallery + '"]').length + 1;
+                var html = template.innerHTML.replace(/__INDEX__/g, nextIndex);
+                var wrapper = document.createElement('div');
+                wrapper.innerHTML = html.trim();
+                var tile = wrapper.firstElementChild;
+                btn.parentNode.insertBefore(tile, btn);
+                if (window.cmsRelayoutOverlay) window.cmsRelayoutOverlay();
+            });
+        });
     });
 </script>
 }

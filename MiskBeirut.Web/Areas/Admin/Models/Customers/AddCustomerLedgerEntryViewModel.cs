@@ -7,8 +7,8 @@ public class AddCustomerLedgerEntryViewModel
 {
     public int CustomerId { get; set; }
 
-    [Required]
-    public int DailyClosingId { get; set; }
+    /// <summary>Optional — leave unset to add the entry with no Daily Closing yet; it's attached automatically once one exists for that date.</summary>
+    public int? DailyClosingId { get; set; }
 
     [Required]
     public CustomerLedgerType Type { get; set; }

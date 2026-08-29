@@ -1,0 +1,157 @@
+@using MiskBeirut.Web.Areas.Cms.Models.Pages
+@*
+    Slim CMS control bar shown above the real public page when previewing it from the Cms area.
+    Included first inside <body>, before _PublicNav, so the "#cmsPreviewBar + *" rule below pushes
+    the real (fixed) nav down instead of the two overlapping. See also _CmsPreviewOverlay.cshtml,
+    which draws the per-field pencil buttons and is included later, near the shared edit modal.
+
+    Owns the page-level Edit/Cancel/Save toggle: the page loads read-only; Edit turns on
+    window.cmsEditMode (pencils appear, via _CmsPreviewOverlay.cshtml) and snapshots every
+    [data-cms-field] element's current value. Each pencil edit (_FieldEditModal.cshtml) only stages
+    its change into window.cmsPendingChanges and patches the DOM optimistically — nothing hits the
+    server until Save flushes every pending change via window.cmsPersistField. Cancel instead restores
+    every snapshotted element via window.cmsPatchField and discards the pending changes untouched.
+*@
+@using System.Text.Json
+@{
+    var pageName = ViewData["PageName"] as string ?? "Page";
+    var pageId = ViewData["PageId"];
+    var langId = ViewData["LangId"] is int li ? li : 0;
+    var languages = ViewData["Languages"] as List<LanguageOptionViewModel> ?? new List<LanguageOptionViewModel>();
+    var previewNavMap = ViewData["PreviewNavMap"] as Dictionary<string, string> ?? new Dictionary<string, string>();
+}
+<div id="cmsPreviewBar" class="fixed top-0 left-0 right-0 z-[9998] h-11 bg-[#1c4258] text-white flex items-center justify-between px-6 shadow-md" style="font-family: 'Hanken Grotesk', sans-serif;">
+    <div class="flex items-center gap-4 min-w-0">
+        <a href="@Url.Action("Index", "Pages", new { area = "Cms" })" class="flex items-center gap-1 text-sm opacity-80 hover:opacity-100 shrink-0">
+            <span class="material-symbols-outlined text-base" style="font-size:18px;">arrow_back</span> All Pages
+        </a>
+        <span class="opacity-30">|</span>
+        <span class="text-sm font-semibold truncate">@pageName</span>
+        <span id="cmsPreviewStatus" class="text-sm opacity-60 truncate">— read-only preview, click Edit to make changes</span>
+    </div>
+    <div class="flex items-center gap-3 text-sm shrink-0">
+        <button type="button" id="cmsEditModeBtn" class="flex items-center gap-1 px-3 py-1 rounded-full bg-white text-[#1c4258] font-bold text-xs tracking-wider uppercase hover:opacity-90 transition-opacity">
+            <span class="material-symbols-outlined" style="font-size:15px;">edit</span> Edit
+        </button>
+        <button type="button" id="cmsCancelBtn" class="hidden px-3 py-1 rounded-full border border-white/40 text-xs font-bold tracking-wider uppercase opacity-80 hover:opacity-100 transition-opacity">Cancel</button>
+        <button type="button" id="cmsSaveBtn" class="hidden px-3 py-1 rounded-full bg-[#2D6A4F] text-white text-xs font-bold tracking-wider uppercase hover:opacity-90 transition-opacity">Save</button>
+        <span class="opacity-30">|</span>
+        @foreach (var l in languages)
+        {
+            var active = l.Id == langId;
+            <a href="@Url.Action("Edit", "Pages", new { area = "Cms", id = pageId, lang = l.Code })"
+               class="px-3 py-1 rounded-full uppercase text-xs tracking-wider transition-colors @(active ? "bg-white text-[#1c4258] font-bold" : "opacity-70 hover:opacity-100 border border-white/30")">@l.Code</a>
+        }
+    </div>
+</div>
+<style>
+    /* Push the real (fixed) public nav down below our bar instead of the two overlapping. */
+    #cmsPreviewBar ~ nav { top: 44px !important; }
+    #cmsPreviewBar ~ #mobile-drawer { top: 44px; }
+</style>
+<script>
+    (function () {
+        var editBtn = document.getElementById('cmsEditModeBtn');
+        var cancelBtn = document.getElementById('cmsCancelBtn');
+        var saveBtn = document.getElementById('cmsSaveBtn');
+        var statusEl = document.getElementById('cmsPreviewStatus');
+        var saveBtnDefaultText = saveBtn.textContent;
+
+        window.cmsPendingChanges = window.cmsPendingChanges || {};
+        window.cmsFieldSnapshot = [];
+
+        function pendingCount() {
+            return Object.keys(window.cmsPendingChanges).length;
+        }
+
+        // Called by _FieldEditModal.cshtml whenever a field is staged, so the status text reflects
+        // how many changes are waiting to be saved.
+        window.cmsOnFieldStaged = function () {
+            var count = pendingCount();
+            statusEl.textContent = count
+                ? '— ' + count + ' change' + (count === 1 ? '' : 's') + ' pending, click Save to publish'
+                : '— editing, hover a field and click the pencil to change it';
+        };
+
+        function enterEditMode() {
+            window.cmsFieldSnapshot = Array.prototype.map.call(document.querySelectorAll('[data-cms-field]'), function (el) {
+                var type = el.dataset.cmsType || 'Text';
+                return { el: el, type: type, value: window.cmsReadFieldValue(el, type) };
+            });
+            window.cmsPendingChanges = {};
+            window.cmsSetEditMode(true);
+            editBtn.classList.add('hidden');
+            cancelBtn.classList.remove('hidden');
+            saveBtn.classList.remove('hidden');
+            window.cmsOnFieldStaged();
+            window.onbeforeunload = function () { return 'You have unsaved changes.'; };
+        }
+
+        function exitEditMode() {
+            window.cmsPendingChanges = {};
+            window.cmsFieldSnapshot = [];
+            window.cmsSetEditMode(false);
+            editBtn.classList.remove('hidden');
+            cancelBtn.classList.add('hidden');
+            saveBtn.classList.add('hidden');
+            statusEl.textContent = '— read-only preview, click Edit to make changes';
+            window.onbeforeunload = null;
+        }
+
+        editBtn.addEventListener('click', enterEditMode);
+
+        cancelBtn.addEventListener('click', function () {
+            window.cmsFieldSnapshot.forEach(function (s) { window.cmsPatchField(s.el, s.type, s.value); });
+            exitEditMode();
+            if (window.cmsRelayoutOverlay) window.cmsRelayoutOverlay();
+        });
+
+        saveBtn.addEventListener('click', function () {
+            var fields = Object.keys(window.cmsPendingChanges);
+            if (!fields.length) {
+                exitEditMode();
+                return;
+            }
+            saveBtn.disabled = true;
+            cancelBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            Promise.all(fields.map(function (field) {
+                var change = window.cmsPendingChanges[field];
+                return window.cmsPersistField(field, change.type, change.value, change.scope);
+            })).then(function () {
+                exitEditMode();
+            }).catch(function (err) {
+                statusEl.textContent = '— save failed: ' + (err.message || 'unknown error') + ' — try again';
+            }).finally(function () {
+                saveBtn.disabled = false;
+                cancelBtn.disabled = false;
+                saveBtn.textContent = saveBtnDefaultText;
+            });
+        });
+    })();
+
+    // The previewed page is the REAL Customer view, so its own nav/footer Home/About/Menu/... links
+    // point straight at the live public site — clicking one would otherwise carry the admin out of
+    // the Cms area entirely. Intercept only the ones that land on another Cms-managed page (per the
+    // map below) and route to that page's Cms edit screen instead; anything else (socials, tel:,
+    // in-page anchors, external links) behaves as normal.
+    (function () {
+        var previewNavMap = @Html.Raw(JsonSerializer.Serialize(previewNavMap));
+
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest('a[href]');
+            if (!a) return;
+
+            var url;
+            try { url = new URL(a.href, window.location.href); } catch (err) { return; }
+            if (url.origin !== window.location.origin) return;
+
+            var path = (url.pathname.replace(/\/+$/, '') || '/').toLowerCase();
+            var target = previewNavMap[path];
+            if (!target) return;
+
+            e.preventDefault();
+            window.location.href = target;
+        });
+    })();
+</script>

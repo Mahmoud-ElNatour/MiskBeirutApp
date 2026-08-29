@@ -14,8 +14,22 @@ public class CustomerLedger
     public CustomerLedgerType Type { get; set; }
     public string? Note { get; set; }
     public int CustomerId { get; set; }
-    public int DailyClosingId { get; set; }
+
+    /// <summary>
+    /// Null for a manual entry added before that date's Daily Closing exists — see
+    /// <see cref="IsManualEntry"/>. <see cref="Managers.DailyClosingManager"/> attaches any
+    /// same-date unattached entry to a closing when one is created or edited.
+    /// </summary>
+    public int? DailyClosingId { get; set; }
+
+    /// <summary>
+    /// True when this entry was added standalone (Customer Details "Add Entry" form or a balance
+    /// edit made with no closing yet for that date) rather than as one of a Daily Closing's
+    /// submitted line items. Manual entries are left alone — not deleted/re-added — when their
+    /// Daily Closing is later edited via <see cref="Managers.DailyClosingManager.UpdateWithLinesAsync"/>.
+    /// </summary>
+    public bool IsManualEntry { get; set; }
 
     public Customer Customer { get; set; } = null!;
-    public DailyClosing DailyClosing { get; set; } = null!;
+    public DailyClosing? DailyClosing { get; set; }
 }

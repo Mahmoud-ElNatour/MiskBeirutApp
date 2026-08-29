@@ -16,10 +16,11 @@ public class DailyClosingRepository : Repository<DailyClosing>, IDailyClosingRep
 
     public Task<DailyClosing?> GetWithDetailsAsync(int id, CancellationToken cancellationToken = default)
         => Context.DailyClosings
-            .Include(d => d.Expenses)
+            .Include(d => d.Expenses).ThenInclude(e => e.Receiver)
             .Include(d => d.NonCashPayments)
-            .Include(d => d.EmployeeLedgerEntries)
-            .Include(d => d.InvestorTransactions)
-            .Include(d => d.CustomerLedgerEntries)
+            .Include(d => d.EmployeeLedgerEntries).ThenInclude(e => e.Employee)
+            .Include(d => d.InvestorTransactions).ThenInclude(t => t.Investor)
+            .Include(d => d.InvestorTransactions).ThenInclude(t => t.Receiver)
+            .Include(d => d.CustomerLedgerEntries).ThenInclude(c => c.Customer)
             .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
 }

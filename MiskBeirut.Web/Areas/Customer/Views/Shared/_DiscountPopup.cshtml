@@ -1,13 +1,18 @@
+@using MiskBeirut.Core.Constants
 @using MiskBeirut.Web.Support
 @{
     var content = (PageContent)ViewData["Content"]!;
-    var eyebrow = content.Global("discount_popup_eyebrow", "A eroro Gift");
-    var title = content.Global("discount_popup_title", "10% not disc");
-    var subtitle = content.Global("discount_popup_subtitle", "do not fuck the essence of Beirut. Subscribe to receive your luxury dining credit.");
-    var submitLabel = content.Global("discount_popup_submit_label", "CLAIM mf");
-    var successMessage = content.Global("discount_popup_success_message", "Thank mn! Your discount code is on its way to your inbox.");
-    var alreadyClaimedMessage = content.Global("discount_popup_already_claimed_message", "You'jaj already claimed your discount - check your inbox for your code!");
+    var eyebrow = content.Global("discount_popup_eyebrow", "A Gift For You");
+    var title = content.Global("discount_popup_title", "10% Off Your Visit");
+    var subtitle = content.Global("discount_popup_subtitle", "Experience the essence of Beirut. Subscribe to receive your luxury dining credit.");
+    var submitLabel = content.Global("discount_popup_submit_label", "Claim Now");
+    var successMessage = content.Global("discount_popup_success_message", "Thank you! Your discount code is on its way to your inbox.");
+    var alreadyClaimedMessage = content.Global("discount_popup_already_claimed_message", "You've already claimed your discount - check your inbox for your code!");
+    const string redeemedCookieName = "misk_discount_redeemed";
+    var alreadyRedeemedThisSession = Context.Request.Cookies.ContainsKey(redeemedCookieName);
 }
+@if (!alreadyRedeemedThisSession)
+{
 <style>
     @@keyframes discount-popup-in {
         from { opacity: 0; transform: translateY(24px); }
@@ -22,22 +27,22 @@
     }
 </style>
 
-<div class="fixed bottom-6 right-6 z-[100] w-[90vw] md:w-[420px] bg-marble-white/95 backdrop-blur-md p-8 shadow-2xl animate-popup text-on-surface border border-outline/10" dir="ltr" id="lead-capture-popup">
-    <button type="button" class="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center border border-outline/20 hover:bg-black/5 transition-colors" onclick="document.getElementById('lead-capture-popup').style.display='none'" aria-label="Close">
+<div class="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] w-[90vw] md:w-[420px] max-h-[85vh] overflow-y-auto bg-marble-white/95 backdrop-blur-md p-5 md:p-8 shadow-2xl animate-popup text-on-surface border border-outline/10" dir="ltr" id="lead-capture-popup">
+    <button type="button" class="absolute top-3 right-3 md:top-4 md:right-4 w-8 h-8 rounded-full flex items-center justify-center border border-outline/20 hover:bg-black/5 transition-colors" onclick="document.getElementById('lead-capture-popup').style.display='none'" aria-label="Close">
         <span class="material-symbols-outlined text-sm">close</span>
     </button>
-    <div class="space-y-4">
+    <div class="space-y-2.5 md:space-y-4">
         <span class="font-label-lg text-label-sm uppercase tracking-[0.2em] text-brick-red block">@eyebrow</span>
-        <h2 class="font-display-lg text-4xl text-primary">@title</h2>
-        <p class="font-body-md text-on-surface-variant leading-relaxed">
+        <h2 class="font-display-lg text-2xl md:text-4xl leading-tight text-primary">@title</h2>
+        <p class="font-body-md text-sm md:text-base text-on-surface-variant leading-relaxed">
             @subtitle
         </p>
-        <form id="discount-popup-form" asp-controller="Leads" asp-action="Subscribe" class="space-y-3 pt-2">
+        <form id="discount-popup-form" asp-controller="Leads" asp-action="Subscribe" class="space-y-2 md:space-y-3 pt-1 md:pt-2">
             @Html.AntiForgeryToken()
-            <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="Name" placeholder="Name" required type="text">
+            <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="Name" placeholder="Name" required type="text" maxlength="@FieldLengths.Name">
             <div class="grid grid-cols-2 gap-3">
-                <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="PhoneNumber" placeholder="Phone" required type="tel">
-                <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="Email" placeholder="Email Address" required type="email">
+                <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="PhoneNumber" placeholder="Phone" required type="tel" maxlength="@FieldLengths.PhoneNumber">
+                <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="Email" placeholder="Email Address" required type="email" maxlength="@FieldLengths.Email">
             </div>
             <p id="discount-popup-error" class="hidden text-xs text-error"></p>
             <button class="w-full bg-brick-red text-white py-3 font-label-lg text-label-lg tracking-widest hover:opacity-90 transition-colors mt-2" type="submit">@submitLabel</button>
@@ -62,6 +67,7 @@
             fetch(form.action, { method: 'POST', body: new FormData(form) })
                 .then(function (response) {
                     if (response.status === 409) {
+                        document.cookie = 'misk_discount_redeemed=1;path=/;max-age=1200';
                         const successEl = document.getElementById('discount-popup-success');
                         form.classList.add('hidden');
                         successEl.querySelector('p').textContent = successEl.dataset.alreadyClaimedMessage;
@@ -69,6 +75,7 @@
                         return;
                     }
                     if (!response.ok) throw new Error();
+                    document.cookie = 'misk_discount_redeemed=1;path=/;max-age=1200';
                     const successEl = document.getElementById('discount-popup-success');
                     form.classList.add('hidden');
                     successEl.querySelector('p').textContent = successEl.dataset.successMessage;
@@ -81,3 +88,4 @@
         });
     });
 </script>
+}

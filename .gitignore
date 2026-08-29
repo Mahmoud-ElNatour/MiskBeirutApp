@@ -18,3 +18,7 @@ obj/
 ## OS
 Thumbs.db
 .DS_Store
+
+## Uploaded applicant CVs / scan temp files — personal data, never committed
+**/App_Data/careers/
+**/App_Data/scan-temp/

@@ -1,0 +1,58 @@
+@model IReadOnlyList<PageDto>
+@{
+    ViewData["Title"] = "Pages";
+    var searchQuery = ViewData["SearchQuery"] as string;
+}
+
+<div class="mb-stack-lg flex justify-between items-end">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Pages</h2>
+        @if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            <p class="font-body-md text-body-md text-on-surface-variant">Every page on the public site, plus the shared "Global" content used in the nav and footer.</p>
+        }
+        else
+        {
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                @Model.Count result@(Model.Count == 1 ? "" : "s") for &quot;<span class="text-on-surface font-medium">@searchQuery</span>&quot;
+                <a asp-action="Index" class="text-slate-blue hover:text-primary hover:underline">clear search</a>
+            </p>
+        }
+    </div>
+</div>
+
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+            <thead>
+                <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    <th class="py-3 px-stack-md" data-sort="text">Page</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Meta Title</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Meta Description</th>
+                    <th class="py-3 px-stack-md text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in Model.OrderBy(p => p.PageName))
+                {
+                    <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors">
+                        <td class="py-4 px-stack-md text-on-surface font-medium">@entry.PageName</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@(entry.MetaTitle ?? "—")</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant max-w-md truncate">@(entry.MetaDesc ?? "—")</td>
+                        <td class="py-4 px-stack-md text-right">
+                            <a asp-action="Edit" asp-route-id="@entry.Id" class="text-slate-blue hover:text-primary inline-flex" title="Edit">
+                                <span class="material-symbols-outlined text-sm">edit</span>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="py-10 px-stack-md text-center text-on-surface-variant">No pages match "@searchQuery".</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

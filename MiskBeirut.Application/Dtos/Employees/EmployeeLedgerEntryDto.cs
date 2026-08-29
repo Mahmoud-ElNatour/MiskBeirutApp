@@ -10,5 +10,5 @@ public sealed record EmployeeLedgerEntryDto
     public EmployeeLedgerType Type { get; init; }
     public string? Note { get; init; }
     public int EmployeeId { get; init; }
-    public int DailyClosingId { get; init; }
+    public int? DailyClosingId { get; init; }
 }

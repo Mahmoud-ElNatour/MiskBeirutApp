@@ -1,0 +1,72 @@
+@*
+    Fixed top-corner, auto-dismissing toast for TempData["Success"]/TempData["Error"].
+    Replaces the old inline alert banner that sat in the content flow and stayed until manually
+    closed. Include once per layout via @@await Html.PartialAsync("_Toast") — its `fixed`
+    positioning takes it out of document flow, so where it sits in the DOM doesn't affect layout.
+    Lives at the shared root (not per-area) so both Admin and Cms layouts render the same toast.
+*@
+@if (TempData["Success"] != null || TempData["Error"] != null)
+{
+    <div id="toast-stack" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-full max-w-sm px-4 sm:px-0 pointer-events-none" aria-live="polite">
+        @if (TempData["Success"] != null)
+        {
+            <div class="toast pointer-events-auto flex items-center justify-between gap-3 p-stack-md bg-[#E8F5E9] text-status-success rounded-DEFAULT shadow-lg text-body-md" role="status" data-toast>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>@TempData["Success"]</span>
+                </div>
+                <button type="button" class="text-status-success flex items-center shrink-0" data-toast-close>
+                    <span class="material-symbols-outlined text-base">close</span>
+                </button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="toast pointer-events-auto flex items-center justify-between gap-3 p-stack-md bg-error-container text-on-error-container rounded-DEFAULT shadow-lg text-body-md" role="alert" data-toast>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined">error</span>
+                    <span>@TempData["Error"]</span>
+                </div>
+                <button type="button" class="text-on-error-container flex items-center shrink-0" data-toast-close>
+                    <span class="material-symbols-outlined text-base">close</span>
+                </button>
+            </div>
+        }
+    </div>
+
+    <style>
+        #toast-stack .toast {
+            animation: toast-in 0.2s ease-out;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        #toast-stack .toast.toast-hide {
+            opacity: 0;
+            transform: translateX(1rem);
+        }
+
+        @@keyframes toast-in {
+            from { opacity: 0; transform: translateX(1rem); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+
+    <script>
+        (function () {
+            var TOAST_DURATION_MS = 5000;
+
+            function dismiss(toast) {
+                if (!toast || toast.dataset.dismissed) return;
+                toast.dataset.dismissed = 'true';
+                toast.classList.add('toast-hide');
+                setTimeout(function () { toast.remove(); }, 300);
+            }
+
+            document.querySelectorAll('#toast-stack [data-toast]').forEach(function (toast) {
+                setTimeout(function () { dismiss(toast); }, TOAST_DURATION_MS);
+                var closeBtn = toast.querySelector('[data-toast-close]');
+                if (closeBtn) closeBtn.addEventListener('click', function () { dismiss(toast); });
+            });
+        })();
+    </script>
+}

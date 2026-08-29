@@ -10,5 +10,6 @@ public sealed record CustomerLedgerEntryDto
     public CustomerLedgerType Type { get; init; }
     public string? Note { get; init; }
     public int CustomerId { get; init; }
-    public int DailyClosingId { get; init; }
+    public int? DailyClosingId { get; init; }
+    public bool IsManualEntry { get; init; }
 }

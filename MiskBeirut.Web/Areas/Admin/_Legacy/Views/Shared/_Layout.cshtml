@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MiskBeirut</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1e3fae",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121520",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <script>
+        // Apply saved theme before render to avoid flash of incorrect theme
+        (function () {
+            try {
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) { }
+        })();
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Toast Animation */
+        @@keyframes toast-progress {
+            0% {
+                transform: scaleX(1);
+                transform-origin: left;
+            }
+            100% {
+                transform: scaleX(0);
+                transform-origin: left;
+            }
+        }
+
+        .animate-toast-progress {
+            animation-name: toast-progress;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+
+        /* Minimal Modal support for Tailwind */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1055;
+            overflow-x: hidden;
+            overflow-y: auto;
+            outline: 0;
+        }
+
+        .modal.show {
+            display: block;
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: auto;
+            margin: 1.75rem auto;
+            pointer-events: none;
+            max-width: 500px;
+        }
+
+        .modal.fade .modal-dialog {
+            transition: transform .3s ease-out;
+            transform: translate(0, -50px);
+        }
+
+        .modal.show .modal-dialog {
+            transform: none;
+        }
+
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 3.5rem);
+        }
+
+        .modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            pointer-events: auto;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, .2);
+            border-radius: 1rem;
+            outline: 0;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .dark .modal-content {
+            background-color: #1e293b;
+            border-color: #334155;
+            color: #f8fafc;
+        }
+
+        .modal-header {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            border-top-left-radius: calc(1rem - 1px);
+            border-top-right-radius: calc(1rem - 1px);
+        }
+
+        .dark .modal-header {
+            border-bottom-color: #334155;
+        }
+
+        .modal-title {
+            margin-bottom: 0;
+            line-height: 1.5;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .btn-close {
+            box-sizing: content-box;
+            width: 1em;
+            height: 1em;
+            padding: .25em .25em;
+            color: #64748b;
+            background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2364748b'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+            border: 0;
+            border-radius: .375rem;
+            opacity: .5;
+            cursor: pointer;
+        }
+
+        .btn-close:hover {
+            opacity: .75;
+            background-color: #f1f5f9;
+        }
+
+        .dark .btn-close {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23cbd5e1'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e");
+        }
+
+        .dark .btn-close:hover {
+            background-color: #334155;
+        }
+
+        .modal-body {
+            position: relative;
+            flex: 1 1 auto;
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 1.5rem;
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            border-bottom-right-radius: calc(1rem - 1px);
+            border-bottom-left-radius: calc(1rem - 1px);
+            gap: 0.75rem;
+        }
+
+        .dark .modal-footer {
+            background-color: #0f172a;
+            border-top-color: #334155;
+        }
+    </style>
+    @RenderSection("ExtraHead", required: false)
+    <link href="/styles.css" rel="stylesheet" />
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <header class="sticky top-0 z-50 w-full bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-8">
+                    <a href="/" class="flex items-center gap-2 group cursor-pointer hover:opacity-90 transition-opacity">
+                        <div class="bg-primary p-1.5 rounded-lg text-white">
+                            <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+                        </div>
+                        <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">MiskBeirut</span>
+                    </a>
+
+                    <nav class="hidden md:flex items-center gap-1">
+                        <a class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="/">Home</a>
+                        @if (User.Identity?.IsAuthenticated == true && User.IsInRole("admin"))
+                        {
+                            <a class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="/Menu/Admin">Menu Setup</a>
+                        }
+                        else
+                        {
+                            <a class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="/Menu">Menu</a>
+                        }
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            @if (User.IsInRole("admin"))
+                            {
+                                <a class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="/System/ControlPanel">Control Panel</a>
+                                <a class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="/control-panel/users">Users</a>
+                                <a class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="/control-panel/roles">Roles</a>
+                            }
+                            <a class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors" href="/DailyClosing">Daily Close</a>
+                        }
+                    </nav>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button type="button" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode" class="size-10 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-symbols-outlined hidden dark:inline">light_mode</span>
+                        <span class="material-symbols-outlined inline dark:hidden">dark_mode</span>
+                    </button>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="flex items-center gap-4 relative">
+                            <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800 cursor-pointer group" id="profileDropdown" aria-expanded="false">
+                                <div class="text-right hidden sm:block">
+                                    <p class="text-sm font-bold leading-none text-slate-900 dark:text-white">@User.Identity.Name</p>
+                                    <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value</p>
+                                </div>
+                                <div class="size-10 rounded-full bg-primary/20 border-2 border-primary/10 overflow-hidden ring-2 ring-transparent group-hover:ring-primary/30 transition-all text-primary font-bold flex items-center justify-center">
+                                    @(User.Identity.Name?[..1].ToUpper() ?? "U")
+                                </div>
+                                <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">expand_more</span>
+                            </div>
+
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 top-12 mt-2 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-primary/10 py-2 opacity-0 invisible transition-all duration-200 z-50 transform origin-top-right scale-95 data-[open=true]:opacity-100 data-[open=true]:visible data-[open=true]:scale-100" id="profileDropdownMenu">
+                                <a class="flex items-center gap-3 px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-primary/5 hover:text-primary" href="/settings">
+                                    <span class="material-symbols-outlined text-lg">settings</span>
+                                    Settings
+                                </a>
+                                <div class="my-1 border-t border-primary/5 dark:border-slate-700/50"></div>
+                                <a class="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10" href="/Auth/Logout">
+                                    <span class="material-symbols-outlined text-lg">logout</span>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="/Auth/Login" class="inline-flex justify-center items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors">Log in</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+        @if (TempData["Success"] != null)
+        {
+            <div id="alert-success" class="mb-6 flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-sm animate-fade-in" role="alert">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span class="font-medium">@TempData["Success"]</span>
+                </div>
+                <button type="button" onclick="document.getElementById('alert-success').remove()" class="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center">
+                    <span class="material-symbols-outlined text-base">close</span>
+                </button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div id="alert-error" class="mb-6 flex items-center justify-between p-4 bg-rose-50 dark:bg-rose-950/30 text-rose-800 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 rounded-xl text-sm animate-fade-in" role="alert">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined">error</span>
+                    <span class="font-medium">@TempData["Error"]</span>
+                </div>
+                <button type="button" onclick="document.getElementById('alert-error').remove()" class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 flex items-center">
+                    <span class="material-symbols-outlined text-base">close</span>
+                </button>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500">
+            &copy; @DateTime.UtcNow.Year MiskBeirut Management System. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Modal: Admin Password to Unlock Date -->
+    <div class="modal fade" id="adminPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content overflow-hidden border-none shadow-2xl">
+                <div class="modal-header bg-slate-50 dark:bg-slate-800/50 px-6 py-4">
+                    <h5 class="modal-title flex items-center gap-2 text-slate-900 dark:text-white">
+                        <span class="material-symbols-outlined text-primary">lock_open</span>
+                        Unlock Date Field
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="adminPassword" class="block text-sm font-bold text-slate-500 uppercase mb-2">Admin Password</label>
+                            <input type="password" id="adminPassword" class="w-full rounded-lg border-slate-200 h-10 px-3 text-slate-950 dark:text-white dark:bg-slate-800 focus:border-primary focus:ring-primary" placeholder="Enter administrative password">
+                        </div>
+                        <div id="passwordError" class="d-none bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 p-3 rounded-lg text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-base">error</span>
+                            <span>Incorrect admin password. Please try again.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-slate-50 dark:bg-slate-800/50 px-6 py-4 gap-3">
+                    <button type="button" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-all font-display" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="unlockDateBtn" class="px-6 py-2 bg-primary hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 transition-all flex items-center gap-2 font-display">
+                        <span class="material-symbols-outlined text-xs">vpn_key</span>
+                        Unlock
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script src="~/toasts.js" asp-append-version="true"></script>
+    <script src="~/config.js" asp-append-version="true"></script>
+    <script src="~/script.js" asp-append-version="true"></script>
+    <script src="~/employees.js" asp-append-version="true"></script>
+    <script src="~/customers.js" asp-append-version="true"></script>
+    <script src="~/receivers.js" asp-append-version="true"></script>
+    <script src="~/table-sort.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Dark mode toggle
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (e) { }
+                });
+            }
+
+            // Profile dropdown logic
+            const profileDropdown = document.getElementById('profileDropdown');
+            const profileDropdownMenu = document.getElementById('profileDropdownMenu');
+            if (profileDropdown && profileDropdownMenu) {
+                profileDropdown.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = profileDropdownMenu.getAttribute('data-open') === 'true';
+                    profileDropdownMenu.setAttribute('data-open', !isOpen);
+                });
+                document.addEventListener('click', (e) => {
+                    if (!profileDropdown.contains(e.target)) {
+                        profileDropdownMenu.setAttribute('data-open', 'false');
+                    }
+                });
+            }
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

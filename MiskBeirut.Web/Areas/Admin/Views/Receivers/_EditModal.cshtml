@@ -1,0 +1,27 @@
+<!-- Edit Receiver Modal -->
+<div class="modal fade" id="editReceiverModal" tabindex="-1" aria-labelledby="editReceiverModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content overflow-hidden">
+            <div class="modal-header">
+                <h5 class="modal-title flex items-center gap-2" id="editReceiverModalLabel">
+                    <span class="material-symbols-outlined text-primary">edit</span>
+                    Edit Receiver
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editReceiverForm">
+                <input type="hidden" name="id" id="edit-receiver-id">
+                <div class="modal-body space-y-stack-md">
+                    <div>
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Receiver Name</label>
+                        <input type="text" name="name" id="edit-receiver-name" required class="w-full rounded-DEFAULT border border-border-subtle text-on-surface focus:ring-slate-blue focus:border-slate-blue font-body-md text-body-md px-4 py-2" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-colors">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

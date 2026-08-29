@@ -1,50 +1,359 @@
-@model IReadOnlyList<EmployeeDto>
-@using MiskBeirut.Application.Dtos.Employees
+@model EmployeesPageViewModel
 @{
-    ViewData["Title"] = "Employees";
+    Layout = "_Layout";
+    ViewData["Title"] = "Employees Management";
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
 }
 
-<div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Employees</h2>
-    <a asp-action="Create" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ New Employee</a>
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">@content.Text("title", "Employees") - @Model.MonthName @Model.CurrentYear</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">@content.Text("subtitle", "Manage employee information and monthly schedules.")</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <a href="/System/ControlPanel"
+           class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            Back
+        </a>
+        <select id="employeeMonth" onchange="filterEmployees()"
+                class="rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-1 focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+            <option value="AllMonths" selected="@(Model.CurrentMonth == 0 ? "selected" : null)">All Months</option>
+            @for (int m = 1; m <= 12; m++)
+            {
+                var monthNames = new[] { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+                <option value="@m" selected="@(m == Model.CurrentMonth ? "selected" : null)">@monthNames[m - 1]</option>
+            }
+        </select>
+        <select id="employeeYear" onchange="filterEmployees()"
+                class="rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-1 focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+            <option value="AllYears" selected="@(Model.CurrentYear == 0 ? "selected" : null)">All Years</option>
+            @for (int y = 2024; y <= 2030; y++)
+            {
+                <option value="@y" selected="@(y == Model.CurrentYear ? "selected" : null)">@y</option>
+            }
+        </select>
+        <select id="viewType" onchange="filterEmployees()"
+                class="rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-1 focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+            <option value="working" selected="@(Model.ViewType == "working" ? "selected" : null)">Working This Month</option>
+            <option value="not_working" selected="@(Model.ViewType == "not_working" ? "selected" : null)">Not Working This Month</option>
+            <option value="all" selected="@(Model.ViewType == "all" ? "selected" : null)">All Employees (Roster)</option>
+        </select>
+        <div class="relative w-full md:w-64">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">search</span>
+            <input type="text" id="employeeSearch" value="@Model.Search" placeholder="Search by name or ID..."
+                   oninput="debouncedSearch()"
+                   class="w-full pl-9 rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-1 focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+        </div>
+        <button onclick="filterEmployees()"
+                class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">filter_list</span>
+            Filter
+        </button>
+        <button data-bs-toggle="modal" data-bs-target="#addEmployeeModal"
+                class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors">
+            <span class="material-symbols-outlined text-sm">add</span>
+            @content.Text("add_button_label", "Add Employee")
+        </button>
+    </div>
 </div>
 
-<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
-    <table class="w-full text-sm text-left">
-        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
-            <tr>
-                <th class="px-6 py-3">Name</th>
-                <th class="px-6 py-3">Position</th>
-                <th class="px-6 py-3">Phone</th>
-                <th class="px-6 py-3">Base Salary</th>
-                <th class="px-6 py-3">Status</th>
-                <th class="px-6 py-3 text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            @foreach (var e in Model)
-            {
-                <tr>
-                    <td class="px-6 py-3 font-semibold text-slate-900 dark:text-white">@e.Name</td>
-                    <td class="px-6 py-3">@e.Position</td>
-                    <td class="px-6 py-3">@e.PhoneNumber</td>
-                    <td class="px-6 py-3">@e.BaseSalary.ToString("N2")</td>
-                    <td class="px-6 py-3">
-                        @if (e.IsActive)
-                        {
-                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Active</span>
-                        }
-                        else
-                        {
-                            <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">Inactive</span>
-                        }
-                    </td>
-                    <td class="px-6 py-3 text-right space-x-2">
-                        <a asp-action="Details" asp-route-id="@e.Id" class="text-primary hover:underline">View</a>
-                        <a asp-action="Edit" asp-route-id="@e.Id" class="text-slate-500 hover:underline">Edit</a>
-                    </td>
+<!-- Employees Table -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+            <thead>
+                <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    <th class="py-3 px-stack-md" data-sort="number">ID</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Name</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Phone</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Position</th>
+                    <th class="py-3 px-stack-md text-right" data-sort="number">Base Salary</th>
+                    <th class="py-3 px-stack-md text-center" data-sort="number">Work Days</th>
+                    <th class="py-3 px-stack-md text-center w-24">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if (Model.Records.Any())
+                {
+                    @foreach (var record in Model.Records)
+                    {
+                        <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors @(record.IsWorking ? "" : "opacity-50 bg-surface-bright")">
+                            <td class="py-4 px-stack-md text-on-surface-variant">
+                                @record.Employee.Id
+                                @if (!record.IsWorking)
+                                {
+                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container-high text-on-surface-variant">Not Working</span>
+                                }
+                            </td>
+                            <td class="py-4 px-stack-md font-medium text-on-surface">@record.Employee.Name</td>
+                            <td class="py-4 px-stack-md text-on-surface-variant">@(record.Employee.PhoneNumber ?? "N/A")</td>
+                            <td class="py-4 px-stack-md text-on-surface-variant">
+                                @if (!string.IsNullOrEmpty(record.Employee.Position))
+                                {
+                                    <span class="inline-flex items-center px-2 py-1 rounded-DEFAULT bg-surface-container-high text-xs font-medium text-on-surface-variant">
+                                        @record.Employee.Position
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-on-surface-variant/60">N/A</span>
+                                }
+                            </td>
+                            <td class="py-4 px-stack-md text-right font-medium text-on-surface">$@record.Employee.BaseSalary.ToString("F2")</td>
+                            <td class="py-4 px-stack-md text-center text-on-surface-variant">@record.WorkingDays</td>
+                            <td class="py-4 px-stack-md">
+                                <div class="flex items-center justify-center gap-3">
+                                    <button onclick="editEmployee('@record.Id', '@record.EmployeeId')"
+                                            class="text-slate-blue hover:text-primary inline-flex items-center"
+                                            title="Edit">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button onclick="deleteEmployee('@record.EmployeeId')"
+                                            class="text-brick-red hover:opacity-80 inline-flex items-center"
+                                            title="Delete">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="py-12 px-stack-md text-center text-on-surface-variant">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="material-symbols-outlined text-4xl mb-3 text-on-surface-variant/40">group_off</span>
+                                <p class="font-body-lg text-body-lg font-medium">@content.Text("empty_title", "No employees found")</p>
+                                <p class="font-body-md text-body-md mt-1">@content.Text("empty_body", "Click 'Add Employee' to create your first record.")</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
+@await Html.PartialAsync("_AddModal")
+@await Html.PartialAsync("_EditModal")
+
+@section Scripts {
+<script>
+    // Add Employee Form Handler
+    document.getElementById('addEmployeeForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        // Ensure numeric types are formatted
+        data.base_salary = parseFloat(data.base_salary) || 0;
+        data.working_days = parseFloat(data.working_days) || 0;
+        data.is_active = true;
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        fetch('/api/employees', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error adding employee: ' + data.message);
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error adding employee');
+                submitBtn.disabled = false;
+            });
+    });
+
+    function editEmployee(id, employeeId) {
+        let url = `/api/employees/${employeeId}`;
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Set form fields. edit-id is the working (payroll) record's own id (0 if this
+                // employee has none yet this month) — edit-employee-id is the actual employee's id;
+                // these must never be conflated (see the comment in _EditModal.cshtml).
+                document.getElementById('edit-id').value = id;
+                document.getElementById('edit-employee-id').value = employeeId;
+                document.getElementById('edit-name').value = data.name || '';
+                document.getElementById('edit-phone').value = data.phone_number || '';
+                document.getElementById('edit-position').value = data.position || '';
+                document.getElementById('edit-base-salary').value = data.base_salary || 0;
+
+                // Load working record specific working days and status
+                fetch(`/api/employees/payroll?year=@Model.CurrentYear&month=@Model.CurrentMonth`)
+                    .then(res => res.json())
+                    .then(payrollList => {
+                        const rec = payrollList.find(p => p.employeeId == employeeId);
+                        if (rec) {
+                            document.getElementById('edit-working-days').value = rec.workingDays || 0;
+                            const isWorkingCheckbox = document.getElementById('edit-is-working');
+                            isWorkingCheckbox.checked = rec.isWorking !== false;
+                            document.getElementById('status-label').textContent = isWorkingCheckbox.checked ? 'Working This Month' : 'Not Working This Month';
+                        } else {
+                            document.getElementById('edit-working-days').value = 30;
+                            document.getElementById('edit-is-working').checked = true;
+                            document.getElementById('status-label').textContent = 'Working This Month';
+                        }
+                    });
+
+                const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+                modal.show();
+            })
+            .catch(err => {
+                console.error('Error fetching employee', err);
+                alert('Error loading employee data');
+            });
+    }
+
+    // Add listener for checkbox label change
+    document.getElementById('edit-is-working').addEventListener('change', function () {
+        document.getElementById('status-label').textContent = this.checked ? 'Working This Month' : 'Not Working This Month';
+    });
+
+    document.getElementById('editEmployeeForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const workingRecordId = document.getElementById('edit-id').value;
+        const employeeId = document.getElementById('edit-employee-id').value;
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        // Handle checkbox explicitly
+        data.is_working = document.getElementById('edit-is-working').checked;
+        data.working_days = parseFloat(data.working_days) || 0;
+        data.base_salary = parseFloat(data.base_salary) || 0;
+        data.employee_id = parseInt(employeeId) || 0;
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        // Save payroll record (working record) updates
+        fetch(`/api/employees/payroll`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: parseInt(workingRecordId) || 0,
+                employeeId: data.employee_id,
+                year: parseInt(data.year),
+                month: parseInt(data.month),
+                status: data.is_working ? "active" : "inactive",
+                workingDays: data.working_days,
+                actualWorkingDays: data.working_days, // default to working days
+                isWorking: data.is_working,
+                note: ""
+            })
+        })
+            .then(response => response.json())
+            .then(resData => {
+                if (resData.status === 'success') {
+                    // Also update basic employee info
+                    fetch(`/api/employees/${data.employee_id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            id: data.employee_id,
+                            name: data.name,
+                            phone_number: data.phone_number,
+                            position: data.position,
+                            base_salary: data.base_salary,
+                            is_active: true
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(empRes => {
+                        if (empRes.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert('Error updating employee: ' + empRes.message);
+                            submitBtn.disabled = false;
+                        }
+                    });
+                } else {
+                    alert('Error updating payroll record: ' + resData.message);
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating employee');
+                submitBtn.disabled = false;
+            });
+    });
+
+    async function deleteEmployee(employeeId) {
+        if (confirm('Are you sure you want to delete this employee working record?')) {
+            try {
+                // Marks this month's working record as not-working rather than deleting the employee.
+                const response = await fetch(`/api/employees/payroll`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        employeeId: parseInt(employeeId) || 0,
+                        year: @Model.CurrentYear,
+                        month: @Model.CurrentMonth,
+                        isWorking: false,
+                        status: "inactive",
+                        workingDays: 0,
+                        actualWorkingDays: 0
+                    })
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(result.message || 'Failed to update working status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred.');
+            }
+        }
+    }
+
+    let searchTimer;
+    function debouncedSearch() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(filterEmployees, 350);
+    }
+
+    function filterEmployees() {
+        const month = document.getElementById('employeeMonth').value;
+        const year = document.getElementById('employeeYear').value;
+        const viewType = document.getElementById('viewType').value;
+        const search = document.getElementById('employeeSearch').value;
+        const params = new URLSearchParams();
+        if (month) params.append('month', month);
+        if (year) params.append('year', year);
+        if (viewType) params.append('view_type', viewType);
+        if (search) params.append('search', search);
+        window.location.href = `/Employees?${params.toString()}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Set up initial filter values from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('month')) document.getElementById('employeeMonth').value = urlParams.get('month');
+        if (urlParams.has('year')) document.getElementById('employeeYear').value = urlParams.get('year');
+        if (urlParams.has('view_type')) document.getElementById('viewType').value = urlParams.get('view_type');
+        if (urlParams.has('search')) document.getElementById('employeeSearch').value = urlParams.get('search');
+    });
+</script>
+}

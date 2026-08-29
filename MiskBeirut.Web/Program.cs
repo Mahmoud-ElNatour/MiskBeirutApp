@@ -1,15 +1,23 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MiskBeirut.Application.Managers;
+using MiskBeirut.Application.Services;
 using MiskBeirut.Core.Entities;
 using MiskBeirut.Core.Repositories;
 using MiskBeirut.Infrastructure.DbContexts;
 using MiskBeirut.Infrastructure.Repositories;
+using MiskBeirut.Infrastructure.Services;
+using MiskBeirut.Web.Authorization;
 using MiskBeirut.Web.Support;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddRazorRuntimeCompilation();
+
+// Needed by AuditLogManager to capture the caller's IP address on every logged action.
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<MiskBeirutDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MiskBeirut")));
@@ -44,6 +52,14 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
 });
 
+// Dynamic, database-managed page/section privileges (Admin area "Role Manager"). Backs
+// [RequirePrivilege] the same way [Authorize(Roles = "...")] is backed by role claims, except the
+// role -> privilege mapping is looked up per request instead of baked into the sign-in cookie, so
+// changes to a role's privileges take effect immediately without requiring users to re-log-in.
+builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PrivilegePolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PrivilegeAuthorizationHandler>();
+
 // Repositories (Core interfaces -> Infrastructure implementations)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
@@ -53,11 +69,110 @@ builder.Services.AddScoped<IReceiverRepository, ReceiverRepository>();
 builder.Services.AddScoped<IExpenseRepository, ExpenseRepository>();
 builder.Services.AddScoped<INonCashPaymentRepository, NonCashPaymentRepository>();
 builder.Services.AddScoped<IDailyClosingRepository, DailyClosingRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IWebsiteLeadRepository, WebsiteLeadRepository>();
 builder.Services.AddScoped<ILanguageRepository, LanguageRepository>();
 builder.Services.AddScoped<IPageRepository, PageRepository>();
+builder.Services.AddScoped<IBackofficePageRepository, BackofficePageRepository>();
+builder.Services.AddScoped<IPrivilegeRepository, PrivilegeRepository>();
 builder.Services.AddScoped<IGoogleReviewRepository, GoogleReviewRepository>();
+builder.Services.AddScoped<IVacancyRepository, VacancyRepository>();
+builder.Services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
+builder.Services.AddScoped<IInquiryReasonRepository, InquiryReasonRepository>();
+builder.Services.AddScoped<IContactInquiryRepository, ContactInquiryRepository>();
+builder.Services.AddScoped<IContactInquiryWhatsAppMessageRepository, ContactInquiryWhatsAppMessageRepository>();
+
+// Virus scanning — shared by CV submissions (Careers) and Cms image/menu-PDF uploads. Windows
+// Defender is tried first; if MpCmdRun.exe isn't installed on this host, ClamAV (clamscan.exe) is
+// tried as a fallback, so uploads aren't blanket-rejected just because one specific engine is
+// missing. A scan only reports ScanUnavailable (which every caller fails closed on) if BOTH are
+// unavailable. Stateless (just wraps external exe paths), so it's registered once as a singleton.
+builder.Services.AddSingleton<IVirusScanner>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+
+    var mpCmdRunPath = config["VirusScanning:MpCmdRunPath"];
+    if (string.IsNullOrWhiteSpace(mpCmdRunPath))
+        mpCmdRunPath = WindowsDefenderVirusScanner.FindDefaultMpCmdRunPath();
+    var defenderScanner = new WindowsDefenderVirusScanner(mpCmdRunPath, sp.GetRequiredService<ILogger<WindowsDefenderVirusScanner>>());
+
+    var clamAvPath = config["VirusScanning:ClamAvPath"];
+    if (string.IsNullOrWhiteSpace(clamAvPath))
+        clamAvPath = ClamAvVirusScanner.FindDefaultClamAvPath();
+    var clamAvScanner = new ClamAvVirusScanner(clamAvPath, sp.GetRequiredService<ILogger<ClamAvVirusScanner>>());
+
+    return new FallbackVirusScanner([defenderScanner, clamAvScanner], sp.GetRequiredService<ILogger<FallbackVirusScanner>>());
+});
+
+// First-run ClamAV install: if it's not already present when the app starts, download the current
+// release's Windows MSI and install it silently, so the fallback above actually has something to
+// fall back to. Set VirusScanning:AutoInstallClamAv=false to disable (see ClamAvBootstrapService
+// for why this needs the app pool identity to have installer permissions, and what happens if it
+// doesn't). Fire-and-forget in the background — never blocks the app from starting.
+builder.Services.AddHttpClient(nameof(ClamAvBootstrapService), c => c.Timeout = TimeSpan.FromMinutes(15));
+builder.Services.AddHostedService(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var enabled = !string.Equals(config["VirusScanning:AutoInstallClamAv"], "false", StringComparison.OrdinalIgnoreCase);
+
+    return new ClamAvBootstrapService(
+        enabled,
+        sp.GetRequiredService<IHttpClientFactory>(),
+        sp.GetRequiredService<IHostApplicationLifetime>(),
+        sp.GetRequiredService<ILogger<ClamAvBootstrapService>>());
+});
+
+// CV private storage (Careers page applications) — scanning itself is IVirusScanner above.
+// Deliberately NOT under wwwroot: CVs carry applicants' personal info (name, phone, address),
+// unlike public marketing images. Paths default to App_Data under the content root
+// (not the bin/ output dir) unless overridden in config.
+builder.Services.AddScoped<ICvSubmissionService>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var env = sp.GetRequiredService<IWebHostEnvironment>();
+    var scanner = sp.GetRequiredService<IVirusScanner>();
+
+    var tempDir = config["FileStorage:CvScanTempPath"];
+    if (string.IsNullOrWhiteSpace(tempDir))
+        tempDir = Path.Combine(env.ContentRootPath, "App_Data", "scan-temp");
+
+    var storageDir = config["FileStorage:CvUploadsPath"];
+    if (string.IsNullOrWhiteSpace(storageDir))
+        storageDir = Path.Combine(env.ContentRootPath, "App_Data", "careers", "cv");
+
+    return new WindowsDefenderCvSubmissionService(scanner, tempDir, storageDir);
+});
+
+// Mailgun (HR notification emails). Requires Mailgun:ApiKey / Mailgun:Domain / Mailgun:FromAddress in config.
+builder.Services.AddHttpClient(nameof(MailgunEmailSender));
+builder.Services.AddScoped<IEmailSender>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    var domain = config["Mailgun:Domain"] ?? throw new InvalidOperationException("Mailgun:Domain is not configured.");
+    var apiKey = config["Mailgun:ApiKey"] ?? throw new InvalidOperationException("Mailgun:ApiKey is not configured.");
+    var fromAddress = config["Mailgun:FromAddress"] ?? $"no-reply@{domain}";
+    return new MailgunEmailSender(httpClientFactory.CreateClient(nameof(MailgunEmailSender)), domain, apiKey, fromAddress);
+});
+
+// Meta WhatsApp Business Platform (Cloud API) — CMS "Send WhatsApp" button on Contact Inquiries.
+// Requires WhatsApp:PhoneNumberId / WhatsApp:AccessToken / WhatsApp:TemplateName in config once the
+// Meta Business app and template are approved; until then, sends fail with a friendly explanation
+// instead of the app refusing to start (see NotConfiguredWhatsAppSender).
+builder.Services.AddHttpClient(nameof(MetaWhatsAppSender));
+builder.Services.AddScoped<IWhatsAppSender>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var phoneNumberId = config["WhatsApp:PhoneNumberId"];
+    var accessToken = config["WhatsApp:AccessToken"];
+    if (string.IsNullOrWhiteSpace(phoneNumberId) || string.IsNullOrWhiteSpace(accessToken))
+        return new NotConfiguredWhatsAppSender();
+
+    var apiVersion = config["WhatsApp:ApiVersion"] is { Length: > 0 } v ? v : "v21.0";
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    return new MetaWhatsAppSender(httpClientFactory.CreateClient(nameof(MetaWhatsAppSender)), phoneNumberId, accessToken, apiVersion);
+});
 
 // Application managers
 builder.Services.AddScoped<CustomerManager>();
@@ -70,12 +185,36 @@ builder.Services.AddScoped<NonCashPaymentManager>();
 builder.Services.AddScoped<ReceiverManager>();
 builder.Services.AddScoped<AuditLogManager>();
 builder.Services.AddScoped<PageContentManager>();
+builder.Services.AddScoped<BackofficePageContentManager>();
+builder.Services.AddScoped<PrivilegeManager>();
 builder.Services.AddScoped<WebsiteLeadManager>();
 builder.Services.AddScoped<GoogleReviewManager>();
+builder.Services.AddScoped<VacancyManager>();
+builder.Services.AddScoped<JobApplicationManager>();
+builder.Services.AddScoped<InquiryReasonManager>();
+builder.Services.AddScoped(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var templateName = config["WhatsApp:TemplateName"] ?? "";
+    var templateLanguage = config["WhatsApp:TemplateLanguage"] is { Length: > 0 } lang ? lang : "en";
+    var defaultCountryCode = config["WhatsApp:DefaultCountryCode"] is { Length: > 0 } cc ? cc : "961";
+    return new ContactInquiryManager(
+        sp.GetRequiredService<IContactInquiryRepository>(),
+        sp.GetRequiredService<IInquiryReasonRepository>(),
+        sp.GetRequiredService<IEmailSender>(),
+        sp.GetRequiredService<PageContentManager>(),
+        sp.GetRequiredService<IWhatsAppSender>(),
+        sp.GetRequiredService<IContactInquiryWhatsAppMessageRepository>(),
+        templateName,
+        templateLanguage,
+        defaultCountryCode,
+        sp.GetRequiredService<ILogger<ContactInquiryManager>>());
+});
 
 var app = builder.Build();
 
 await AdminSeeder.SeedAsync(app.Services);
+await PrivilegeSeeder.SeedAsync(app.Services);
 
 if (!app.Environment.IsDevelopment())
 {

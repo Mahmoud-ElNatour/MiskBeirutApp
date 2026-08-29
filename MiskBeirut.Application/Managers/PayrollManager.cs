@@ -4,7 +4,9 @@ using MiskBeirut.Core.Repositories;
 
 namespace MiskBeirut.Application.Managers;
 
-/// <summary>Monthly working/payroll records. No automatic salary-calculation or carryover-debt engine yet — totals are entered manually.</summary>
+/// <summary>Monthly working/payroll records. ActualSalary/Total are computed from each record's own
+/// BaseSalary/ActualWorkingDays/Deductions/Advance — see EmployeeWorking.RecomputeSalary. No
+/// carryover-debt engine yet (a negative month doesn't roll into the next one).</summary>
 public class PayrollManager
 {
     private readonly IEmployeeRepository _employees;
@@ -28,13 +30,45 @@ public class PayrollManager
         return record is null ? null : ToDto(record);
     }
 
+    /// <summary>Every employee's working record for one month, skipping employees with none yet.</summary>
+    public async Task<IReadOnlyList<EmployeeWorkingDto>> GetAllForMonthAsync(int year, int month, CancellationToken cancellationToken = default)
+    {
+        var employees = await _employees.GetAllAsync(cancellationToken);
+        var results = new List<EmployeeWorkingDto>();
+        foreach (var employee in employees)
+        {
+            var record = await _employees.GetWorkingRecordAsync(employee.Id, year, month, cancellationToken);
+            if (record is not null)
+                results.Add(ToDto(record));
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// ActualSalary and Total are always computed here (see EmployeeWorking.RecomputeSalary), never
+    /// taken from the caller — request.ActualSalary/Total don't exist on the request type at all.
+    /// This is the one place a month's record gets its Status/WorkingDays/ActualWorkingDays edited
+    /// directly, so it's the authoritative point to (re)apply the formula against those plus
+    /// whatever Deductions/Advance/BaseSalary totals already exist. BaseSalary is a per-month
+    /// snapshot (see EmployeeWorking.BaseSalary) — a brand-new record defaults it from the
+    /// employee's current Base Salary; an existing record keeps its own rate unless
+    /// request.BaseSalary explicitly overrides it.
+    /// </summary>
     public async Task<EmployeeWorkingDto> SaveAsync(SaveEmployeeWorkingRequest request, CancellationToken cancellationToken = default)
     {
         var existing = await _employees.GetWorkingRecordAsync(request.EmployeeId, request.Year, request.Month, cancellationToken);
 
         if (existing is null)
         {
-            var created = await _employees.AddWorkingRecordAsync(new EmployeeWorking
+            var baseSalary = request.BaseSalary;
+            if (baseSalary is null)
+            {
+                var employee = await _employees.GetByIdAsync(request.EmployeeId, cancellationToken)
+                    ?? throw new InvalidOperationException($"Employee {request.EmployeeId} was not found.");
+                baseSalary = employee.BaseSalary;
+            }
+
+            var record = new EmployeeWorking
             {
                 EmployeeId = request.EmployeeId,
                 Year = request.Year,
@@ -44,23 +78,28 @@ public class PayrollManager
                 ActualWorkingDays = request.ActualWorkingDays,
                 DeductionsTotal = request.DeductionsTotal,
                 AdvanceTotal = request.AdvanceTotal,
-                ActualSalary = request.ActualSalary,
-                Total = request.Total,
+                BaseSalary = baseSalary.Value,
                 IsWorking = request.IsWorking,
                 Note = request.Note
-            }, cancellationToken);
+            };
+            record.RecomputeSalary();
+
+            var created = await _employees.AddWorkingRecordAsync(record, cancellationToken);
             return ToDto(created);
         }
 
         existing.Status = request.Status;
         existing.WorkingDays = request.WorkingDays;
         existing.ActualWorkingDays = request.ActualWorkingDays;
-        existing.DeductionsTotal = request.DeductionsTotal;
-        existing.AdvanceTotal = request.AdvanceTotal;
-        existing.ActualSalary = request.ActualSalary;
-        existing.Total = request.Total;
+        // These aren't sent by every caller (e.g. the Employees page's own edit modal only ever
+        // sends Status/WorkingDays/IsWorking) — a caller that omits one keeps the existing value
+        // rather than silently zeroing out a total accumulated elsewhere (ledger-entry sync, etc.).
+        existing.DeductionsTotal = request.DeductionsTotal ?? existing.DeductionsTotal;
+        existing.AdvanceTotal = request.AdvanceTotal ?? existing.AdvanceTotal;
+        existing.BaseSalary = request.BaseSalary ?? existing.BaseSalary;
         existing.IsWorking = request.IsWorking;
         existing.Note = request.Note;
+        existing.RecomputeSalary();
 
         await _employees.UpdateWorkingRecordAsync(existing, cancellationToken);
         return ToDto(existing);
@@ -77,6 +116,7 @@ public class PayrollManager
         ActualWorkingDays = w.ActualWorkingDays,
         DeductionsTotal = w.DeductionsTotal,
         AdvanceTotal = w.AdvanceTotal,
+        BaseSalary = w.BaseSalary,
         ActualSalary = w.ActualSalary,
         Total = w.Total,
         StartedAt = w.StartedAt,

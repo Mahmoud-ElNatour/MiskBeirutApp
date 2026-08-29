@@ -1,0 +1,50 @@
+<!-- Quick-add Employee/Customer/Receiver from inside the Daily Close form — one shared modal, whose
+     fields/title/target endpoint switch based on which row's "+" button opened it (see the
+     data-quick-add="employee|customer|receiver" buttons next to each picker, and wireQuickAdd() in
+     daily-close.js). On success the new option is pushed into that role's shared option pool and
+     every open picker of that role is refreshed immediately, with no page reload — including
+     auto-selecting the new option in the row that triggered it. -->
+<div class="modal fade" id="quickAddModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content overflow-hidden">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickAddModalTitle">Add</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickAddForm" onsubmit="return false;" class="space-y-stack-md">
+                    <div>
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Name</label>
+                        <input type="text" id="quickAddName" required autofocus class="w-full rounded-DEFAULT border-border-subtle focus:border-slate-blue focus:ring-slate-blue h-12" />
+                    </div>
+                    <div id="quickAddPhoneGroup">
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Phone Number</label>
+                        <input type="tel" id="quickAddPhone" class="w-full rounded-DEFAULT border-border-subtle focus:border-slate-blue focus:ring-slate-blue h-12" />
+                    </div>
+                    <div id="quickAddPositionGroup">
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Position</label>
+                        <input type="text" id="quickAddPosition" class="w-full rounded-DEFAULT border-border-subtle focus:border-slate-blue focus:ring-slate-blue h-12" />
+                    </div>
+                    <div id="quickAddBaseSalaryGroup">
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Base Salary</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                            <input type="number" step="0.01" id="quickAddBaseSalary" class="w-full pl-8 rounded-DEFAULT border-border-subtle h-12 focus:border-slate-blue focus:ring-slate-blue" placeholder="0.00" />
+                        </div>
+                    </div>
+                </form>
+                <div id="quickAddError" class="mt-stack-md hidden bg-error-container text-on-error-container border border-status-urgent/20 rounded-DEFAULT p-3 text-sm flex items-center gap-2">
+                    <span class="material-symbols-outlined">warning</span>
+                    <span id="quickAddErrorText"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-all" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="quickAddSubmitBtn" class="px-6 py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">add_circle</span>
+                    Add
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

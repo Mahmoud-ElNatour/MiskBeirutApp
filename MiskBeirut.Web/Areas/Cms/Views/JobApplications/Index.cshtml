@@ -1,0 +1,168 @@
+@using MiskBeirut.Application.Dtos.Careers
+@model IReadOnlyList<JobApplicationDto>
+@{
+    ViewData["Title"] = "Job Applications";
+}
+
+<div class="mb-stack-lg flex justify-between items-end">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Job Applications</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Applications submitted via the public Careers page, most recent first.</p>
+    </div>
+</div>
+
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+            <thead>
+                <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    <th class="py-3 px-stack-md" data-sort="text">Applicant</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Position</th>
+                    <th class="py-3 px-stack-md">Contact</th>
+                    <th class="py-3 px-stack-md" data-sort="date">Applied</th>
+                    <th class="py-3 px-stack-md" data-sort="number">Status</th>
+                    <th class="py-3 px-stack-md text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var app in Model)
+                {
+                    <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors align-top">
+                        <td class="py-4 px-stack-md text-on-surface font-medium">
+                            @app.Name
+                            @if (!string.IsNullOrWhiteSpace(app.Address))
+                            {
+                                <div class="text-on-surface-variant font-normal text-xs mt-1">@app.Address</div>
+                            }
+                        </td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@(app.VacancyTitle ?? "—")</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">
+                            <div>@app.PhoneNumber</div>
+                            <div>@app.Email</div>
+                        </td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@app.CreatedAt.ToString("yyyy-MM-dd")</td>
+                        <td class="py-4 px-stack-md" data-sort-value="@(app.DecisionTaken ? 1 : 0)">
+                            @if (app.DecisionTaken)
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#E8F5E9] text-status-success">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                                    Decision Taken
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#FFF3E0] text-status-pending">
+                                    <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+                                    Not Yet
+                                </span>
+                            }
+                        </td>
+                        <td class="py-4 px-stack-md">
+                            <div class="flex items-center justify-end gap-3 flex-wrap">
+                                <a asp-action="ViewCv" asp-route-id="@app.Id" target="_blank" class="text-slate-blue hover:text-primary inline-flex items-center gap-1" title="View CV">
+                                    <span class="material-symbols-outlined text-sm">description</span>
+                                </a>
+                                <button type="button" class="job-app-email-btn text-slate-blue hover:text-primary inline-flex items-center gap-1"
+                                    data-id="@app.Id" data-name="@app.Name" data-email="@app.Email" data-vacancy="@(app.VacancyTitle ?? "the position")" title="Email Applicant">
+                                    <span class="material-symbols-outlined text-sm">mail</span>
+                                </button>
+                                <form asp-action="SetDecision" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@app.Id" />
+                                    <input type="hidden" name="decisionTaken" value="@(!app.DecisionTaken ? "true" : "false")" />
+                                    <button type="submit" class="text-slate-blue hover:text-primary hover:underline text-xs font-bold uppercase tracking-wider">
+                                        @(app.DecisionTaken ? "Mark Not Yet" : "Mark Decided")
+                                    </button>
+                                </form>
+                                <form asp-action="Delete" method="post" class="inline" onsubmit="return confirm('Delete this application? This cannot be undone.');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@app.Id" />
+                                    <button type="submit" class="text-brick-red hover:opacity-80 inline-flex items-center" title="Delete">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="py-10 px-stack-md text-center text-on-surface-variant">No applications yet.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Email Applicant modal — one shared modal, populated per-row by JS (see button.job-app-email-btn above) -->
+<div id="emailApplicantModal" class="hidden fixed inset-0 z-[10050] items-center justify-center bg-black/50 p-4">
+    <div class="bg-white rounded-DEFAULT shadow-xl w-full max-w-lg overflow-hidden font-body-md">
+        <form asp-action="SendEmail" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="emailApplicantId" />
+            <div class="p-4 border-b border-black/10 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-[#1A1A1A]">Email Applicant</h3>
+                    <p class="text-xs text-black/50 mt-0.5">To: <span id="emailApplicantRecipient"></span></p>
+                </div>
+                <button type="button" id="emailApplicantClose" class="text-black/50 hover:text-[#355970]">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-black/50 mb-1">Subject</label>
+                    <input type="text" name="subject" id="emailApplicantSubject" required
+                        class="w-full rounded-DEFAULT border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-[#355970]" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-black/50 mb-1">Message</label>
+                    <textarea name="body" id="emailApplicantBody" rows="6" required
+                        class="w-full rounded-DEFAULT border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-[#355970]"></textarea>
+                </div>
+                <p class="text-xs text-black/50">Sent from careers@miskbeirut.com — replies will land in that inbox.</p>
+            </div>
+            <div class="p-4 border-t border-black/10 bg-black/[0.02] flex justify-end gap-3">
+                <button type="button" id="emailApplicantCancel" class="px-4 py-2 rounded-DEFAULT border border-black/15 text-sm font-semibold text-black/60 hover:border-[#355970] transition-colors">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-DEFAULT bg-[#355970] hover:bg-[#1c4258] text-white text-sm font-semibold transition-colors">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        var modal = document.getElementById('emailApplicantModal');
+        var idInput = document.getElementById('emailApplicantId');
+        var recipientEl = document.getElementById('emailApplicantRecipient');
+        var subjectInput = document.getElementById('emailApplicantSubject');
+        var bodyInput = document.getElementById('emailApplicantBody');
+
+        function openModal(btn) {
+            idInput.value = btn.dataset.id;
+            recipientEl.textContent = btn.dataset.name + ' <' + btn.dataset.email + '>';
+            subjectInput.value = 'Regarding your application — ' + btn.dataset.vacancy;
+            bodyInput.value = 'Hi ' + btn.dataset.name + ',\n\n';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            bodyInput.focus();
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.querySelectorAll('.job-app-email-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () { openModal(btn); });
+        });
+
+        document.getElementById('emailApplicantClose').addEventListener('click', closeModal);
+        document.getElementById('emailApplicantCancel').addEventListener('click', closeModal);
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    })();
+</script>
+}

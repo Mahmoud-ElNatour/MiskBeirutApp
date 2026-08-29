@@ -1,0 +1,114 @@
+@using MiskBeirut.Web.Areas.Admin.ViewComponents
+@model List<AdminNavItem>
+@{
+    var isEmployeeOnly = ViewBag.IsEmployeeOnly as bool? ?? false;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    string LabelFor(AdminNavItem item) => item.Controller == "DailyClosing" && isEmployeeOnly ? "Submit Closing" : item.Label;
+    string ActionFor(AdminNavItem item) => item.Controller == "DailyClosing" && isEmployeeOnly ? "Create" : item.Action;
+
+    bool SameController(AdminNavItem item) => string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase);
+    bool IsExactMatch(AdminNavItem item) => SameController(item) && string.Equals(currentAction, ActionFor(item), StringComparison.OrdinalIgnoreCase);
+
+    // Several controllers back more than one nav item (Customers/Credits/Cashbacks all live on
+    // CustomersController; Employees/Deductions & Advances on EmployeesController) — matching on
+    // controller alone would light up every sibling at once. An exact controller+action match wins;
+    // failing that, only the controller's own "Index" item falls back to active, and only when no
+    // sibling claims the current action (so viewing e.g. Customers/Edit still highlights "Customers"
+    // without also lighting up "Credits"/"Cashbacks").
+    bool IsActive(AdminNavItem item) =>
+        IsExactMatch(item) ||
+        (SameController(item) && string.Equals(item.Action, "Index", StringComparison.OrdinalIgnoreCase)
+            && !Model.Any(IsExactMatch));
+
+    // Fixed display order; a category is skipped entirely if privilege-filtering left it empty.
+    var categoryOrder = new[] { "Operations", "Administration" };
+    var topLevel = Model.Where(i => i.Category is null).ToList();
+    var groups = categoryOrder
+        .Select(cat => (Category: cat, Items: Model.Where(i => i.Category == cat).ToList()))
+        .Where(g => g.Items.Count > 0)
+        .ToList();
+}
+
+<!-- Search -->
+<div class="px-container-padding mb-stack-md">
+    <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-primary/50 text-lg pointer-events-none">search</span>
+        <input type="text" id="adminNavSearch" placeholder="Search..." autocomplete="off"
+               class="w-full pl-9 pr-3 py-2 rounded-DEFAULT bg-white/10 border border-white/10 text-on-primary placeholder-on-primary/50 font-body-md text-body-md focus:outline-none focus:bg-white/15 focus:border-white/30 transition-colors" />
+    </div>
+</div>
+
+@foreach (var item in topLevel)
+{
+    var label = LabelFor(item);
+    <li data-nav-item data-nav-label="@label.ToLowerInvariant()">
+        <a asp-area="Admin" asp-controller="@item.Controller" asp-action="@ActionFor(item)"
+           class="flex items-center gap-3 px-container-padding py-stack-sm text-sm transition-all @(IsActive(item) ? "text-marble-white font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+            <span class="material-symbols-outlined text-lg">@item.Icon</span>
+            @label
+        </a>
+    </li>
+}
+
+@foreach (var group in groups)
+{
+    var hasActiveChild = group.Items.Any(IsActive);
+    <li>
+        <details class="admin-nav-category" open="@(hasActiveChild ? "open" : null)">
+            <summary class="flex items-center justify-between px-container-padding py-stack-sm text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container transition-all cursor-pointer select-none">
+                <span class="font-label-sm text-label-sm uppercase tracking-wider">@group.Category</span>
+                <span class="material-symbols-outlined text-sm admin-nav-chevron transition-transform">expand_more</span>
+            </summary>
+            <ul class="bg-black/10">
+                @foreach (var item in group.Items)
+                {
+                    var label = LabelFor(item);
+                    <li data-nav-item data-nav-label="@label.ToLowerInvariant()">
+                        <a asp-area="Admin" asp-controller="@item.Controller" asp-action="@ActionFor(item)"
+                           class="flex items-center gap-3 pl-12 pr-container-padding py-stack-sm text-sm transition-all @(IsActive(item) ? "text-marble-white font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+                            <span class="material-symbols-outlined text-lg">@item.Icon</span>
+                            @label
+                        </a>
+                    </li>
+                }
+            </ul>
+        </details>
+    </li>
+}
+
+<script>
+    // Sidebar search: filters nav items by label text. Matching a category auto-opens it (and
+    // hides the category entirely if nothing in it matches); clearing the search restores each
+    // category to whatever open/closed state it had before searching (typically closed, unless
+    // the current page lives in it).
+    (function () {
+        var searchInput = document.getElementById('adminNavSearch');
+        if (!searchInput) return;
+
+        var categories = document.querySelectorAll('.admin-nav-category');
+        categories.forEach(function (details) {
+            details.dataset.wasOpen = details.open ? '1' : '0';
+        });
+
+        var items = document.querySelectorAll('[data-nav-item]');
+
+        searchInput.addEventListener('input', function () {
+            var term = searchInput.value.trim().toLowerCase();
+
+            items.forEach(function (li) {
+                var label = li.dataset.navLabel || '';
+                li.style.display = (!term || label.indexOf(term) !== -1) ? '' : 'none';
+            });
+
+            categories.forEach(function (details) {
+                var anyVisible = Array.prototype.some.call(details.querySelectorAll('[data-nav-item]'), function (li) {
+                    return li.style.display !== 'none';
+                });
+                details.parentElement.style.display = anyVisible ? '' : 'none';
+                details.open = term ? anyVisible : details.dataset.wasOpen === '1';
+            });
+        });
+    })();
+</script>

@@ -42,5 +42,13 @@ public class ReceiverManager
         return ToDto(receiver);
     }
 
+    public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var receiver = await _receivers.GetByIdAsync(id, cancellationToken)
+            ?? throw new InvalidOperationException($"Receiver {id} was not found.");
+
+        await _receivers.DeleteAsync(receiver, cancellationToken);
+    }
+
     private static ReceiverDto ToDto(Receiver receiver) => new() { Id = receiver.Id, Name = receiver.Name };
 }

@@ -1,0 +1,304 @@
+@*
+    Draws a pencil button over every real [data-cms-field] element already present in the current
+    page's own markup (see e.g. Areas/Customer/Views/Careers/Index.cshtml). Included once, alongside
+    _FieldEditModal.cshtml, only when ViewData["IsCmsPreview"] == true (see _PublicLayout.cshtml).
+    Purely an overlay drawn on top via JS — never touches the page's own rendering or DOM structure
+    apart from appending its own layer element.
+
+    Pencils only render while edit mode is on (toggled by the Edit/Cancel/Save buttons in
+    _CmsPreviewBar.cshtml via window.cmsSetEditMode) — the page loads read-only. This file also owns
+    window.cmsReadFieldValue / window.cmsPatchField, the shared "read a field's current rendered
+    value" / "write a value into every matching [data-cms-field] element" helpers used by both the
+    field-edit modal (staging an edit) and the preview bar (snapshotting for Cancel).
+*@
+<style>
+    /* One positioned box per field, matching its bounding rect exactly — the pencil button and its
+       label chip are anchored to this box's corner rather than to raw page coordinates, so they stay
+       visually attached to "their" field even when two fields sit close together. */
+    .cms-field-marker {
+        position: absolute;
+        pointer-events: none;
+    }
+    .cms-overlay-btn {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        z-index: 9997;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 26px;
+        width: 26px;
+        border-radius: 9999px;
+        background: #ffffff;
+        color: #355970;
+        border: 1px solid rgba(0,0,0,0.12);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+        cursor: pointer;
+        transition: background .15s, color .15s, transform .15s;
+    }
+    .cms-overlay-btn:hover {
+        background: #355970;
+        color: #fff;
+        transform: scale(1.08);
+    }
+    .cms-overlay-btn .material-symbols-outlined { font-size: 15px; }
+    /* Field name chip — hidden until its pencil (or the field itself) is hovered, so it doesn't
+       clutter the page, but makes which-pencil-edits-which-field unambiguous on demand. */
+    .cms-overlay-label {
+        position: absolute;
+        top: -11px;
+        right: 34px;
+        z-index: 9997;
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        background: #1c4258;
+        color: #fff;
+        font-family: 'Hanken Grotesk', sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        padding: 5px 10px;
+        border-radius: 9999px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+        opacity: 0;
+        transform: translateY(2px);
+        transition: opacity .12s ease, transform .12s ease;
+        pointer-events: none;
+    }
+    .cms-overlay-label-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    [data-cms-field] { outline-offset: 2px; }
+    body.cms-edit-mode [data-cms-field]:hover { outline: 1.5px dashed rgba(53,89,112,0.5); }
+    /* Solid highlight tied to hovering the field's OWN pencil/label — distinct from the plain dashed
+       "this is editable" outline above, so hovering a pencil unambiguously points at its field even
+       when several fields sit close together. */
+    [data-cms-field].cms-field-highlight {
+        outline: 2px solid #8F383A !important;
+        outline-offset: 2px;
+        background-color: rgba(143,56,58,0.08);
+    }
+    /* Any control that should only ever appear while editing (e.g. an "Add Photo" button) — the base
+       "display: none" lives in _PublicLayout.cshtml (loaded on every page, CMS preview or not); this
+       override, shown purely off the body.cms-edit-mode class already toggled by
+       window.cmsSetEditMode, only needs to exist here since that class can only ever be set from
+       within a CMS preview in the first place. */
+    body.cms-edit-mode .cms-preview-edit-only { display: inline-flex; }
+</style>
+
+<script>
+    (function () {
+        var overlayLayer = document.createElement('div');
+        overlayLayer.id = 'cmsOverlayLayer';
+        overlayLayer.style.cssText = 'position:absolute; top:0; left:0; width:100%; pointer-events:none;';
+
+        window.cmsEditMode = false;
+
+        function fieldLabel(el) {
+            var name = el.dataset.cmsField || '';
+            return name.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        }
+
+        function currentValue(el, type) {
+            if (type === 'Image') return el.getAttribute('src') || '';
+            if (type === 'BackgroundImage') {
+                var bg = el.style.backgroundImage || getComputedStyle(el).backgroundImage;
+                var match = /url\((['"]?)(.*?)\1\)/.exec(bg || '');
+                return match ? match[2] : '';
+            }
+            if (type === 'Link') return el.getAttribute('href') || '';
+            if (type === 'Placeholder') return el.getAttribute('placeholder') || '';
+            return (el.textContent || '').trim();
+        }
+        window.cmsReadFieldValue = currentValue;
+
+        // Writes a value into every DOM shape a field can take — shared by the field modal (staging
+        // an edit) and the preview bar (reverting to a snapshot on Cancel).
+        window.cmsPatchField = function (el, type, value) {
+            if (type === 'BackgroundImage') el.style.backgroundImage = value ? "url('" + value + "')" : '';
+            else if (type === 'Image' || el.tagName === 'IMG') el.setAttribute('src', value);
+            else if (type === 'Placeholder') el.setAttribute('placeholder', value);
+            else if (type === 'Link') el.setAttribute('href', value || '#');
+            else el.textContent = value;
+            if (type === 'Image' || type === 'BackgroundImage') {
+                var badge = el.querySelector ? el.querySelector('.cms-placeholder-badge') : null;
+                if (badge) badge.remove();
+                el.classList.remove('cms-is-placeholder');
+            }
+        };
+
+        // getBoundingClientRect() reports a field's true geometric position even when it has
+        // scrolled out of the viewport, or sits underneath a sticky/fixed bar (the public nav, or
+        // this preview's own toolbar) — neither shrinks the field's rect to 0, so the old "skip if
+        // 0x0" check alone left pencils floating on top of whatever now covers the real field.
+        //
+        // An earlier version of this tried "is the field the topmost thing at some sample point",
+        // but that's the wrong question for a BackgroundImage field: a hero image routinely has a
+        // same-section decorative gradient/overlay div AND centered foreground text permanently
+        // painted on top of it everywhere, by design — "topmost at any point" was false across the
+        // entire field, so its pencil silently never rendered at all, not just while scrolled away.
+        //
+        // What we actually want to know is narrower: is the field hidden behind the persistent UI
+        // chrome that scrolls independently of the page (this preview's fixed toolbar, the public
+        // site's sticky nav) — not "is anything at all painted over it". So this collects the
+        // rects of every position:fixed/sticky element on the page once per relayout, and only
+        // treats a field as hidden if one of those chrome rects covers nearly all of it. A same-page
+        // decorative sibling isn't fixed/sticky, so it never counts; a field genuinely tucked under
+        // the sticky nav is covered nearly 100% by that nav's own rect and correctly filtered.
+        function getStickyChromeRects() {
+            var rects = [];
+            document.querySelectorAll('body *').forEach(function (el) {
+                if (el.id === 'cmsOverlayLayer' || el.closest('#cmsOverlayLayer')) return;
+                var position = getComputedStyle(el).position;
+                if (position !== 'fixed' && position !== 'sticky') return;
+                var r = el.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) rects.push(r);
+            });
+            return rects;
+        }
+
+        function isActuallyVisible(rect, stickyChromeRects) {
+            if (rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth)
+                return false; // scrolled fully out of the viewport, above or below
+
+            var fieldArea = rect.width * rect.height;
+            if (fieldArea === 0) return false;
+
+            return !stickyChromeRects.some(function (chrome) {
+                var overlapTop = Math.max(rect.top, chrome.top);
+                var overlapBottom = Math.min(rect.bottom, chrome.bottom);
+                var overlapLeft = Math.max(rect.left, chrome.left);
+                var overlapRight = Math.min(rect.right, chrome.right);
+                if (overlapBottom <= overlapTop || overlapRight <= overlapLeft) return false;
+
+                var overlapArea = (overlapBottom - overlapTop) * (overlapRight - overlapLeft);
+                return overlapArea / fieldArea > 0.9; // nearly entirely hidden behind this one chrome element
+            });
+        }
+
+        // A field can be much bigger than one screenful (the homepage hero is the whole viewport
+        // tall) — anchoring its pencil at the field's own raw corner puts it wherever that corner
+        // happens to be, which is routinely off-screen or, right at the top, directly behind the
+        // sticky chrome that isActuallyVisible just proved doesn't hide the FIELD (only a sliver of
+        // it does). This clamps the marker to the slice of the field that's both on-screen and
+        // below any chrome pinned across its top edge, so the pencil itself always lands somewhere
+        // visible and clickable, not just "the field it belongs to is technically visible somewhere".
+        function visibleSlice(rect, stickyChromeRects) {
+            var top = Math.max(rect.top, 0);
+            var left = Math.max(rect.left, 0);
+            var bottom = Math.min(rect.bottom, window.innerHeight);
+            var right = Math.min(rect.right, window.innerWidth);
+
+            stickyChromeRects.forEach(function (chrome) {
+                var overlapsHorizontally = chrome.left < right && chrome.right > left;
+                if (overlapsHorizontally && chrome.top <= top + 1 && chrome.bottom > top) {
+                    top = Math.min(chrome.bottom, bottom);
+                }
+            });
+
+            return { top: top, left: left, width: Math.max(right - left, 0), height: Math.max(bottom - top, 0) };
+        }
+
+        function layout() {
+            overlayLayer.innerHTML = '';
+            if (!window.cmsEditMode) return;
+            overlayLayer.style.height = document.documentElement.scrollHeight + 'px';
+            var stickyChromeRects = getStickyChromeRects();
+            document.querySelectorAll('[data-cms-field]').forEach(function (el) {
+                var rect = el.getBoundingClientRect();
+                if (rect.width === 0 && rect.height === 0) return;
+                if (!isActuallyVisible(rect, stickyChromeRects)) return;
+                var type = el.dataset.cmsType || 'Text';
+
+                // The marker's box is the visible, chrome-clear slice of the field, not necessarily
+                // its full rect — the button/label anchor to ITS corner so they stay on-screen and
+                // clickable no matter how large the underlying field is.
+                var slice = visibleSlice(rect, stickyChromeRects);
+                var marker = document.createElement('div');
+                marker.className = 'cms-field-marker';
+                marker.style.top = (slice.top + window.scrollY) + 'px';
+                marker.style.left = (slice.left + window.scrollX) + 'px';
+                marker.style.width = slice.width + 'px';
+                marker.style.height = slice.height + 'px';
+
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cms-edit-btn cms-overlay-btn';
+                btn.style.pointerEvents = 'auto';
+                btn.dataset.field = el.dataset.cmsField;
+                btn.dataset.type = type;
+                btn.dataset.scope = el.dataset.cmsScope || 'page';
+                btn.dataset.value = currentValue(el, type);
+                btn.dataset.label = fieldLabel(el);
+                btn.title = 'Edit ' + btn.dataset.label;
+                btn.innerHTML = '<span class="material-symbols-outlined">edit</span>';
+                btn.cmsTargetField = el;
+
+                var label = document.createElement('span');
+                label.className = 'cms-overlay-label';
+                label.textContent = btn.dataset.label;
+                btn.cmsLabelEl = label;
+
+                marker.appendChild(label);
+                marker.appendChild(btn);
+                overlayLayer.appendChild(marker);
+            });
+        }
+
+        // Delegated once (not re-bound per layout()) so it keeps working across every relayout without
+        // piling up duplicate listeners. Hovering a pencil shows its field's name chip AND draws a
+        // solid highlight around the exact field it edits — clears up which pencil belongs to which
+        // field when several sit close together.
+        document.addEventListener('mouseover', function (e) {
+            var btn = e.target.closest('.cms-edit-btn');
+            if (!btn) return;
+            if (btn.cmsTargetField) btn.cmsTargetField.classList.add('cms-field-highlight');
+            if (btn.cmsLabelEl) btn.cmsLabelEl.classList.add('cms-overlay-label-visible');
+        });
+        document.addEventListener('mouseout', function (e) {
+            var btn = e.target.closest('.cms-edit-btn');
+            if (!btn) return;
+            if (btn.cmsTargetField) btn.cmsTargetField.classList.remove('cms-field-highlight');
+            if (btn.cmsLabelEl) btn.cmsLabelEl.classList.remove('cms-overlay-label-visible');
+        });
+
+        function debounce(fn, ms) {
+            var t;
+            return function () {
+                clearTimeout(t);
+                t = setTimeout(fn, ms);
+            };
+        }
+
+        var relayout = debounce(layout, 120);
+        window.cmsRelayoutOverlay = relayout;
+
+        // Called by the Edit/Cancel/Save buttons in _CmsPreviewBar.cshtml. Pencils (and the dashed
+        // hover outline, see body.cms-edit-mode rule above) only show while this is on.
+        window.cmsSetEditMode = function (on) {
+            window.cmsEditMode = !!on;
+            document.body.classList.toggle('cms-edit-mode', window.cmsEditMode);
+            layout();
+        };
+
+        // Called by _FieldEditModal.cshtml while its modal is open, so the pencil layer doesn't sit
+        // on top of (or show through) the modal backdrop while a field is actively being edited.
+        window.cmsSetOverlayVisible = function (visible) {
+            overlayLayer.style.visibility = visible ? '' : 'hidden';
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.body.appendChild(overlayLayer);
+            layout();
+            // Real content images loading late can shift layout — relayout once more after they settle.
+            window.addEventListener('load', relayout);
+        });
+        window.addEventListener('resize', relayout);
+        window.addEventListener('scroll', relayout, true);
+    })();
+</script>

@@ -13,8 +13,15 @@ public class EmployeeLedger
     public EmployeeLedgerType Type { get; set; }
     public string? Note { get; set; }
     public int EmployeeId { get; set; }
-    public int DailyClosingId { get; set; }
+
+    /// <summary>
+    /// Null for an entry that isn't tied to any specific day's cash register — e.g. a carried-over
+    /// shortfall applied automatically at the start of a new month (see
+    /// EmployeeManager.EnsureCurrentMonthWorkingRecordsAsync). A manually-entered Advance/Deduct from
+    /// the Employee Details page still always names one, via its required dropdown.
+    /// </summary>
+    public int? DailyClosingId { get; set; }
 
     public Employee Employee { get; set; } = null!;
-    public DailyClosing DailyClosing { get; set; } = null!;
+    public DailyClosing? DailyClosing { get; set; }
 }

@@ -1,0 +1,141 @@
+@model MiskBeirut.Web.Areas.Cms.Models.LoginRequest
+@{
+    Layout = null;
+    ViewData["Title"] = "Sign In";
+
+    var hostValue = Context.Request.Host.Value;
+    var customerHost = hostValue.StartsWith("cms.", StringComparison.OrdinalIgnoreCase) ? hostValue["cms.".Length..] : hostValue;
+    var customerUrl = $"{Context.Request.Scheme}://{customerHost}/";
+}
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Misk Beirut CMS - Sign In</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1c4258",
+                        "primary-container": "#355970",
+                        "slate-blue": "#4E7289",
+                        "brick-red": "#8F383A",
+                        "marble-white": "#F5F5F6",
+                        "on-surface": "#1a1c1d",
+                        "on-surface-variant": "#42474c",
+                        "outline": "#72787d",
+                        "outline-variant": "#c2c7cd",
+                        "border-subtle": "#E2E2E4",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e8e8e9",
+                        "on-primary": "#ffffff"
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                    spacing: {
+                        "container-padding": "32px",
+                        "row-height-dense": "48px",
+                        "stack-xs": "4px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["EB Garamond"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "label-lg": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", fontWeight: "500" }],
+                        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "label-lg": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "label-sm": ["11px", { lineHeight: "16px", letterSpacing: "0.1em", fontWeight: "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: theme('colors.marble-white'); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <!-- Login Container -->
+    <main class="relative z-10 w-full max-w-md bg-surface-container-lowest border border-surface-container-high rounded-none shadow-sm flex flex-col p-container-padding">
+        <!-- Header -->
+        <header class="flex flex-col items-center justify-center mb-stack-lg space-y-stack-md">
+            <img src="~/img/logo.png" alt="Misk Beirut Logo" class="h-12 w-auto object-contain" />
+            <h1 class="font-headline-lg text-headline-lg text-primary text-center">Sign In</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant text-center">Administrative CMS Access</p>
+        </header>
+
+        <!-- Form -->
+        <form asp-action="Login" method="post" class="flex flex-col space-y-stack-md">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="font-body-md text-body-md text-brick-red"></div>
+
+            <!-- Username / Email Field -->
+            <div class="flex flex-col space-y-stack-xs">
+                <label class="font-label-md text-label-md text-on-surface uppercase tracking-wider" asp-for="Username">Username or Email</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-outline-variant pointer-events-none">mail</span>
+                    <input asp-for="Username" placeholder="admin@miskbeirut.com" autocomplete="username"
+                        class="w-full h-row-height-dense pl-10 pr-4 bg-surface-container-lowest border border-surface-container-high rounded-none focus:border-slate-blue focus:ring-1 focus:ring-slate-blue font-body-lg text-body-lg text-on-surface transition-colors placeholder-outline-variant" />
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="flex flex-col space-y-stack-xs">
+                <div class="flex justify-between items-center">
+                    <label class="font-label-md text-label-md text-on-surface uppercase tracking-wider" asp-for="Password">Password</label>
+                </div>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-outline-variant pointer-events-none">lock</span>
+                    <input asp-for="Password" type="password" placeholder="••••••••" autocomplete="current-password"
+                        class="w-full h-row-height-dense pl-10 pr-10 bg-surface-container-lowest border border-surface-container-high rounded-none focus:border-slate-blue focus:ring-1 focus:ring-slate-blue font-body-lg text-body-lg text-on-surface transition-colors placeholder-outline-variant" />
+                    <button type="button" id="togglePassword" tabindex="-1"
+                        class="material-symbols-outlined absolute right-3 top-1/2 transform -translate-y-1/2 text-outline-variant hover:text-slate-blue transition-colors bg-transparent border-0 p-0 cursor-pointer">visibility</button>
+                </div>
+            </div>
+
+            <!-- CTA Button -->
+            <button type="submit"
+                class="mt-stack-sm w-full h-row-height-dense bg-slate-blue hover:bg-primary text-on-primary font-label-lg text-label-lg rounded-none transition-colors duration-200 flex items-center justify-center space-x-2">
+                <span>ACCESS SYSTEM</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+        </form>
+
+        <!-- Footer Links -->
+        <footer class="mt-stack-lg pt-stack-md border-t border-surface-container-high flex justify-center">
+            <a class="font-label-md text-label-md text-outline hover:text-primary transition-colors flex items-center space-x-1" href="@customerUrl">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                <span>Return to Website</span>
+            </a>
+        </footer>
+    </main>
+
+    <script>
+        (function () {
+            var toggle = document.getElementById('togglePassword');
+            var input = document.getElementById('Password');
+            if (!toggle || !input) return;
+            toggle.addEventListener('click', function () {
+                var isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                toggle.textContent = isHidden ? 'visibility_off' : 'visibility';
+            });
+        })();
+    </script>
+</body>
+</html>

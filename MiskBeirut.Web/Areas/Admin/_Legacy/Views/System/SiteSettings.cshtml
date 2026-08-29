@@ -1,0 +1,130 @@
+@model Dictionary<string, string>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Site Settings";
+}
+
+<!-- Page Header Section -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div>
+        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Landing Page Settings</h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-1">Configure public-facing marketing copy, contact details, and links.</p>
+    </div>
+    <div class="flex flex-wrap gap-3">
+        <a href="/" target="_blank"
+           class="inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-primary text-white hover:bg-primary/95 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all">
+            <span class="material-symbols-outlined text-sm font-bold">open_in_new</span>
+            View Live Site
+        </a>
+        <a href="/control-panel/site-gallery"
+           class="inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all">
+            <span class="material-symbols-outlined text-sm font-bold">collections</span>
+            Manage Gallery
+        </a>
+        <a href="/System/ControlPanel"
+           class="inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all">
+            <span class="material-symbols-outlined text-sm font-bold">arrow_back</span>
+            Back
+        </a>
+    </div>
+</div>
+
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-primary/10 shadow-sm p-6 max-w-4xl">
+    <form action="/api/site-settings" method="POST" class="space-y-8">
+
+        <!-- Identity & Branding Section -->
+        <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">palette</span>
+                Identity & Socials
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Brand Name -->
+                <div>
+                    <label for="brand_name" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Brand Name</label>
+                    <input type="text" id="brand_name" name="brand_name" value="@(Model.ContainsKey("brand_name") ? Model["brand_name"] : "")"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-primary focus:ring-primary text-sm"
+                           placeholder="e.g. Misk Beirut">
+                </div>
+
+                <!-- Instagram -->
+                <div>
+                    <label for="instagram_url" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Instagram Profile URL</label>
+                    <input type="url" id="instagram_url" name="instagram_url" value="@(Model.ContainsKey("instagram_url") ? Model["instagram_url"] : "")"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-primary focus:ring-primary text-sm"
+                           placeholder="https://instagram.com/...">
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-100 dark:border-slate-800" />
+
+        <!-- Address & Map Section -->
+        <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">map</span>
+                Location details
+            </h3>
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Address -->
+                <div>
+                    <label for="address" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Address Display Text</label>
+                    <input type="text" id="address" name="address" value="@(Model.ContainsKey("address") ? Model["address"] : "")"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-primary focus:ring-primary text-sm"
+                           placeholder="e.g. Beirut, Coastal Road, Lebanon">
+                </div>
+
+                <!-- Maps URL -->
+                <div>
+                    <label for="maps_url" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Google Maps Embed or Link URL</label>
+                    <input type="url" id="maps_url" name="maps_url" value="@(Model.ContainsKey("maps_url") ? Model["maps_url"] : "")"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-primary focus:ring-primary text-sm"
+                           placeholder="https://maps.google.com/...">
+                </div>
+            </div>
+        </div>
+
+        <hr class="border-slate-100 dark:border-slate-800" />
+
+        <!-- Operating Hours & Contact Section -->
+        <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">schedule</span>
+                Hours & Communication
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Hours -->
+                <div class="md:col-span-2">
+                    <label for="hours" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Operating Hours</label>
+                    <textarea id="hours" name="hours" rows="2"
+                              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-primary focus:ring-primary text-sm"
+                              placeholder="e.g. Mon-Sun: 8:00 AM - 12:00 AM">@(Model.ContainsKey("hours") ? Model["hours"] : "")</textarea>
+                </div>
+
+                <!-- Phones -->
+                <div>
+                    <label for="phone_display" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Phone Number (Display Text)</label>
+                    <input type="text" id="phone_display" name="phone_display" value="@(Model.ContainsKey("phone_display") ? Model["phone_display"] : "")"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-primary focus:ring-primary text-sm"
+                           placeholder="e.g. +961 1 000 000">
+                    <p class="text-xs text-slate-400 mt-1.5">How it appears visually on the landing page header.</p>
+                </div>
+                <div>
+                    <label for="phone_tel" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Dialable Phone Number (WhatsApp / Tel Link)</label>
+                    <input type="text" id="phone_tel" name="phone_tel" value="@(Model.ContainsKey("phone_tel") ? Model["phone_tel"] : "")"
+                           class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white focus:border-primary focus:ring-primary text-sm"
+                           placeholder="e.g. +9611000000">
+                    <p class="text-xs text-slate-400 mt-1.5">No spaces/dashes. Used for initiating direct WhatsApp chats and calls.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+            <button type="submit"
+                    class="inline-flex justify-center items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl text-sm shadow-lg shadow-primary/20 transition-all">
+                <span class="material-symbols-outlined text-lg">save</span>
+                Save Settings
+            </button>
+        </div>
+    </form>
+</div>

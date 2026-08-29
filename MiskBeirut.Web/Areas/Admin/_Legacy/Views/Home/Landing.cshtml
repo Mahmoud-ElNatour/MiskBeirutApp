@@ -1,0 +1,195 @@
+@model IEnumerable<MiskBeirut.Application.DTOs.SiteGalleryImagesDto>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = ViewData["BrandName"] as string ?? "Misk Beirut";
+    var brandName = ViewData["BrandName"] as string ?? "Misk Beirut";
+    var address = ViewData["Address"] as string ?? "Beirut, Coastal Road, Lebanon";
+    var hours = ViewData["Hours"] as string ?? "Mon-Sun: 8:00 AM - 12:00 AM";
+    var phoneDisplay = ViewData["PhoneDisplay"] as string ?? "+961 1 000 000";
+    var phoneTel = ViewData["PhoneTel"] as string ?? "";
+    var whatsappDigits = ViewData["WhatsappDigits"] as string ?? "";
+    var instagramUrl = ViewData["InstagramUrl"] as string ?? "";
+    var mapsUrl = ViewData["MapsUrl"] as string ?? "";
+    var menuUrl = ViewData["MenuUrl"] as string ?? "";
+    var isAdmin = ViewData["IsAdmin"] as bool? ?? false;
+}
+
+<!-- Hero Section -->
+<section class="relative bg-slate-50 dark:bg-slate-900/40 py-20 lg:py-32 overflow-hidden rounded-3xl border border-slate-200/50 dark:border-slate-800 mb-12" data-purpose="hero">
+    <div class="max-w-3xl mx-auto text-center px-4 relative z-10">
+        <h1 class="text-4xl lg:text-6xl font-black text-slate-900 dark:text-white leading-tight mb-6 font-display">
+            @brandName — <span class="text-primary dark:text-blue-400 italic font-serif">A Cozy Resto-Café</span> by the Sea
+        </h1>
+        <p class="text-lg lg:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed max-w-2xl mx-auto">
+            Fresh flavors, comforting dishes, and a relaxed Beirut atmosphere — any time of day. Join us for an authentic coastal dining experience.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div class="relative inline-block w-full sm:w-auto">
+                <a class="inline-flex justify-center items-center px-8 py-4 bg-primary hover:bg-blue-700 text-white font-bold rounded-xl transition-all text-lg w-full sm:w-auto shadow-lg shadow-primary/20"
+                   href="/Menu">
+                    View Menu
+                </a>
+                @if (isAdmin && string.IsNullOrEmpty(menuUrl))
+                {
+                    <a href="/control-panel/site-settings"
+                       class="absolute -top-3 -right-3 bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-[10px] font-bold px-2 py-0.5 rounded shadow border border-rose-200 dark:border-rose-800 z-50 hover:bg-rose-200 dark:hover:bg-rose-900 whitespace-nowrap">
+                        Add Menu PDF/Link
+                    </a>
+                }
+            </div>
+            <a class="inline-flex justify-center items-center px-8 py-4 border-2 border-primary text-primary hover:bg-primary hover:text-white font-bold rounded-xl transition-all text-lg w-full sm:w-auto dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-slate-950"
+               href="@(string.IsNullOrEmpty(mapsUrl) ? "#" : mapsUrl)" @(string.IsNullOrEmpty(mapsUrl) ? "" : "target=\"_blank\"")>
+                Get Directions
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/50 dark:border-slate-800 p-8 text-center mb-12" data-purpose="about-text" id="about">
+    <div class="max-w-4xl mx-auto">
+        <span class="text-primary dark:text-blue-400 font-black tracking-widest uppercase text-sm mb-3 block">Our Story</span>
+        <h2 class="text-3xl lg:text-4xl font-bold mb-6 text-slate-900 dark:text-white font-display">A Taste of Coastal Comfort</h2>
+        <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+            Inspired by the vibrant yet laid-back spirit of Beirut's coastline, @brandName is your all-day destination for warmth and flavor. We blend traditional hospitality with a contemporary café feel, serving everything from morning staples to hearty evening meals in a space designed for relaxation.
+        </p>
+    </div>
+</section>
+
+<!-- Menu Preview -->
+<section class="py-16 mb-12" data-purpose="menu-preview" id="menu">
+    <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-slate-900 dark:text-white mb-3 font-display">On The Menu</h2>
+        <p class="text-slate-500 dark:text-slate-400 max-w-xl mx-auto">Explore our diverse selection of all-day favorites, crafted with care.</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+        <!-- Categories -->
+        <div class="relative group overflow-hidden rounded-2xl h-48 flex items-center justify-center border border-slate-200 dark:border-slate-800">
+            <div class="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/50 transition-colors z-10"></div>
+            <img alt="Breakfast" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXWcv5xjF4UFqbIo-igKgtAOlxvJlXhTNldnC7vUctM8QzIy9aFhjkLF848lpcxFjEaAf-XjFMIx9dHRPSrfzrC8VUqv1cQAQ2v4GsLADWAab2TH4QmwkWCGiDRqwMOobRR_RYCVfPGo7t5jM8fQ55x1FzQKElvaAO6ta544M8ZO8nqu6EOGWGgGBjty84S1Tzuye-Qu4ebnAI11BwiAuGKptlmQJxsv-hypjkEbcrGNllKQuNax6fXWzh2sd7_mcCJGKI70nNbPA" />
+            <span class="relative z-20 text-white text-2xl font-black font-display tracking-tight">Breakfast</span>
+        </div>
+        <div class="relative group overflow-hidden rounded-2xl h-48 flex items-center justify-center border border-slate-200 dark:border-slate-800">
+            <div class="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/50 transition-colors z-10"></div>
+            <img alt="Main Dishes" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgblc5JgZGg7gOL8s9QjTaGlRR3M9FCZc9WktrCeIZH2AZNZJJpx6n55rHa0ZjdHHk0rLgeAeOEGTn1y02mchXFqYNdpM1gdIKg3FOmM8006XX63QDUVvdgc6FLP_VjjeuEwoHxSPREiBOYxwWsUdlebHW_SFnTDpXyC5E-BRD__6DYHkI7429WX3r98d7uic5stYPW2PtBcgspPj31ryUtFSAW9ywsK7vE1kfTrdJuxhuAwjRW9Q0qiSQ8WShGccGu8-rMm3bGY4" />
+            <span class="relative z-20 text-white text-2xl font-black font-display tracking-tight">Main Dishes</span>
+        </div>
+        <div class="relative group overflow-hidden rounded-2xl h-48 flex items-center justify-center border border-slate-200 dark:border-slate-800">
+            <div class="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/50 transition-colors z-10"></div>
+            <img alt="Sandwiches" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR4mhRYps12dFmbEfTzItK3aI_IY3fVAhMXQ4G8myAsEXtturlZDW-z8kS6MNGpvShF36JI0QeMJxr8nSJxjW_i96vh3OUcaC7tiByFu2whbErOuiiYc5XMluRV99aHQzRRexylzdv2v7YhSnwDJX0stK2hsQStH6qBKMhhF1FleJZpVK9YQ8i5xdPZ7ySm6NyZ5U3lYy0lModEVihfKcaG2lkc8V1XhMb8W0Loopkg1EoddnKU1R5dth44EF5UONqkoLX05HrCpQ" />
+            <span class="relative z-20 text-white text-2xl font-black font-display tracking-tight">Sandwiches</span>
+        </div>
+        <div class="relative group overflow-hidden rounded-2xl h-48 flex items-center justify-center border border-slate-200 dark:border-slate-800">
+            <div class="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/50 transition-colors z-10"></div>
+            <img alt="Desserts" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDddeKkSmnj6M1SP7P8ps_kCdYfyP4fNDgaPZR3EokyCZdSDBAkwH3l8qDtc5Sn-JksIL5m_kBoAN8snYuFdvCsZ-S7i5VHAFfJE7OPv2VjhJ6EjWQDE_1MlWFDTuMMOF1SnefoedqrVMcFZas8enfh2wyVn1FNVGT7dFdxtg3wI0Eo6M4a2nyQtVNBwjCpsFuXA3qwFO9Tziuw2GBB-3PiVNx1OFs2IQC35RK1jTUZxfMy9zgj7lx60df1tA7aY_PQ4_IDpk-5CzM" />
+            <span class="relative z-20 text-white text-2xl font-black font-display tracking-tight">Desserts</span>
+        </div>
+        <div class="relative group overflow-hidden rounded-2xl h-48 flex items-center justify-center lg:col-span-2 border border-slate-200 dark:border-slate-800">
+            <div class="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/50 transition-colors z-10"></div>
+            <img alt="Drinks" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi1cQ6-BF2UNmyc43gYsLvVlQk_I8a6yp252yKqFoRrdrRGP3kbXJ4EoTp4yrturxBr15Mcs5IyOI48aMCZMPmhybzOQDliEyiyF6SywF4WdpeiK_BxcVKdLcuSad71gaOMwPQSa75qlO4z0llOSQEbycsom3cBqREhI6J-gUhAPpEK94cwVpn_dsjquNzITRXEwZJRp1LilrPwl5KBuMUn9XVMHS7yqf3gEzBYr0drs42Av4_qOGJno6hQxVcda8NCRotuccTgBA" />
+            <span class="relative z-20 text-white text-2xl font-black font-display tracking-tight">Hot &amp; Cold Drinks</span>
+        </div>
+    </div>
+    <div class="text-center">
+        <a class="inline-flex justify-center items-center px-8 py-4 bg-primary hover:bg-blue-700 text-white font-bold rounded-xl transition-all text-lg shadow-md shadow-primary/10"
+           href="/Menu">
+            Explore Full Menu
+        </a>
+    </div>
+</section>
+
+<!-- Gallery -->
+<section class="py-16 bg-slate-50 dark:bg-slate-900/40 rounded-3xl border border-slate-200/50 dark:border-slate-800 p-8 mb-12" id="gallery">
+    <div class="relative mb-10">
+        <h2 class="text-3xl font-black text-center text-slate-900 dark:text-white uppercase tracking-widest font-display">The Experience</h2>
+        @if (isAdmin && !Model.Any())
+        {
+            <div class="absolute -top-1 right-0">
+                <a href="/control-panel/site-gallery"
+                   class="bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 font-bold px-4 py-2 rounded-lg shadow-sm border border-rose-200 dark:border-rose-800 hover:bg-rose-200 dark:hover:bg-rose-900 transition-colors text-sm">
+                    Add Gallery Images
+                </a>
+            </div>
+        }
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        @foreach (var img in Model)
+        {
+            <img alt="@(img.AltText ?? "Gallery Image")"
+                 class="w-full aspect-square object-cover rounded-xl border border-slate-200/50 dark:border-slate-800 hover:opacity-95 transition-opacity" loading="lazy"
+                 src="@img.ImageUrl" />
+        }
+        @if (!Model.Any())
+        {
+            <div class="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                No active gallery images uploaded yet.
+            </div>
+        }
+    </div>
+</section>
+
+<!-- Location & Hours -->
+<section class="py-16 mb-6" id="location">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="space-y-8">
+            <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-display">Visit Us</h2>
+            <div class="space-y-6">
+                <div class="flex items-start gap-4 relative">
+                    <span class="text-primary dark:text-blue-400"><span class="material-symbols-outlined text-3xl">location_on</span></span>
+                    <div>
+                        <h4 class="font-bold text-lg text-slate-900 dark:text-white">Address</h4>
+                        <p class="text-slate-600 dark:text-slate-400">@address</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4 relative">
+                    <span class="text-primary dark:text-blue-400"><span class="material-symbols-outlined text-3xl">schedule</span></span>
+                    <div>
+                        <h4 class="font-bold text-lg text-slate-900 dark:text-white">Opening Hours</h4>
+                        <p class="text-slate-600 dark:text-slate-400 whitespace-pre-line">@hours</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4 relative">
+                    <span class="text-primary dark:text-blue-400"><span class="material-symbols-outlined text-3xl">call</span></span>
+                    <div>
+                        <h4 class="font-bold text-lg text-slate-900 dark:text-white">Contact</h4>
+                        <p class="text-slate-600 dark:text-slate-400">@phoneDisplay</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-4 relative pt-4">
+                <a class="flex-1 min-w-[160px] text-center bg-primary hover:bg-blue-700 text-white py-4 rounded-xl font-bold transition-all shadow-md shadow-primary/10"
+                   href="@(string.IsNullOrEmpty(mapsUrl) ? "#" : mapsUrl)" @(string.IsNullOrEmpty(mapsUrl) ? "" : "target=\"_blank\"")>Open in Maps</a>
+                <a class="flex-1 min-w-[160px] text-center border-2 border-slate-900 dark:border-slate-700 text-slate-900 dark:text-slate-300 py-4 rounded-xl font-bold hover:bg-slate-900 hover:text-white dark:hover:bg-slate-800 dark:hover:text-white transition-all"
+                   href="tel:@phoneTel">Call Now</a>
+                <a class="flex-1 min-w-[160px] text-center bg-[#25D366] hover:bg-[#20ba56] text-white py-4 rounded-xl font-bold transition-all shadow-md shadow-green-500/10"
+                   href="@(string.IsNullOrEmpty(whatsappDigits) ? "#" : $"https://wa.me/{whatsappDigits}")" target="_blank">WhatsApp</a>
+            </div>
+        </div>
+        <!-- Google Map View -->
+        <div class="w-full h-80 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm relative">
+            @if (!string.IsNullOrEmpty(mapsUrl) && (mapsUrl.Contains("google.com/maps") || mapsUrl.Contains("embed")))
+            {
+                <iframe src="@mapsUrl" width="100%" height="100%" style="border:0;" allowfullscreen=""
+                        loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            }
+            else
+            {
+                <div class="w-full h-full bg-slate-100 dark:bg-slate-900/60 flex flex-col items-center justify-center p-6 text-center">
+                    <span class="material-symbols-outlined text-4xl text-slate-400 mb-2">map</span>
+                    <p class="text-slate-500 dark:text-slate-400 font-medium">Map location is not fully configured.</p>
+                    @if (isAdmin)
+                    {
+                        <a href="/control-panel/site-settings"
+                           class="mt-4 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition">Configure Map URL</a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</section>

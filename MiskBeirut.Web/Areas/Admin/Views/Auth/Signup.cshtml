@@ -1,0 +1,31 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Sign Up";
+}
+
+<div class="max-w-md mx-auto bg-surface-container-lowest border border-border-subtle rounded-DEFAULT p-container-padding">
+    <div class="text-center mb-stack-lg">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Create Account</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-2">Register a new management account</p>
+    </div>
+
+    <form method="post" action="/Auth/Signup" class="space-y-stack-md">
+        <div>
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Username</label>
+            <input type="text" name="Username" required class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue" />
+        </div>
+        <div>
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Email Address</label>
+            <input type="email" name="Email" required class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue" />
+        </div>
+        <div>
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Password</label>
+            <input type="password" name="Password" required class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue" />
+        </div>
+        <button type="submit" class="w-full py-3 bg-primary hover:bg-primary-container text-white font-label-lg text-label-lg rounded-DEFAULT transition-colors">Sign Up</button>
+    </form>
+
+    <div class="mt-stack-lg text-center font-body-md text-body-md text-on-surface-variant">
+        Already have an account? <a href="/Auth/Login" class="text-primary hover:underline font-semibold">Log In</a>
+    </div>
+</div>

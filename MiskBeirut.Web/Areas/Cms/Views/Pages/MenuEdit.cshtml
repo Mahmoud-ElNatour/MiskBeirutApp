@@ -1,0 +1,134 @@
+@model MiskBeirut.Web.Areas.Cms.Models.Pages.MenuEditViewModel
+@{
+    ViewData["Title"] = "Menu";
+    var hasPdf = !string.IsNullOrWhiteSpace(Model.PdfUrl);
+}
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-md">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Menu</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">The PDF shown to visitors at <strong>/Menu</strong>. Content in <strong>@Model.LangCode.ToUpper()</strong>.</p>
+    </div>
+    <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+        <span class="material-symbols-outlined text-sm">list</span>
+        All Pages
+    </a>
+</div>
+
+<!-- Language tabs -->
+<div class="flex gap-2 mb-stack-lg border-b border-surface-container-high">
+    @foreach (var lang in Model.Languages)
+    {
+        var isActive = lang.Id == Model.LangId;
+        <a asp-action="Edit" asp-route-id="@Model.PageId" asp-route-lang="@lang.Code"
+           class="px-4 py-2 font-label-lg text-label-lg uppercase border-b-2 -mb-px transition-colors @(isActive ? "border-brick-red text-primary" : "border-transparent text-on-surface-variant hover:text-primary")">
+            @lang.Name (@lang.Code)
+        </a>
+    }
+</div>
+
+<form id="menuAntiForgeryForm" class="hidden">@Html.AntiForgeryToken()</form>
+
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="p-stack-md border-b border-surface-container-high bg-surface-bright flex items-center justify-between">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface">Current Menu PDF</h3>
+        <div class="flex items-center gap-2">
+            <button type="button" id="editMenuBtn" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-colors">
+                <span class="material-symbols-outlined text-sm">edit</span>
+                Edit
+            </button>
+            <button type="button" id="cancelMenuBtn" class="hidden inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+                Cancel
+            </button>
+        </div>
+    </div>
+    <div class="p-stack-lg">
+        <div id="menuPreview" class="@(hasPdf ? "" : "hidden")">
+            <iframe id="menuPdfFrame" src="@(hasPdf ? Model.PdfUrl + "#toolbar=0&navpanes=0&scrollbar=0" : "")"
+                    title="Current menu PDF" class="w-full h-[75vh] rounded-DEFAULT border border-border-subtle"></iframe>
+        </div>
+        <div id="menuEmptyState" class="@(hasPdf ? "hidden" : "") text-center py-20 bg-surface-bright rounded-DEFAULT border-2 border-dashed border-surface-container-high">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4 block">picture_as_pdf</span>
+            <p class="font-body-md text-body-md text-on-surface-variant">No menu PDF has been uploaded yet.</p>
+        </div>
+
+        <div id="menuUploadArea" class="hidden mt-stack-lg pt-stack-lg border-t border-surface-container-high">
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Replace with a new PDF</label>
+            <div class="flex items-center gap-3">
+                <label class="inline-flex items-center gap-2 px-4 py-2 rounded-DEFAULT bg-surface-bright border border-border-subtle font-label-md text-label-md cursor-pointer hover:border-slate-blue transition-colors">
+                    <span class="material-symbols-outlined text-sm">upload</span>
+                    Choose PDF
+                    <input type="file" id="menuPdfFile" accept="application/pdf" class="hidden" />
+                </label>
+                <span id="menuUploadStatus" class="font-label-sm text-label-sm text-on-surface-variant"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        const editBtn = document.getElementById('editMenuBtn');
+        const cancelBtn = document.getElementById('cancelMenuBtn');
+        const uploadArea = document.getElementById('menuUploadArea');
+        const fileInput = document.getElementById('menuPdfFile');
+        const status = document.getElementById('menuUploadStatus');
+        const frame = document.getElementById('menuPdfFrame');
+        const preview = document.getElementById('menuPreview');
+        const emptyState = document.getElementById('menuEmptyState');
+
+        function tokenValue() {
+            var input = document.querySelector('#menuAntiForgeryForm input[name="__RequestVerificationToken"]');
+            return input ? input.value : '';
+        }
+
+        function setEditing(on) {
+            uploadArea.classList.toggle('hidden', !on);
+            editBtn.classList.toggle('hidden', on);
+            cancelBtn.classList.toggle('hidden', !on);
+        }
+
+        editBtn.addEventListener('click', function () { setEditing(true); });
+        cancelBtn.addEventListener('click', function () {
+            status.textContent = '';
+            fileInput.value = '';
+            setEditing(false);
+        });
+
+        fileInput.addEventListener('change', async function () {
+            if (!fileInput.files.length) return;
+
+            const uploadData = new FormData();
+            uploadData.append('file', fileInput.files[0]);
+            uploadData.append('__RequestVerificationToken', tokenValue());
+
+            status.textContent = 'Uploading...';
+            try {
+                const uploadResponse = await fetch('@Url.Action("UploadMenuPdf", "Pages")', { method: 'POST', body: uploadData });
+                const uploadResult = await uploadResponse.json();
+                if (!uploadResponse.ok) throw new Error(uploadResult.error || 'Upload failed.');
+
+                const saveData = new FormData();
+                saveData.append('pageId', '@Model.GlobalPageId');
+                saveData.append('langId', '@Model.LangId');
+                saveData.append('attributeName', 'menu_pdf_url');
+                saveData.append('attributeType', 'Link');
+                saveData.append('value', uploadResult.url);
+                saveData.append('__RequestVerificationToken', tokenValue());
+
+                const saveResponse = await fetch('@Url.Action("SaveField", "Pages")', { method: 'POST', body: saveData });
+                if (!saveResponse.ok) throw new Error('The PDF uploaded, but saving the new menu failed.');
+
+                frame.src = uploadResult.url + '#toolbar=0&navpanes=0&scrollbar=0';
+                preview.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                status.textContent = 'Menu updated.';
+                setEditing(false);
+            } catch (err) {
+                status.textContent = err.message || 'Upload failed.';
+            }
+        });
+    })();
+</script>
+}

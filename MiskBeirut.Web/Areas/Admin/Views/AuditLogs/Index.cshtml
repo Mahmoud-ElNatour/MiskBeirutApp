@@ -1,60 +1,226 @@
 @model IReadOnlyList<AuditLogDto>
 @using MiskBeirut.Application.Dtos.Audit
+
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Audit Logs";
-    var entityTypes = (string[])ViewData["EntityTypes"]!;
-    var actions = (string[])ViewData["Actions"]!;
-    var currentEntityType = ViewData["EntityType"] as string;
-    var currentAction = ViewData["Action"] as string;
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
+    var currentMonth = ViewData["CurrentMonth"] as int?;
+    var currentYear = ViewData["CurrentYear"] as int?;
 }
 
-<h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Audit Logs</h2>
-
-<form method="get" class="flex flex-wrap gap-3 mb-6">
-    <select name="entityType" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" onchange="this.form.submit()">
-        <option value="">All entity types</option>
-        @foreach (var t in entityTypes)
-        {
-            <option value="@t" selected="@(t == currentEntityType ? "selected" : null)">@t</option>
-        }
-    </select>
-    <select name="auditAction" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" onchange="this.form.submit()">
-        <option value="">All actions</option>
-        @foreach (var a in actions)
-        {
-            <option value="@a" selected="@(a == currentAction ? "selected" : null)">@a</option>
-        }
-    </select>
-</form>
-
-<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
-    <table class="w-full text-sm text-left">
-        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
-            <tr>
-                <th class="px-4 py-2">When</th>
-                <th class="px-4 py-2">User</th>
-                <th class="px-4 py-2">Entity</th>
-                <th class="px-4 py-2">Action</th>
-                <th class="px-4 py-2">Description</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            @foreach (var log in Model)
-            {
-                <tr>
-                    <td class="px-4 py-2 whitespace-nowrap">@log.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td class="px-4 py-2">@log.Username</td>
-                    <td class="px-4 py-2">@log.EntityType #@log.EntityId</td>
-                    <td class="px-4 py-2">
-                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold @(log.Action == "Delete" ? "bg-rose-100 text-rose-700" : log.Action == "Add" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700")">@log.Action</span>
-                    </td>
-                    <td class="px-4 py-2 text-slate-500">@log.Description</td>
-                </tr>
-            }
-            @if (!Model.Any())
-            {
-                <tr><td class="px-4 py-3 text-slate-400" colspan="5">No audit log entries yet.</td></tr>
-            }
-        </tbody>
-    </table>
+<!-- Header -->
+<div class="mb-stack-lg">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">@content.Text("title", "Audit Logs")</h2>
 </div>
+
+<!-- Filter Section -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden mb-stack-lg">
+    <div class="bg-surface-bright border-b border-surface-container-high px-stack-md py-4">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface m-0">Filter Audit Logs</h3>
+    </div>
+    <div class="p-stack-md">
+        <form method="get" class="flex flex-wrap items-end gap-4">
+            <div class="w-full sm:w-52">
+                <label for="entityType" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Entity Type</label>
+                <select id="entityType" name="entityType" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    <option value="">All</option>
+                    <option value="DailyClosing" selected="@(ViewData["SelectedEntityType"]?.ToString() == "DailyClosing")">Daily Closing</option>
+                    <option value="Employee" selected="@(ViewData["SelectedEntityType"]?.ToString() == "Employee")">Employee</option>
+                    <option value="Customer" selected="@(ViewData["SelectedEntityType"]?.ToString() == "Customer")">Customer</option>
+                    <option value="Receiver" selected="@(ViewData["SelectedEntityType"]?.ToString() == "Receiver")">Receiver</option>
+                    <option value="EmployeeWorking" selected="@(ViewData["SelectedEntityType"]?.ToString() == "EmployeeWorking")">Payroll</option>
+                </select>
+            </div>
+            <div class="w-full sm:w-40">
+                <label for="action" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Action</label>
+                <select id="action" name="action" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    <option value="">All</option>
+                    <option value="Add" selected="@(ViewData["SelectedAction"]?.ToString() == "Add")">Add</option>
+                    <option value="Update" selected="@(ViewData["SelectedAction"]?.ToString() == "Update")">Update</option>
+                    <option value="Delete" selected="@(ViewData["SelectedAction"]?.ToString() == "Delete")">Delete</option>
+                </select>
+            </div>
+            <div class="w-full sm:w-32">
+                <label for="entityId" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Entity ID</label>
+                <input type="number" id="entityId" name="entityId" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md" value="@(ViewData["SelectedEntityId"]?.ToString() ?? "")" placeholder="Optional">
+            </div>
+            <div class="w-full sm:w-36">
+                <label for="month" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Month</label>
+                <select id="month" name="month" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    <option value="">All Months</option>
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" selected="@(m == currentMonth ? "selected" : null)">@(new DateTime(2000, m, 1).ToString("MMMM"))</option>
+                    }
+                </select>
+            </div>
+            <div class="w-full sm:w-28">
+                <label for="year" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Year</label>
+                <select id="year" name="year" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    <option value="">All Years</option>
+                    @for (int y = 2023; y <= 2030; y++)
+                    {
+                        <option value="@y" selected="@(y == currentYear ? "selected" : null)">@y</option>
+                    }
+                </select>
+            </div>
+            <div class="w-full sm:w-40">
+                <label for="fromDate" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">From Date</label>
+                <input type="date" id="fromDate" name="fromDate" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md" value="@(ViewData["SelectedFromDate"]?.ToString() ?? "")">
+            </div>
+            <div class="w-full sm:w-40">
+                <label for="toDate" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">To Date</label>
+                <input type="date" id="toDate" name="toDate" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md" value="@(ViewData["SelectedToDate"]?.ToString() ?? "")">
+            </div>
+            <button type="submit" class="px-stack-md py-2 bg-primary hover:bg-primary-container text-white font-label-md text-label-md rounded-DEFAULT">Filter</button>
+        </form>
+    </div>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="bg-surface-bright border-b border-surface-container-high px-stack-md py-4">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface m-0">Audit Log Entries</h3>
+    </div>
+    <div>
+        @if (Model == null || !Model.Any())
+        {
+            <div class="p-stack-md">
+                <div class="p-stack-md bg-slate-blue/10 text-slate-blue rounded-DEFAULT font-body-md text-body-md">
+                    @content.Text("empty_title", "No audit logs found matching the selected criteria.")
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="overflow-x-auto">
+                <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+                    <thead>
+                        <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                            <th class="py-3 px-stack-md" data-sort="number">ID</th>
+                            <th class="py-3 px-stack-md" data-sort="text">Entity Type</th>
+                            <th class="py-3 px-stack-md" data-sort="text">Action</th>
+                            <th class="py-3 px-stack-md">Entity ID</th>
+                            <th class="py-3 px-stack-md" data-sort="text">User</th>
+                            <th class="py-3 px-stack-md">Description</th>
+                            <th class="py-3 px-stack-md" data-sort="date">Date/Time</th>
+                            <th class="py-3 px-stack-md">IP Address</th>
+                            <th class="py-3 px-stack-md">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors">
+                                <td class="py-4 px-stack-md text-on-surface-variant">@log.Id</td>
+                                <td class="py-4 px-stack-md">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-blue/10 text-slate-blue">@log.EntityType</span>
+                                </td>
+                                <td class="py-4 px-stack-md">
+                                    @if (log.Action == "Add")
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#E8F5E9] text-status-success">Add</span>
+                                    }
+                                    else if (log.Action == "Update")
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#FFF3E0] text-status-pending">Update</span>
+                                    }
+                                    else if (log.Action == "Delete")
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-error-container text-on-error-container">Delete</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-stack-md text-on-surface-variant">@log.EntityId</td>
+                                <td class="py-4 px-stack-md">
+                                    <span class="font-semibold text-on-surface">@log.Username</span>
+                                    @if (log.UserId.HasValue)
+                                    {
+                                        <span class="text-on-surface-variant text-xs">(ID: @log.UserId)</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-stack-md text-on-surface-variant">@log.Description</td>
+                                <td class="py-4 px-stack-md text-on-surface-variant text-xs">@log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td class="py-4 px-stack-md text-on-surface-variant text-xs">@log.IpAddress</td>
+                                <td class="py-4 px-stack-md">
+                                    <button type="button" class="px-3 py-1.5 border border-border-subtle rounded-DEFAULT font-label-sm text-label-sm text-on-surface-variant hover:border-slate-blue transition-colors" data-bs-toggle="modal" data-bs-target="#detailsModal" onclick="loadDetails(@log.Id)">
+                                        Details
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Audit Log Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detailsContent">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadDetails(logId) {
+        fetch(`/api/audit-logs/detail/${logId}`)
+            .then(response => response.json())
+            .then(data => {
+                let html = `
+                    <div class="grid grid-cols-2 gap-4 mb-3 text-sm text-on-surface">
+                        <div><strong>Entity Type:</strong> ${data.entityType}</div>
+                        <div><strong>Action:</strong> ${data.action}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-3 text-sm text-on-surface">
+                        <div><strong>Entity ID:</strong> ${data.entityId}</div>
+                        <div><strong>User:</strong> ${data.username} ${data.userId ? `(ID: ${data.userId})` : ''}</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-3 text-sm text-on-surface">
+                        <div><strong>Date/Time:</strong> ${new Date(data.createdAt).toLocaleString()}</div>
+                        <div><strong>IP Address:</strong> ${data.ipAddress}</div>
+                    </div>
+                    <div class="mb-3 text-sm text-on-surface">
+                        <strong>Description:</strong><br>
+                        ${data.description || 'N/A'}
+                    </div>
+                `;
+
+                if (data.action === 'Update' || data.action === 'Delete') {
+                    html += `
+                        <div class="mb-3">
+                            <strong class="text-sm text-on-surface">Old Values:</strong>
+                            <pre style="background: #f9f9fa; padding: 10px; border-radius: 2px; max-height: 200px; overflow-y: auto;">
+${data.oldValues ? JSON.stringify(JSON.parse(data.oldValues), null, 2) : 'N/A'}
+                            </pre>
+                        </div>
+                    `;
+                }
+
+                if (data.action === 'Update' || data.action === 'Add') {
+                    html += `
+                        <div class="mb-3">
+                            <strong class="text-sm text-on-surface">New Values:</strong>
+                            <pre style="background: #f9f9fa; padding: 10px; border-radius: 2px; max-height: 200px; overflow-y: auto;">
+${data.newValues ? JSON.stringify(JSON.parse(data.newValues), null, 2) : 'N/A'}
+                            </pre>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('detailsContent').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('detailsContent').innerHTML = `<div class="p-3 bg-error-container text-on-error-container rounded">Error loading details: ${error.message}</div>`;
+            });
+    }
+</script>

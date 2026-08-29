@@ -1,46 +1,229 @@
-@model List<UserListItem>
+@model IEnumerable<UserListItem>
 @{
-    ViewData["Title"] = "Users";
+    Layout = "_Layout";
+    ViewData["Title"] = "User Management";
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
+    var currentMonth = ViewData["CurrentMonth"] as int?;
+    var currentYear = ViewData["CurrentYear"] as int?;
 }
 
-<div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Users</h2>
-    <a asp-action="Create" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ New User</a>
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@content.Text("title", "User Management")</h2>
+    </div>
+    <a asp-action="Create" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors w-full md:w-auto">
+        <span class="material-symbols-outlined text-sm">person_add</span>
+        Add User
+    </a>
 </div>
 
-<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
-    <table class="w-full text-sm text-left">
-        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
-            <tr>
-                <th class="px-6 py-3">Username</th>
-                <th class="px-6 py-3">Email</th>
-                <th class="px-6 py-3">Roles</th>
-                <th class="px-6 py-3">Created</th>
-                <th class="px-6 py-3 text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            @foreach (var user in Model)
-            {
-                <tr>
-                    <td class="px-6 py-3 font-semibold text-slate-900 dark:text-white">@user.Username</td>
-                    <td class="px-6 py-3 text-slate-500">@user.Email</td>
-                    <td class="px-6 py-3">
-                        @foreach (var role in user.Roles)
-                        {
-                            <span class="inline-block mr-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">@role</span>
-                        }
-                    </td>
-                    <td class="px-6 py-3 text-slate-500">@user.CreatedAt.ToString("yyyy-MM-dd")</td>
-                    <td class="px-6 py-3 text-right space-x-2">
-                        <a asp-action="Edit" asp-route-id="@user.Id" class="text-primary hover:underline">Edit</a>
-                        <a asp-action="ResetPassword" asp-route-id="@user.Id" class="text-slate-500 hover:underline">Reset Password</a>
-                        <form asp-action="Delete" asp-route-id="@user.Id" method="post" class="inline">
-                            <button type="submit" class="text-rose-600 hover:underline">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<!-- Filter Section -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden mb-stack-lg">
+    <div class="bg-surface-bright border-b border-surface-container-high px-stack-md py-4">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface m-0">Filter Users</h3>
+    </div>
+    <div class="p-stack-md">
+        <form method="get" class="flex flex-wrap items-end gap-4">
+            <div class="w-full sm:w-64">
+                <label for="role" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Role</label>
+                <select id="role" name="role" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    <option value="">All Roles</option>
+                    <option value="admin" selected="@(ViewData["SelectedRole"]?.ToString() == "admin")">Admin</option>
+                    <option value="manager" selected="@(ViewData["SelectedRole"]?.ToString() == "manager")">Manager</option>
+                    <option value="user" selected="@(ViewData["SelectedRole"]?.ToString() == "user")">User</option>
+                </select>
+            </div>
+            <div class="w-full sm:w-40">
+                <label for="month" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Month Created</label>
+                <select id="month" name="month" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    <option value="">All Months</option>
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" selected="@(m == currentMonth ? "selected" : null)">@(new DateTime(2000, m, 1).ToString("MMMM"))</option>
+                    }
+                </select>
+            </div>
+            <div class="w-full sm:w-28">
+                <label for="year" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Year</label>
+                <select id="year" name="year" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    <option value="">All Years</option>
+                    @for (int y = 2023; y <= 2030; y++)
+                    {
+                        <option value="@y" selected="@(y == currentYear ? "selected" : null)">@y</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="px-stack-md py-2 bg-primary hover:bg-primary-container text-white font-label-md text-label-md rounded-DEFAULT">Filter</button>
+        </form>
+    </div>
 </div>
+
+<!-- Users Table -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="bg-surface-bright border-b border-surface-container-high px-stack-md py-4">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface m-0">Users</h3>
+    </div>
+    <div class="p-stack-md">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="p-stack-md bg-slate-blue/10 text-slate-blue rounded-DEFAULT font-body-md text-body-md">
+                @content.Text("empty_title", "No users found.")
+            </div>
+        }
+        else
+        {
+            <div class="overflow-x-auto -m-stack-md">
+                <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+                    <thead>
+                        <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                            <th class="py-3 px-stack-md" data-sort="number">ID</th>
+                            <th class="py-3 px-stack-md" data-sort="text">Username</th>
+                            <th class="py-3 px-stack-md" data-sort="text">Email</th>
+                            <th class="py-3 px-stack-md">Roles</th>
+                            <th class="py-3 px-stack-md">Employee Profile</th>
+                            <th class="py-3 px-stack-md" data-sort="date">Created</th>
+                            <th class="py-3 px-stack-md">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors">
+                                <td class="py-4 px-stack-md text-on-surface-variant">@user.Id</td>
+                                <td class="py-4 px-stack-md font-semibold text-on-surface">@user.Username</td>
+                                <td class="py-4 px-stack-md text-on-surface-variant text-xs">@user.Email</td>
+                                <td class="py-4 px-stack-md">
+                                    @foreach (var role in user.Roles)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-on-surface-variant mr-1">@role</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-stack-md">
+                                    @if (user.AssignedEmployeeName != null)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-blue/10 text-slate-blue">@user.AssignedEmployeeName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-on-surface-variant/60">-</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-stack-md text-on-surface-variant text-xs">@user.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                <td class="py-4 px-stack-md">
+                                    <div class="flex items-center gap-3">
+                                        <a asp-action="Edit" asp-route-id="@user.Id" class="text-slate-blue hover:text-primary inline-flex items-center" title="Edit / Assign Roles">
+                                            <span class="material-symbols-outlined text-sm">edit</span>
+                                        </a>
+                                        <button type="button" class="text-slate-blue hover:text-primary inline-flex items-center" title="Assign Employee Profile" data-bs-toggle="modal" data-bs-target="#assignmentModal" onclick="openAssignment(@user.Id)">
+                                            <span class="material-symbols-outlined text-sm">badge</span>
+                                        </button>
+                                        <a asp-action="ResetPassword" asp-route-id="@user.Id" class="text-slate-blue hover:text-primary inline-flex items-center" title="Reset Password">
+                                            <span class="material-symbols-outlined text-sm">key</span>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@user.Id" method="post" onsubmit="return confirm('Delete user &quot;@user.Username&quot;? This cannot be undone.');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="text-brick-red hover:opacity-80 inline-flex items-center" title="Delete">
+                                                <span class="material-symbols-outlined text-sm">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Assignment Modal -->
+<div class="modal fade" id="assignmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Customer/Employee to User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="assignmentContent">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openAssignment(userId) {
+        fetch(`/api/users/${userId}/assign`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== "success") {
+                    document.getElementById('assignmentContent').innerHTML = `<div class="p-3 bg-error-container text-on-error-container rounded">${data.error}</div>`;
+                    return;
+                }
+
+                const user = data.user;
+                const employees = data.availableEmployees || [];
+                const currentEmployee = data.currentEmployee;
+
+                let html = `
+                    <div class="mb-4">
+                        <h6 class="font-semibold text-on-surface">User: <strong>${user.userName}</strong></h6>
+                        <p class="text-on-surface-variant text-sm">${user.email}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="font-semibold text-on-surface mb-2">Employee Profile</h6>
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-1">Assign Employee</label>
+                        <select id="employeeSelect" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md">
+                            <option value="">None</option>
+                `;
+
+                employees.forEach(e => {
+                    const selected = currentEmployee && currentEmployee.id === e.id ? 'selected' : '';
+                    html += `<option value="${e.id}" ${selected}>${e.name}</option>`;
+                });
+
+                html += `
+                        </select>
+                        <button type="button" class="px-3 py-1.5 mt-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-sm text-label-sm" onclick="assignEmployee(${user.id})">
+                            Save Employee
+                        </button>
+                    </div>
+                `;
+
+                document.getElementById('assignmentContent').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('assignmentContent').innerHTML = `<div class="p-3 bg-error-container text-on-error-container rounded">Error loading options: ${error.message}</div>`;
+            });
+    }
+
+    function assignEmployee(userId) {
+        const employeeId = document.getElementById('employeeSelect').value;
+        const payload = {
+            employeeId: employeeId ? parseInt(employeeId) : null
+        };
+
+        fetch(`/api/users/${userId}/assign-employee`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert('Employee assignment saved successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || data.message));
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+    }
+</script>

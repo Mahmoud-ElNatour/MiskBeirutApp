@@ -4,55 +4,99 @@
     ViewData["Title"] = "Edit Payroll";
 }
 
-<div class="max-w-lg mx-auto bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-8 shadow-sm">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">@Model.EmployeeName — @Model.Year-@Model.Month.ToString("00")</h2>
-    <form asp-action="Edit" method="post" class="space-y-6">
+<div class="max-w-lg mx-auto bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT p-container-padding">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-lg">@Model.EmployeeName — @Model.Year-@Model.Month.ToString("00")</h2>
+    <form asp-action="Edit" method="post" class="space-y-stack-md">
         <input type="hidden" asp-for="EmployeeId" />
         <input type="hidden" asp-for="EmployeeName" />
         <input type="hidden" asp-for="Year" />
         <input type="hidden" asp-for="Month" />
         <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Status</label>
-            <input asp-for="Status" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Status</label>
+            <input asp-for="Status" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
+        </div>
+        <div>
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Base Salary (this month)</label>
+            <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+                <input asp-for="BaseSalary" type="number" step="0.01" class="w-full pl-7 rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
+            </div>
+            <span asp-validation-for="BaseSalary" class="text-status-urgent font-label-sm text-label-sm"></span>
+            <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">This month's own rate — defaults from the employee's current Base Salary but stays fixed even if that changes later, so past months don't get recalculated with today's rate.</p>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Working Days</label>
-                <input asp-for="WorkingDays" type="number" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Working Days</label>
+                <input asp-for="WorkingDays" type="number" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Actual Working Days</label>
-                <input asp-for="ActualWorkingDays" type="number" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
-            </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Advance Total</label>
-                <input asp-for="AdvanceTotal" type="number" step="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Deductions Total</label>
-                <input asp-for="DeductionsTotal" type="number" step="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Actual Working Days</label>
+                <input asp-for="ActualWorkingDays" type="number" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
             </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Actual Salary</label>
-                <input asp-for="ActualSalary" type="number" step="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Advance Total</label>
+                <input asp-for="AdvanceTotal" type="number" step="0.01" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Total</label>
-                <input asp-for="Total" type="number" step="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Deductions Total</label>
+                <input asp-for="DeductionsTotal" type="number" step="0.01" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Actual Salary</label>
+                <div id="computed-actual-salary" class="w-full rounded-DEFAULT border border-border-subtle bg-surface-container-high px-4 py-2 text-on-surface-variant">$0.00</div>
+                <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">(Base Salary ÷ 30) × Actual Days − Deductions − Advance</p>
+            </div>
+            <div>
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Total</label>
+                <div id="computed-total" class="w-full rounded-DEFAULT border border-border-subtle bg-surface-container-high px-4 py-2 text-on-surface-variant font-bold">$0.00</div>
+                <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Same as Actual Salary, floored at $0</p>
             </div>
         </div>
         <label class="flex items-center gap-2">
-            <input asp-for="IsWorking" type="checkbox" class="rounded border-slate-300" />
-            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Currently Working</span>
+            <input asp-for="IsWorking" type="checkbox" class="rounded border-border-subtle" />
+            <span class="font-body-md text-body-md text-on-surface-variant">Currently Working</span>
         </label>
         <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Note</label>
-            <textarea asp-for="Note" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2"></textarea>
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Note</label>
+            <textarea asp-for="Note" rows="3" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue"></textarea>
         </div>
-        <button type="submit" class="w-full py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg transition-colors">Save</button>
+        <button type="submit" class="w-full py-3 bg-primary hover:bg-primary-container text-white font-label-lg text-label-lg rounded-DEFAULT transition-colors">Save</button>
     </form>
 </div>
+
+@section Scripts {
+<script>
+    // Live preview only — matches EmployeeWorking.RecomputeSalary exactly, but the server always
+    // recomputes on save regardless of what this shows, so there's nothing to keep in sync here.
+    (function () {
+        var baseSalaryInput = document.getElementById('BaseSalary');
+        var actualDaysInput = document.getElementById('ActualWorkingDays');
+        var advanceInput = document.getElementById('AdvanceTotal');
+        var deductionsInput = document.getElementById('DeductionsTotal');
+        var actualSalaryEl = document.getElementById('computed-actual-salary');
+        var totalEl = document.getElementById('computed-total');
+
+        function recompute() {
+            var baseSalary = parseFloat(baseSalaryInput.value) || 0;
+            var actualDays = parseFloat(actualDaysInput.value) || 0;
+            var advance = parseFloat(advanceInput.value) || 0;
+            var deductions = parseFloat(deductionsInput.value) || 0;
+
+            var actualSalary = (baseSalary / 30) * actualDays - deductions - advance;
+            var total = actualSalary < 0 ? 0 : actualSalary;
+
+            actualSalaryEl.textContent = '$' + actualSalary.toFixed(2);
+            totalEl.textContent = '$' + total.toFixed(2);
+        }
+
+        [baseSalaryInput, actualDaysInput, advanceInput, deductionsInput].forEach(function (input) {
+            input.addEventListener('input', recompute);
+        });
+        recompute();
+    })();
+</script>
+}

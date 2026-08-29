@@ -3,50 +3,71 @@
 @using MiskBeirut.Core.Enums
 @{
     ViewData["Title"] = Model.Customer.Name;
+    var currentMonth = ViewData["CurrentMonth"] as int?;
+    var currentYear = ViewData["CurrentYear"] as int?;
 }
 
-<div class="flex items-center justify-between mb-6">
+<div class="flex items-center justify-between mb-stack-lg">
     <div>
-        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">@Model.Customer.Name</h2>
-        <p class="text-slate-500">@Model.Customer.PhoneNumber</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@Model.Customer.Name</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">@Model.Customer.PhoneNumber</p>
     </div>
     <div class="flex items-center gap-4">
         <div class="text-right">
-            <p class="text-xs text-slate-500 uppercase font-semibold">Balance</p>
-            <p class="text-2xl font-bold @(Model.Customer.Balance < 0 ? "text-rose-600" : "text-emerald-600")">@Model.Customer.Balance.ToString("N2")</p>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase">Balance</p>
+            <p class="font-headline-sm text-headline-sm @(Model.Customer.Balance < 0 ? "text-brick-red" : "text-status-success")">@Model.Customer.Balance.ToString("N2")</p>
         </div>
-        <a asp-action="Edit" asp-route-id="@Model.Customer.Id" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">Edit</a>
+        <a asp-action="Edit" asp-route-id="@Model.Customer.Id" class="px-4 py-2 bg-primary hover:bg-primary-container text-white font-label-md text-label-md rounded-DEFAULT">Edit</a>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
     <div class="lg:col-span-2">
-        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Ledger</h3>
-        <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-hidden">
-            <table class="w-full text-sm text-left">
-                <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
-                    <tr>
-                        <th class="px-4 py-2">Date</th>
-                        <th class="px-4 py-2">Type</th>
-                        <th class="px-4 py-2">Amount</th>
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-stack-sm">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface m-0">Ledger</h3>
+            <form method="get" asp-action="Details" asp-route-id="@Model.Customer.Id" class="flex flex-wrap items-end gap-2">
+                <select name="month" class="rounded-DEFAULT border border-border-subtle font-body-md text-body-md">
+                    <option value="">All Months</option>
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m" selected="@(m == currentMonth ? "selected" : null)">@(new DateTime(2000, m, 1).ToString("MMMM"))</option>
+                    }
+                </select>
+                <select name="year" class="rounded-DEFAULT border border-border-subtle font-body-md text-body-md">
+                    <option value="">All Years</option>
+                    @for (int y = 2023; y <= 2030; y++)
+                    {
+                        <option value="@y" selected="@(y == currentYear ? "selected" : null)">@y</option>
+                    }
+                </select>
+                <button type="submit" class="px-3 py-1.5 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">Filter</button>
+            </form>
+        </div>
+        <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+            <table class="w-full font-data-tabular text-data-tabular text-left" data-sortable data-paginate="10">
+                <thead>
+                    <tr class="border-b border-surface-container-high bg-surface-bright text-on-surface-variant uppercase font-label-sm text-label-sm">
+                        <th class="px-4 py-2" data-sort="date">Date</th>
+                        <th class="px-4 py-2" data-sort="text">Type</th>
+                        <th class="px-4 py-2" data-sort="number">Amount</th>
                         <th class="px-4 py-2">Note</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody>
                     @foreach (var entry in Model.Ledger)
                     {
-                        <tr>
+                        <tr class="border-b border-surface-container-high last:border-b-0 hover:bg-surface-bright transition-colors">
                             <td class="px-4 py-2">@entry.Date.ToString("yyyy-MM-dd")</td>
                             <td class="px-4 py-2">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold @(entry.Type == CustomerLedgerType.Credit ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700")">@entry.Type</span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold @(entry.Type == CustomerLedgerType.Credit ? "bg-error-container text-on-error-container" : "bg-[#E8F5E9] text-status-success")">@entry.Type</span>
                             </td>
                             <td class="px-4 py-2">@entry.Amount.ToString("N2")</td>
-                            <td class="px-4 py-2 text-slate-500">@entry.Note</td>
+                            <td class="px-4 py-2 text-on-surface-variant">@entry.Note</td>
                         </tr>
                     }
                     @if (!Model.Ledger.Any())
                     {
-                        <tr><td class="px-4 py-3 text-slate-400" colspan="4">No ledger entries yet.</td></tr>
+                        <tr><td class="px-4 py-3 text-on-surface-variant" colspan="4">No ledger entries yet.</td></tr>
                     }
                 </tbody>
             </table>
@@ -54,13 +75,13 @@
     </div>
 
     <div>
-        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Add Entry</h3>
-        <form asp-action="AddLedgerEntry" method="post" class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4 space-y-3">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">Add Entry</h3>
+        <form asp-action="AddLedgerEntry" method="post" class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT p-stack-md space-y-3">
             <input type="hidden" asp-for="NewEntry.CustomerId" />
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Daily Closing</label>
-                <select asp-for="NewEntry.DailyClosingId" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm">
-                    <option value="">Select date...</option>
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Daily Closing (optional)</label>
+                <select asp-for="NewEntry.DailyClosingId" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md">
+                    <option value="">None — attach automatically once today's closing exists</option>
                     @foreach (var closing in Model.RecentClosings)
                     {
                         <option value="@closing.Id">@closing.Date.ToString("yyyy-MM-dd")</option>
@@ -68,18 +89,18 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Type</label>
-                <select asp-for="NewEntry.Type" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm">
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Type</label>
+                <select asp-for="NewEntry.Type" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md">
                     <option value="Credit">Credit (customer owes)</option>
                     <option value="Cashback">Cashback (customer is owed)</option>
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Amount</label>
-                <input asp-for="NewEntry.Amount" type="number" step="0.01" min="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Amount</label>
+                <input asp-for="NewEntry.Amount" type="number" step="0.01" min="0.01" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md" />
             </div>
-            <input asp-for="NewEntry.Note" placeholder="Note (optional)" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
-            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ Add Entry</button>
+            <input asp-for="NewEntry.Note" placeholder="Note (optional)" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md" />
+            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary-container text-white font-label-md text-label-md rounded-DEFAULT">+ Add Entry</button>
         </form>
     </div>
 </div>

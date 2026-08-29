@@ -13,5 +13,10 @@ public sealed record CreateCustomerLedgerEntryRequest
     public CustomerLedgerType Type { get; init; }
     public string? Note { get; init; }
     public int CustomerId { get; init; }
-    public int DailyClosingId { get; init; }
+
+    /// <summary>Null to add this entry with no Daily Closing yet — see <see cref="MiskBeirut.Core.Entities.CustomerLedger.DailyClosingId"/>.</summary>
+    public int? DailyClosingId { get; init; }
+
+    /// <summary>True for a standalone entry (not one of a Daily Closing's submitted line items) — see <see cref="MiskBeirut.Core.Entities.CustomerLedger.IsManualEntry"/>.</summary>
+    public bool IsManualEntry { get; init; }
 }

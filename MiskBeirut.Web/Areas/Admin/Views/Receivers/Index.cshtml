@@ -1,32 +1,296 @@
-@model IReadOnlyList<ReceiverDto>
-@using MiskBeirut.Application.Dtos.Receivers
+@model IEnumerable<ReceiverListItemViewModel>
 @{
-    ViewData["Title"] = "Receivers";
+    Layout = "_Layout";
+    ViewData["Title"] = "Receivers Management";
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
 }
 
-<div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Receivers</h2>
-    <a asp-action="Create" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ New Receiver</a>
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">@content.Text("title", "Receivers Management")</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">@content.Text("subtitle", "Manage and view all payment recipients.")</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <a href="/System/ControlPanel" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors w-full sm:w-auto">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            Back
+        </a>
+        <button type="button" data-bs-toggle="modal" data-bs-target="#addReceiverModal" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors w-full sm:w-auto">
+            <span class="material-symbols-outlined text-sm">person_add</span>
+            @content.Text("add_button_label", "Add Receiver")
+        </button>
+    </div>
 </div>
 
-<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-x-auto">
-    <table class="w-full text-sm text-left">
-        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-xs">
-            <tr>
-                <th class="px-6 py-3">Name</th>
-                <th class="px-6 py-3 text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-            @foreach (var r in Model)
-            {
-                <tr>
-                    <td class="px-6 py-3 font-semibold text-slate-900 dark:text-white">@r.Name</td>
-                    <td class="px-6 py-3 text-right">
-                        <a asp-action="Edit" asp-route-id="@r.Id" class="text-primary hover:underline">Edit</a>
-                    </td>
+<!-- Receivers Table -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+            <thead>
+                <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    <th class="py-3 px-stack-md w-24" data-sort="number">ID</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Name</th>
+                    <th class="py-3 px-stack-md text-right" data-sort="number">All-Time Record</th>
+                    <th class="py-3 px-stack-md text-center w-28">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="font-medium">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var receiver in Model)
+                    {
+                        <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors">
+                            <td class="py-4 px-stack-md text-on-surface-variant font-mono">#@receiver.Id.ToString("D4")</td>
+                            <td class="py-4 px-stack-md text-on-surface font-semibold flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant border border-surface-container-high shrink-0">
+                                    <span class="material-symbols-outlined text-sm">person</span>
+                                </div>
+                                @receiver.Name
+                            </td>
+                            <td class="py-4 px-stack-md text-right">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-bright text-on-surface-variant font-mono text-xs">
+                                    <span class="text-on-surface-variant/60">$</span>@receiver.PaidAmount.ToString("F2")
+                                </span>
+                            </td>
+                            <td class="py-4 px-stack-md text-center">
+                                <div class="flex items-center justify-center gap-3">
+                                    <button onclick="openReceiverHistory('@receiver.Id', '@receiver.Name')" class="text-status-success hover:opacity-80 inline-flex items-center" title="Expense History">
+                                        <span class="material-symbols-outlined text-sm">history</span>
+                                    </button>
+                                    <button onclick="editReceiver('@receiver.Id')" class="text-slate-blue hover:text-primary inline-flex items-center" title="Edit">
+                                        <span class="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button onclick="deleteReceiver('@receiver.Id')" class="text-brick-red hover:opacity-80 inline-flex items-center" title="Delete">
+                                        <span class="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="py-12 px-stack-md text-center text-on-surface-variant">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="material-symbols-outlined text-4xl mb-3 text-on-surface-variant/40">group_off</span>
+                                <p class="font-body-lg text-body-lg font-medium">@content.Text("empty_title", "No receivers found")</p>
+                                <p class="font-body-md text-body-md mt-1">@content.Text("empty_body", "Register a new receiver to start tracking payments.")</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
+@await Html.PartialAsync("_AddModal")
+@await Html.PartialAsync("_EditModal")
+
+<!-- Receiver Expense History Modal -->
+<div class="modal fade" id="receiverHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content overflow-hidden">
+            <div class="modal-header">
+                <h5 class="modal-title flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">history</span>
+                    Expense History — <span id="rh-receiver-name" class="text-primary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rh-receiver-id">
+                <div class="flex flex-wrap items-center gap-3 mb-stack-lg">
+                    <div class="flex items-center gap-2 bg-surface-bright border border-border-subtle rounded-DEFAULT px-3 py-2">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">From</span>
+                        <input type="date" id="rh-from" class="border-0 p-0 bg-transparent font-body-md text-body-md focus:ring-0 text-on-surface w-32" />
+                    </div>
+                    <div class="flex items-center gap-2 bg-surface-bright border border-border-subtle rounded-DEFAULT px-3 py-2">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">To</span>
+                        <input type="date" id="rh-to" class="border-0 p-0 bg-transparent font-body-md text-body-md focus:ring-0 text-on-surface w-32" />
+                    </div>
+                    <button onclick="loadReceiverHistory()" class="inline-flex items-center gap-2 px-stack-md py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-colors">
+                        <span class="material-symbols-outlined text-sm">search</span>
+                        Load
+                    </button>
+                </div>
+                <div id="rh-loading" class="hidden text-center py-6 text-on-surface-variant">
+                    <span class="material-symbols-outlined animate-spin text-2xl">progress_activity</span>
+                </div>
+                <div id="rh-results" class="hidden space-y-stack-md">
+                    <div class="bg-surface-bright border border-border-subtle rounded-DEFAULT px-4 py-3">
+                        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Expenses</p>
+                        <p class="font-headline-sm text-headline-sm text-on-surface mt-1">$<span id="rh-total">0.00</span></p>
+                    </div>
+                    <div class="rounded-DEFAULT border border-surface-container-high overflow-hidden">
+                        <table id="rh-table" class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+                            <thead class="bg-surface-bright text-on-surface-variant">
+                                <tr>
+                                    <th class="px-4 py-2 font-semibold" data-sort="date">Date</th>
+                                    <th class="px-4 py-2 font-semibold text-right" data-sort="number">Amount</th>
+                                    <th class="px-4 py-2 font-semibold">Note</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rh-expenses-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function openReceiverHistory(id, name) {
+        document.getElementById('rh-receiver-id').value = id;
+        document.getElementById('rh-receiver-name').textContent = name;
+        document.getElementById('rh-results').classList.add('hidden');
+        document.getElementById('rh-loading').classList.add('hidden');
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const today = now.toISOString().split('T')[0];
+        document.getElementById('rh-from').value = firstDay;
+        document.getElementById('rh-to').value = today;
+        new bootstrap.Modal(document.getElementById('receiverHistoryModal')).show();
+    }
+
+    function loadReceiverHistory() {
+        const id = document.getElementById('rh-receiver-id').value;
+        const from = document.getElementById('rh-from').value;
+        const to = document.getElementById('rh-to').value;
+        if (!from || !to) { alert('Please select both dates.'); return; }
+
+        document.getElementById('rh-loading').classList.remove('hidden');
+        document.getElementById('rh-results').classList.add('hidden');
+
+        fetch(`/api/Receivers/${id}/expenses?from=${from}&to=${to}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('rh-loading').classList.add('hidden');
+            document.getElementById('rh-total').textContent = (data.total || 0).toFixed(2);
+
+            const body = document.getElementById('rh-expenses-body');
+            body.innerHTML = data.expenses.length
+                ? data.expenses.map(e => `<tr class="border-b border-surface-container-high last:border-b-0 hover:bg-surface-bright"><td class="px-4 py-2 text-on-surface-variant">${e.date}</td><td class="px-4 py-2 text-right font-medium text-on-surface">$${e.amount.toFixed(2)}</td><td class="px-4 py-2 text-on-surface-variant">${e.note || '—'}</td></tr>`).join('')
+                : '<tr><td colspan="3" class="px-4 py-4 text-center text-on-surface-variant">No expenses in this range</td></tr>';
+
+            document.getElementById('rh-results').classList.remove('hidden');
+            window.wireTablePagination(document.getElementById('rh-table'));
+        })
+        .catch(() => {
+            document.getElementById('rh-loading').classList.add('hidden');
+            alert('Error loading expense history.');
+        });
+    }
+
+    // Add Receiver Form Handler
+    document.getElementById('addReceiverForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        data.paidAmount = 0; // Default
+
+        fetch('/api/receivers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Error adding receiver: ' + (data.message || data.error));
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding receiver');
+            submitBtn.disabled = false;
+        });
+    });
+
+    function editReceiver(id) {
+        fetch(`/api/receivers/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('edit-receiver-id').value = data.id;
+            document.getElementById('edit-receiver-name').value = data.name;
+
+            const modal = new bootstrap.Modal(document.getElementById('editReceiverModal'));
+            modal.show();
+        })
+        .catch(err => {
+            console.error('Error fetching receiver', err);
+            alert('Error loading receiver data');
+        });
+    }
+
+    document.getElementById('editReceiverForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        const id = document.getElementById('edit-receiver-id').value;
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        data.id = parseInt(id);
+
+        fetch(`/api/receivers/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Error updating receiver: ' + (data.message || data.error));
+                submitBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating receiver');
+            submitBtn.disabled = false;
+        });
+    });
+
+    async function deleteReceiver(id) {
+        if (confirm('Are you sure you want to delete this receiver? This action cannot be undone.')) {
+            try {
+                const response = await fetch(`/api/receivers/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(result.message || 'Failed to delete receiver');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred');
+            }
+        }
+    }
+</script>
+}

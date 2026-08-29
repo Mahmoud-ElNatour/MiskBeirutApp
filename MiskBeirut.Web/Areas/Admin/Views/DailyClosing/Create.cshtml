@@ -1,44 +1,457 @@
 @model CreateDailyClosingViewModel
 @{
-    ViewData["Title"] = "New Daily Closing";
-    var isEmployeeOnly = User.IsInRole(RoleNames.Employee) && !User.IsInRole(RoleNames.Admin) && !User.IsInRole(RoleNames.Supervisor);
+    Layout = "_Layout";
+    ViewData["Title"] = "Daily Close";
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
 }
 
-<div class="max-w-lg mx-auto bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-8 shadow-sm">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-        @(isEmployeeOnly ? "Submit Today's Closing" : "New Daily Closing")
-    </h2>
+@section ExtraHead {
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.min.css" rel="stylesheet">
+<style>
+    .fade {
+        transition: opacity .15s linear;
+    }
 
-    <div asp-validation-summary="ModelOnly" class="mb-4 text-sm text-rose-600 dark:text-rose-400"></div>
+    .fade:not(.show) {
+        opacity: 0;
+    }
 
-    <form asp-action="Create" method="post" class="space-y-6">
-        @if (isEmployeeOnly)
+    .ts-wrapper .ts-control {
+        border-color: #E2E2E4;
+        border-radius: 0.125rem;
+        min-height: 42px;
+    }
+</style>
+}
+
+<header class="mb-stack-lg">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">@content.Text("title", "Daily Close")</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant mt-1">@content.Text("subtitle", "Process daily transactions with real-time calculations")</p>
+</header>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="mb-stack-lg p-stack-md bg-error-container text-on-error-container rounded-DEFAULT text-body-md" role="alert">
+        <ul class="list-disc pl-5">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<form id="dailyCloseForm" asp-action="Create" method="post" class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+    @Html.AntiForgeryToken()
+    <!-- Left Column: Main Form -->
+    <div class="lg:col-span-8 space-y-stack-md pb-20">
+
+        <!-- Date Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="flex items-center justify-between mb-stack-sm">
+                <label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Transaction Date</label>
+            </div>
+            <div class="flex items-center gap-4 bg-surface-bright p-stack-md rounded-DEFAULT border border-surface-container-high">
+                <span id="dateLockIcon" class="material-symbols-outlined text-on-surface-variant">lock</span>
+                <input id="closeDate" name="Date" type="date" readonly value="@Model.Date.ToString("yyyy-MM-dd")"
+                       class="bg-transparent border-none focus:ring-0 p-0 font-body-lg text-body-lg font-semibold flex-1 text-on-surface" />
+                <button type="button" id="editDateBtn" data-bs-toggle="modal" data-bs-target="#unlockModal"
+                    class="px-stack-md py-1.5 bg-surface-container-lowest border border-border-subtle font-label-md text-label-md rounded-DEFAULT hover:border-slate-blue transition-colors">
+                    Edit
+                </button>
+                <button type="button" id="lockDateBtn"
+                    class="hidden px-stack-md py-1.5 bg-surface-container-lowest border border-border-subtle font-label-md text-label-md rounded-DEFAULT hover:border-slate-blue transition-colors">
+                    Lock
+                </button>
+            </div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant mt-2 normal-case tracking-normal">Date is locked for accuracy. Click Edit to modify — a Supervisor or Admin must co-sign.</p>
+        </section>
+
+        <!-- Basic Values Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                <div>
+                    <label asp-for="MainReading" class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-stack-xs">Main Reading</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                        <input asp-for="MainReading" id="mainReading" type="number" step="0.01" required
+                               class="w-full pl-8 rounded-DEFAULT border-border-subtle font-body-lg text-body-lg font-semibold focus:border-slate-blue focus:ring-slate-blue" placeholder="0.00" />
+                    </div>
+                </div>
+                <div>
+                    <label asp-for="Note" class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-stack-xs">Closing Note</label>
+                    <input asp-for="Note" class="w-full rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Optional" />
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Expenses Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="flex items-center justify-between mb-stack-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-status-pending">receipt_long</span>
+                    Daily General Expenses
+                </h3>
+                <button type="button" data-add-section="GeneralExpenses" class="text-status-success hover:opacity-80 flex items-center gap-1 font-label-md text-label-md">
+                    <span class="material-symbols-outlined">add_circle</span> Add
+                </button>
+            </div>
+            <div id="generalExpensesRows" class="space-y-3"></div>
+            <template id="tpl-GeneralExpenses">
+                <div class="row-item flex flex-wrap md:flex-nowrap gap-4 items-center p-3 bg-surface-bright rounded-DEFAULT">
+                    <div class="flex-1 min-w-[200px] flex items-center gap-2">
+                        <select data-role="receiver" name="GeneralExpenses[__INDEX__].ReceiverId" class="flex-1"></select>
+                        <button type="button" class="quick-add-btn text-status-success hover:opacity-80 shrink-0" data-quick-add="receiver" title="Add new receiver"><span class="material-symbols-outlined text-xl">add_circle</span></button>
+                    </div>
+                    <input type="text" name="GeneralExpenses[__INDEX__].Note" class="flex-[1.5] min-w-[200px] rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Note/Details" />
+                    <div class="relative w-32 shrink-0">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                        <input type="number" step="0.01" required name="GeneralExpenses[__INDEX__].Amount" class="row-amount w-full pl-7 rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue text-right" placeholder="0.00" />
+                    </div>
+                    <button type="button" class="remove-row text-brick-red hover:opacity-80" title="Remove"><span class="material-symbols-outlined">remove_circle</span></button>
+                </div>
+            </template>
+            <div class="mt-stack-md p-3 bg-surface-bright rounded-DEFAULT flex justify-between items-center">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">General Expenses Total</span>
+                <span id="totalGeneralExpenses" class="font-headline-sm text-headline-sm text-primary">$0.00</span>
+            </div>
+        </section>
+
+        <!-- Investor Expenses — one dedicated section per investor, e.g. "Samer Expenses" -->
+        @if (!Model.Investors.Any())
         {
-            <p class="text-sm text-slate-500">Date: <span class="font-semibold text-slate-900 dark:text-white">@Model.Date.ToString("yyyy-MM-dd")</span> (today)</p>
+            <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2 mb-stack-xs">
+                    <span class="material-symbols-outlined text-orange-500">payments</span>
+                    Investor Expenses
+                </h3>
+                <p class="font-body-md text-body-md text-on-surface-variant">No investors yet — add one from the Investors page and it'll get its own section here.</p>
+            </section>
         }
         else
         {
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Date</label>
-                <input asp-for="Date" type="date" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
-            </div>
+            foreach (var investor in Model.Investors)
+            {
+                <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high investor-expense-section" data-investor-id="@investor.Id" data-investor-name="@investor.Name">
+                    <div class="flex items-center justify-between mb-stack-md">
+                        <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                            <span class="material-symbols-outlined text-orange-500">payments</span>
+                            @investor.Name Expenses
+                        </h3>
+                        <button type="button" data-add-investor="@investor.Id" class="text-status-success hover:opacity-80 flex items-center gap-1 font-label-md text-label-md">
+                            <span class="material-symbols-outlined">add_circle</span> Add
+                        </button>
+                    </div>
+                    <div id="investorExpenseRows-@investor.Id" class="space-y-3"></div>
+                    <div class="mt-stack-md p-3 bg-orange-50 rounded-DEFAULT flex justify-between items-center">
+                        <span class="font-label-sm text-label-sm text-orange-700 uppercase">@investor.Name Expenses Total</span>
+                        <span id="totalInvestorExpense-@investor.Id" class="font-headline-sm text-headline-sm text-orange-600">$0.00</span>
+                    </div>
+                </section>
+            }
         }
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Main Reading</label>
-            <input asp-for="MainReading" type="number" step="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+        <template id="tpl-InvestorExpenses">
+            <div class="row-item flex flex-wrap md:flex-nowrap gap-4 items-center p-3 bg-orange-50/60 rounded-DEFAULT border border-orange-100">
+                <input type="hidden" name="InvestorExpenses[__INDEX__].InvestorId" value="__INVESTORID__" />
+                <div class="flex-1 min-w-[200px] flex items-center gap-2">
+                    <select data-role="receiver" name="InvestorExpenses[__INDEX__].ReceiverId" class="flex-1"></select>
+                    <button type="button" class="quick-add-btn text-status-success hover:opacity-80 shrink-0" data-quick-add="receiver" title="Add new receiver"><span class="material-symbols-outlined text-xl">add_circle</span></button>
+                </div>
+                <input type="text" name="InvestorExpenses[__INDEX__].Note" class="flex-[1.5] min-w-[200px] rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Note" />
+                <div class="relative w-32 shrink-0">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                    <input type="number" step="0.01" required name="InvestorExpenses[__INDEX__].Amount" class="row-amount w-full pl-7 rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue text-right" placeholder="0.00" />
+                </div>
+                <button type="button" class="remove-row text-brick-red hover:opacity-80" title="Remove"><span class="material-symbols-outlined">remove_circle</span></button>
+            </div>
+        </template>
+
+        <!-- Advances Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="flex items-center justify-between mb-stack-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-blue">account_balance_wallet</span>
+                    Employee Advances
+                </h3>
+                <button type="button" data-add-section="Advances" class="text-status-success hover:opacity-80 flex items-center gap-1 font-label-md text-label-md">
+                    <span class="material-symbols-outlined">add_circle</span> Add
+                </button>
+            </div>
+            <div id="advancesRows" class="space-y-3"></div>
+            <template id="tpl-Advances">
+                <div class="row-item flex flex-wrap md:flex-nowrap gap-4 items-center p-3 bg-surface-bright rounded-DEFAULT">
+                    <div class="flex-1 min-w-[200px] flex items-center gap-2">
+                        <select data-role="employee" name="Advances[__INDEX__].EmployeeId" class="flex-1"></select>
+                        <button type="button" class="quick-add-btn text-status-success hover:opacity-80 shrink-0" data-quick-add="employee" title="Add new employee"><span class="material-symbols-outlined text-xl">add_circle</span></button>
+                    </div>
+                    <input type="text" name="Advances[__INDEX__].Note" class="flex-[1.5] min-w-[200px] rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Advance Reason" />
+                    <div class="relative w-32 shrink-0">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                        <input type="number" step="0.01" required name="Advances[__INDEX__].Amount" class="row-amount w-full pl-7 rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue text-right" placeholder="0.00" />
+                    </div>
+                    <button type="button" class="remove-row text-brick-red hover:opacity-80" title="Remove"><span class="material-symbols-outlined">remove_circle</span></button>
+                </div>
+            </template>
+            <div class="mt-stack-md p-3 bg-surface-bright rounded-DEFAULT flex justify-between items-center">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Advances Total</span>
+                <span id="totalAdvances" class="font-headline-sm text-headline-sm text-primary">$0.00</span>
+            </div>
+        </section>
+
+        <!-- Deductions Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="flex items-center justify-between mb-stack-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-brick-red">money_off</span>
+                    Other Deductions
+                </h3>
+                <button type="button" data-add-section="Deductions" class="text-status-success hover:opacity-80 flex items-center gap-1 font-label-md text-label-md">
+                    <span class="material-symbols-outlined">add_circle</span> Add
+                </button>
+            </div>
+            <div id="deductionsRows" class="space-y-3"></div>
+            <template id="tpl-Deductions">
+                <div class="row-item flex flex-wrap md:flex-nowrap gap-4 items-center p-3 bg-surface-bright rounded-DEFAULT">
+                    <div class="flex-1 min-w-[200px] flex items-center gap-2">
+                        <select data-role="employee" name="Deductions[__INDEX__].EmployeeId" class="flex-1"></select>
+                        <button type="button" class="quick-add-btn text-status-success hover:opacity-80 shrink-0" data-quick-add="employee" title="Add new employee"><span class="material-symbols-outlined text-xl">add_circle</span></button>
+                    </div>
+                    <input type="text" name="Deductions[__INDEX__].Note" class="flex-[1.5] min-w-[200px] rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Deduction Reason" />
+                    <div class="relative w-32 shrink-0">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                        <input type="number" step="0.01" required name="Deductions[__INDEX__].Amount" class="row-amount w-full pl-7 rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue text-right" placeholder="0.00" />
+                    </div>
+                    <button type="button" class="remove-row text-brick-red hover:opacity-80" title="Remove"><span class="material-symbols-outlined">remove_circle</span></button>
+                </div>
+            </template>
+            <div class="mt-stack-md p-3 bg-surface-bright rounded-DEFAULT flex justify-between items-center">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Deductions Total</span>
+                <span id="totalDeductions" class="font-headline-sm text-headline-sm text-primary">$0.00</span>
+            </div>
+        </section>
+
+        <!-- Credits Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="flex items-center justify-between mb-stack-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-on-surface-variant">credit_card</span>
+                    Credit / Debt
+                </h3>
+                <button type="button" data-add-section="Credits" class="text-status-success hover:opacity-80 flex items-center gap-1 font-label-md text-label-md">
+                    <span class="material-symbols-outlined">add_circle</span> Add
+                </button>
+            </div>
+            <div id="creditsRows" class="space-y-3"></div>
+            <template id="tpl-Credits">
+                <div class="row-item flex flex-wrap md:flex-nowrap gap-4 items-center p-3 bg-surface-bright rounded-DEFAULT">
+                    <div class="flex-1 min-w-[200px] flex items-center gap-2">
+                        <select data-role="customer" name="Credits[__INDEX__].CustomerId" class="flex-1"></select>
+                        <button type="button" class="quick-add-btn text-status-success hover:opacity-80 shrink-0" data-quick-add="customer" title="Add new customer"><span class="material-symbols-outlined text-xl">add_circle</span></button>
+                    </div>
+                    <input type="text" name="Credits[__INDEX__].Note" class="flex-[1.5] min-w-[200px] rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Reason" />
+                    <div class="relative w-32 shrink-0">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                        <input type="number" step="0.01" required name="Credits[__INDEX__].Amount" class="row-amount w-full pl-7 rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue text-right" placeholder="0.00" />
+                    </div>
+                    <button type="button" class="remove-row text-brick-red hover:opacity-80" title="Remove"><span class="material-symbols-outlined">remove_circle</span></button>
+                </div>
+            </template>
+            <div class="mt-stack-md p-3 bg-surface-bright rounded-DEFAULT flex justify-between items-center">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Credits Total</span>
+                <span id="totalCredits" class="font-headline-sm text-headline-sm text-primary">$0.00</span>
+            </div>
+        </section>
+
+        <!-- Cashback Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="flex items-center justify-between mb-stack-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-status-success">payments</span>
+                    Cash Back / Pay Off Credit
+                </h3>
+                <button type="button" data-add-section="Cashbacks" class="text-status-success hover:opacity-80 flex items-center gap-1 font-label-md text-label-md">
+                    <span class="material-symbols-outlined">add_circle</span> Add
+                </button>
+            </div>
+            <div id="cashbacksRows" class="space-y-3"></div>
+            <template id="tpl-Cashbacks">
+                <div class="row-item flex flex-wrap md:flex-nowrap gap-4 items-center p-3 bg-surface-bright rounded-DEFAULT">
+                    <div class="flex-1 min-w-[200px] flex items-center gap-2">
+                        <select data-role="customer" name="Cashbacks[__INDEX__].CustomerId" class="flex-1"></select>
+                        <button type="button" class="quick-add-btn text-status-success hover:opacity-80 shrink-0" data-quick-add="customer" title="Add new customer"><span class="material-symbols-outlined text-xl">add_circle</span></button>
+                    </div>
+                    <input type="text" name="Cashbacks[__INDEX__].Note" class="flex-[1.5] min-w-[200px] rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Reason" />
+                    <div class="relative w-32 shrink-0">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                        <input type="number" step="0.01" required name="Cashbacks[__INDEX__].Amount" class="row-amount w-full pl-7 rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue text-right" placeholder="0.00" />
+                    </div>
+                    <button type="button" class="remove-row text-brick-red hover:opacity-80" title="Remove"><span class="material-symbols-outlined">remove_circle</span></button>
+                </div>
+            </template>
+            <div class="mt-stack-md p-3 bg-surface-bright rounded-DEFAULT flex justify-between items-center">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Cashback Total</span>
+                <span id="totalCashbacks" class="font-headline-sm text-headline-sm text-primary">$0.00</span>
+            </div>
+        </section>
+
+        <!-- Non-Cash Payments Section -->
+        <section class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border border-surface-container-high">
+            <div class="flex items-center justify-between mb-stack-md">
+                <h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-blue">credit_score</span>
+                    Non-Cash Payments
+                </h3>
+                <button type="button" data-add-section="NonCashPayments" class="text-status-success hover:opacity-80 flex items-center gap-1 font-label-md text-label-md">
+                    <span class="material-symbols-outlined">add_circle</span> Add
+                </button>
+            </div>
+            <div id="nonCashRows" class="space-y-3"></div>
+            <template id="tpl-NonCashPayments">
+                <div class="row-item flex flex-wrap md:flex-nowrap gap-4 items-center p-3 bg-surface-bright rounded-DEFAULT">
+                    <div class="flex-1 min-w-[180px]">
+                        <select data-role="paymentMethod" name="NonCashPayments[__INDEX__].PaymentMethod"></select>
+                    </div>
+                    <input type="text" name="NonCashPayments[__INDEX__].Note" class="flex-[1.5] min-w-[200px] rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue" placeholder="Bill Ref / Note" />
+                    <div class="relative w-32 shrink-0">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
+                        <input type="number" step="0.01" required name="NonCashPayments[__INDEX__].Amount" class="row-amount w-full pl-7 rounded-DEFAULT border-border-subtle font-body-md text-body-md focus:border-slate-blue focus:ring-slate-blue text-right" placeholder="0.00" />
+                    </div>
+                    <button type="button" class="remove-row text-brick-red hover:opacity-80" title="Remove"><span class="material-symbols-outlined">remove_circle</span></button>
+                </div>
+            </template>
+            <div class="mt-stack-md p-3 bg-surface-bright rounded-DEFAULT flex justify-between items-center">
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Non-Cash Payments Total</span>
+                <span id="totalNonCash" class="font-headline-sm text-headline-sm text-primary">$0.00</span>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Right Column: Results & Summary -->
+    <div class="lg:col-span-4 lg:sticky lg:top-8 space-y-stack-md">
+        <section id="resultsSection" class="bg-surface-container-lowest p-stack-lg rounded-DEFAULT border-2 border-primary/20">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-lg flex items-center gap-3">
+                <span class="w-10 h-10 bg-primary/10 rounded-DEFAULT flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">calculate</span>
+                </span>
+                Calculations Result
+            </h3>
+
+            <div class="space-y-stack-md">
+                <div class="p-5 bg-surface-bright rounded-DEFAULT border border-surface-container-high">
+                    <span class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-stack-xs">Adjusted Reading</span>
+                    <span id="adjustedReadingDisplay" class="font-headline-lg text-headline-lg text-on-surface">$0.00</span>
+                    <p class="text-[10px] text-on-surface-variant mt-2 italic">(Main − Total Credits + Total Cashback)</p>
+                </div>
+
+                <div class="p-5 bg-surface-bright rounded-DEFAULT border border-surface-container-high">
+                    <div class="flex items-center justify-between">
+                        <span class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">5% Commission</span>
+                        <span class="px-2 py-0.5 bg-slate-blue/10 text-slate-blue text-[10px] font-bold rounded-DEFAULT">INFO ONLY</span>
+                    </div>
+                    <span id="fivePercentDisplay" class="font-headline-lg text-headline-lg text-on-surface">$0.00</span>
+                </div>
+
+                <div class="p-stack-lg bg-primary text-white rounded-DEFAULT">
+                    <span class="block font-label-sm text-label-sm uppercase tracking-widest mb-stack-xs opacity-80">Actual Cash Required</span>
+                    <span id="actualCashDisplay" class="text-4xl font-black tracking-tight">$0.00</span>
+                    <p class="text-[10px] mt-3 opacity-70">(Adjusted − Expenses − Investor − Advances − Non-Cash)</p>
+                </div>
+            </div>
+
+            <div id="rowValidationError" class="hidden mt-stack-lg p-3 bg-error-container text-on-error-container rounded-DEFAULT text-body-md flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">warning</span>
+                <span>Some rows are missing a pick or an amount — fixed rows are outlined in red above.</span>
+            </div>
+
+            <div class="mt-stack-lg grid grid-cols-2 gap-4">
+                <button type="button" id="clearForm" class="py-4 bg-surface-bright hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md rounded-DEFAULT border border-border-subtle transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">restart_alt</span>
+                    Clear
+                </button>
+                <button type="submit" class="py-4 bg-status-success hover:opacity-90 text-white font-label-md text-label-md rounded-DEFAULT transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-sm">save</span>
+                    Save Close
+                </button>
+            </div>
+        </section>
+
+        <section class="bg-slate-blue/10 p-5 rounded-DEFAULT border border-slate-blue/20">
+            <h4 class="font-label-sm text-label-sm text-slate-blue uppercase mb-stack-xs flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">info</span>
+                @content.Text("help_title", "Quick Help")
+            </h4>
+            <p class="font-body-md text-body-md text-slate-blue/80 leading-relaxed italic">
+                @content.Text("help_body", "All calculations are automated. Investor and general expenses, advances and non-cash payments are deducted from the adjusted reading to calculate final cash.")
+            </p>
+        </section>
+    </div>
+</form>
+
+<!-- Modal: Unlock Date -->
+<div class="modal fade" id="unlockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content overflow-hidden">
+            <div class="modal-header">
+                <h5 class="modal-title flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">lock_open</span>
+                    Unlock Transaction Date
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="font-body-md text-body-md text-on-surface-variant mb-stack-md">A Supervisor or Admin must enter their own credentials to unlock the date.</p>
+                <form id="unlockForm" onsubmit="return false;">
+                    <div class="mb-stack-md">
+                        <label for="unlockUsername" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Username</label>
+                        <input type="text" id="unlockUsername" required autocomplete="username" class="w-full rounded-DEFAULT border-border-subtle focus:border-slate-blue focus:ring-slate-blue h-12" />
+                    </div>
+                    <div>
+                        <label for="unlockPassword" class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Password</label>
+                        <input type="password" id="unlockPassword" required autocomplete="current-password" class="w-full rounded-DEFAULT border-border-subtle focus:border-slate-blue focus:ring-slate-blue h-12" />
+                    </div>
+                </form>
+                <div id="unlockError" class="mt-stack-md hidden bg-error-container text-on-error-container border border-status-urgent/20 rounded-DEFAULT p-3 text-sm flex items-center justify-start gap-2">
+                    <span class="material-symbols-outlined">warning</span>
+                    <span>Invalid credentials, or this account isn't a Supervisor/Admin.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-all" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnSubmitUnlock" class="px-6 py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-xs">lock_open</span>
+                    Unlock
+                </button>
+            </div>
         </div>
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Adjusted Reading</label>
-            <input asp-for="AdjustedReading" type="number" step="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
-        </div>
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Actual Cash</label>
-            <input asp-for="ActualCash" type="number" step="0.01" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
-        </div>
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Note</label>
-            <textarea asp-for="Note" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2"></textarea>
-        </div>
-        <button type="submit" class="w-full py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg transition-colors">Save</button>
-    </form>
+    </div>
 </div>
+
+@await Html.PartialAsync("_QuickAddModal")
+
+<script id="dc-receivers" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Receivers.Select(r => new { id = r.Id.ToString(), name = r.Name })))</script>
+<script id="dc-investors" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Investors.Select(r => new { id = r.Id.ToString(), name = r.Name })))</script>
+<script id="dc-employees" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Employees.Select(r => new { id = r.Id.ToString(), name = r.Name })))</script>
+<script id="dc-customers" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Customers.Select(r => new { id = r.Id.ToString(), name = r.Name })))</script>
+<!-- Rows carried over from a failed submit (validation error / duplicate date), keyed by section — the
+     JS re-adds these rows on load instead of starting empty, so nothing typed gets lost. -->
+<script id="dc-initial-rows" type="application/json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+{
+    GeneralExpenses = Model.GeneralExpenses,
+    InvestorExpenses = Model.InvestorExpenses,
+    Advances = Model.Advances,
+    Deductions = Model.Deductions,
+    Credits = Model.Credits,
+    Cashbacks = Model.Cashbacks,
+    NonCashPayments = Model.NonCashPayments
+}))</script>
+<script>
+    window.DAILY_CLOSE_CONFIG = {
+        verifyUnlockUrl: '@Url.Action("VerifyUnlock", "DailyClosing", new { area = "Admin" })'
+    };
+</script>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script src="~/js/daily-close.js" asp-append-version="true"></script>
+}

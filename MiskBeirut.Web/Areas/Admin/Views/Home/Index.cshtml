@@ -1,8 +1,322 @@
+@model MiskBeirut.Web.Areas.Admin.Models.Home.HomeIndexViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    var content = Model.Content;
 }
 
-<div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-8 shadow-sm">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Welcome back, @User.Identity?.Name</h2>
-    <p class="text-slate-500 mt-2">The Admin console screens (Daily Closing, Employees, Customers, Expenses, Receivers, Audit Logs, Users) will be built out here in the next phase.</p>
+<div class="mb-stack-lg flex justify-between items-end">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">@content.Text("hero_title", "Welcome to the")  @content.Text("hero_title_highlight", "MiskBeirut Management System")</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">@content.Text("hero_subtitle", "Streamline your business operations with our integrated management tools. Manage your team, track your customers, and settle your books with ease.")</p>
+    </div>
 </div>
+
+@if (Model.Stats is not null)
+{
+    var stats = Model.Stats;
+    var monthLabel = DateTime.UtcNow.ToString("MMMM yyyy");
+
+    <!-- KPI Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter mb-stack-lg">
+        <div class="bg-primary text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+            <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                <span class="material-symbols-outlined text-8xl">payments</span>
+            </div>
+            <div class="relative z-10">
+                <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Actual Cash — @monthLabel</h6>
+                <h3 class="font-headline-lg text-headline-lg">$@stats.ActualCashThisMonth.ToString("N2")</h3>
+            </div>
+        </div>
+
+        <div class="bg-slate-blue text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+            <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                <span class="material-symbols-outlined text-8xl">calendar_today</span>
+            </div>
+            <div class="relative z-10">
+                <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Daily Closings — @monthLabel</h6>
+                <h3 class="font-headline-lg text-headline-lg">@stats.DailyClosingsThisMonth</h3>
+            </div>
+        </div>
+
+        <div class="bg-brick-red text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+            <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                <span class="material-symbols-outlined text-8xl">credit_card</span>
+            </div>
+            <div class="relative z-10">
+                <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Outstanding Customer Credit</h6>
+                <h3 class="font-headline-lg text-headline-lg">$@stats.OutstandingCustomerCredit.ToString("N2")</h3>
+            </div>
+        </div>
+
+        @if (Model.IsAdmin)
+        {
+            <div class="bg-status-pending text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                    <span class="material-symbols-outlined text-8xl">badge</span>
+                </div>
+                <div class="relative z-10">
+                    <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Active Employees</h6>
+                    <h3 class="font-headline-lg text-headline-lg">@stats.ActiveEmployees</h3>
+                </div>
+            </div>
+
+            <div class="bg-status-success text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                    <span class="material-symbols-outlined text-8xl">account_balance_wallet</span>
+                </div>
+                <div class="relative z-10">
+                    <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Payroll — @monthLabel</h6>
+                    <h3 class="font-headline-lg text-headline-lg">$@stats.PayrollThisMonth.ToString("N2")</h3>
+                </div>
+            </div>
+
+            <div class="bg-on-surface text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                    <span class="material-symbols-outlined text-8xl">receipt_long</span>
+                </div>
+                <div class="relative z-10">
+                    <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Expenses — @monthLabel</h6>
+                    <h3 class="font-headline-lg text-headline-lg">$@stats.ExpensesThisMonth?.ToString("N2")</h3>
+                </div>
+            </div>
+
+            <div class="bg-primary-container text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                    <span class="material-symbols-outlined text-8xl">groups</span>
+                </div>
+                <div class="relative z-10">
+                    <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Total Customers</h6>
+                    <h3 class="font-headline-lg text-headline-lg">@stats.TotalCustomers</h3>
+                </div>
+            </div>
+
+            <div class="bg-slate-blue text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                    <span class="material-symbols-outlined text-8xl">handshake</span>
+                </div>
+                <div class="relative z-10">
+                    <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Active Investors</h6>
+                    <h3 class="font-headline-lg text-headline-lg">@stats.ActiveInvestors</h3>
+                </div>
+            </div>
+
+            <div class="bg-primary text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                    <span class="material-symbols-outlined text-8xl">redeem</span>
+                </div>
+                <div class="relative z-10">
+                    <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Cashbacks — @monthLabel</h6>
+                    <h3 class="font-headline-lg text-headline-lg">$@stats.CustomerCashbacksThisMonth?.ToString("N2")</h3>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="bg-status-success text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+                <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                    <span class="material-symbols-outlined text-8xl">account_balance_wallet</span>
+                </div>
+                <div class="relative z-10">
+                    <h6 class="font-label-sm text-label-sm uppercase tracking-wider mb-stack-sm opacity-80">Payroll — @monthLabel <span class="opacity-70 normal-case">(read-only)</span></h6>
+                    <h3 class="font-headline-lg text-headline-lg">$@stats.PayrollThisMonth.ToString("N2")</h3>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.Charts is not null)
+{
+    var charts = Model.Charts;
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
+        <div class="lg:col-span-2 bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT p-stack-lg">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Actual Cash — Last 6 Months</h3>
+            @if (charts.MonthlyActualCash.Any(v => v != 0))
+            {
+                <div class="h-64"><canvas id="monthlyCashChart"></canvas></div>
+            }
+            else
+            {
+                <div class="h-64 flex items-center justify-center text-on-surface-variant font-body-md text-body-md">No closings recorded in this range yet.</div>
+            }
+        </div>
+
+        <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT p-stack-lg">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Expenses by Receiver</h3>
+            @if (charts.ReceiverAmounts.Any())
+            {
+                <div class="h-64"><canvas id="receiverChart"></canvas></div>
+            }
+            else
+            {
+                <div class="h-64 flex items-center justify-center text-center text-on-surface-variant font-body-md text-body-md">No expenses recorded this month yet.</div>
+            }
+        </div>
+
+        <div class="lg:col-span-3 bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT p-stack-lg">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Daily Actual Cash — This Month</h3>
+            @if (charts.DailyActualCash.Any())
+            {
+                <div class="h-64"><canvas id="dailyCashChart"></canvas></div>
+            }
+            else
+            {
+                <div class="h-64 flex items-center justify-center text-on-surface-variant font-body-md text-body-md">No daily closings submitted this month yet.</div>
+            }
+        </div>
+    </div>
+}
+
+<!-- Feature Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+    <!-- Control Panel Card -->
+    <div class="bg-surface-container-lowest p-stack-lg border border-surface-container-high rounded-DEFAULT hover:border-slate-blue hover:shadow-sm transition-all flex flex-col">
+        <div class="bg-primary/10 text-primary p-3 rounded-DEFAULT mb-stack-md self-start">
+            <span class="material-symbols-outlined text-2xl">grid_view</span>
+        </div>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">@content.Text("control_panel_title", "Control Panel")</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant mb-stack-lg flex-grow">
+            @Html.Raw(content.Text("control_panel_body", "The central hub for your business administration. Manage all modules including <strong>Employees</strong>, <strong>Customers</strong>, and detailed configurations from one centralized console."))
+        </p>
+        <a asp-area="Admin" asp-controller="System" asp-action="ControlPanel" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors self-start">
+            @content.Text("control_panel_cta_label", "Go to Control Panel")
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+    </div>
+
+    <!-- Daily Close Card -->
+    <div class="bg-surface-container-lowest p-stack-lg border border-surface-container-high rounded-DEFAULT hover:border-slate-blue hover:shadow-sm transition-all flex flex-col">
+        <div class="bg-status-success/10 text-status-success p-3 rounded-DEFAULT mb-stack-md self-start">
+            <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+        </div>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">@content.Text("daily_close_title", "Daily Close")</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant mb-stack-lg flex-grow">
+            @content.Text("daily_close_body", "Settle daily financial receipts, document sales figures, calculate cashouts, and record daily expenses. Export printable summaries for records.")
+        </p>
+        <a asp-area="Admin" asp-controller="DailyClosing" asp-action="Index" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-status-success hover:opacity-90 text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors self-start">
+            @content.Text("daily_close_cta_label", "Manage Daily Close")
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+@if (Model.Charts is not null)
+{
+    var charts = Model.Charts;
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script>
+        (function () {
+            var inkSecondary = '#42474c';
+            var inkPrimary = '#1a1c1d';
+            var gridline = '#E2E2E4';
+            var accent = '#2a78d6';
+            var fontFamily = 'Hanken Grotesk, sans-serif';
+
+            Chart.defaults.font.family = fontFamily;
+            Chart.defaults.color = inkSecondary;
+
+            function currency(value) {
+                return '$' + Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+            }
+
+            var monthlyCanvas = document.getElementById('monthlyCashChart');
+            if (monthlyCanvas) {
+                new Chart(monthlyCanvas, {
+                    type: 'line',
+                    data: {
+                        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(charts.MonthlyLabels)),
+                        datasets: [{
+                            label: 'Actual cash',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(charts.MonthlyActualCash)),
+                            borderColor: accent,
+                            backgroundColor: 'rgba(42, 120, 214, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: accent,
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: function (ctx) { return currency(ctx.parsed.y); } } }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, border: { color: gridline } },
+                            y: { beginAtZero: true, grid: { color: gridline }, border: { display: false }, ticks: { callback: currency } }
+                        }
+                    }
+                });
+            }
+
+            var dailyCanvas = document.getElementById('dailyCashChart');
+            if (dailyCanvas) {
+                new Chart(dailyCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(charts.DailyLabels)),
+                        datasets: [{
+                            label: 'Actual cash',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(charts.DailyActualCash)),
+                            backgroundColor: accent,
+                            borderRadius: 4,
+                            maxBarThickness: 24
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: function (ctx) { return currency(ctx.parsed.y); } } }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, border: { color: gridline } },
+                            y: { beginAtZero: true, grid: { color: gridline }, border: { display: false }, ticks: { callback: currency } }
+                        }
+                    }
+                });
+            }
+
+            var receiverCanvas = document.getElementById('receiverChart');
+            if (receiverCanvas) {
+                new Chart(receiverCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(charts.ReceiverLabels)),
+                        datasets: [{
+                            label: 'Expenses',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(charts.ReceiverAmounts)),
+                            backgroundColor: accent,
+                            borderRadius: 4,
+                            maxBarThickness: 20
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: function (ctx) { return currency(ctx.parsed.x); } } }
+                        },
+                        scales: {
+                            x: { beginAtZero: true, grid: { color: gridline }, border: { display: false }, ticks: { callback: currency } },
+                            y: { grid: { display: false }, border: { color: gridline }, ticks: { color: inkPrimary } }
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
+    }
+}

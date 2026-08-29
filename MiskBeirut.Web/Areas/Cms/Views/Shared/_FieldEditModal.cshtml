@@ -1,0 +1,192 @@
+@*
+    Shared single-field edit modal for the CMS's live page previews — the actual public Razor views,
+    rendered from PagesController with data-cms-field/data-cms-type attributes on their real content
+    elements (see _CmsPreviewOverlay.cshtml, which draws the pencil buttons over them).
+    Include once via <partial name="_FieldEditModal" />. Listens for clicks on any ".cms-edit-btn" and,
+    on Save, patches the matching "[data-cms-field]" element(s) in place via window.cmsPatchField
+    (Text -> textContent, Image -> src, Link -> href, Placeholder -> placeholder attribute,
+    BackgroundImage -> inline style.backgroundImage) and STAGES the change in window.cmsPendingChanges
+    — it does NOT hit the server. The page stays in this locally-staged state until the top preview
+    bar's Save button (_CmsPreviewBar.cshtml) flushes every pending change via window.cmsPersistField,
+    or Cancel reverts the DOM from its pre-edit snapshot. This file owns window.cmsPersistField (the
+    actual SaveField POST) since it already has pageId/langId in scope.
+*@
+<div id="cmsFieldModal" class="hidden fixed inset-0 z-[10050] items-center justify-center bg-black/50 p-4">
+    <div class="bg-white rounded-DEFAULT shadow-xl w-full max-w-lg overflow-hidden font-body-md">
+        <div class="p-4 border-b border-black/10 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-[#1A1A1A]" id="cmsFieldModalTitle">Edit field</h3>
+            <button type="button" id="cmsFieldModalClose" class="text-black/50 hover:text-[#355970]">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-black/50 mb-1" id="cmsFieldModalLabel">Value</label>
+                <textarea id="cmsFieldModalTextInput" rows="4" class="w-full rounded-DEFAULT border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-[#355970]"></textarea>
+            </div>
+            <div id="cmsFieldModalImageArea" class="hidden space-y-2">
+                <img id="cmsFieldModalImagePreview" class="hidden max-h-40 rounded-DEFAULT border border-black/10 object-cover" />
+                <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-DEFAULT bg-black/5 border border-black/10 text-xs font-semibold cursor-pointer hover:border-[#355970] transition-colors">
+                    <span class="material-symbols-outlined text-sm">upload</span>
+                    Upload new image
+                    <input type="file" accept="image/*" id="cmsFieldModalImageFile" class="hidden" />
+                </label>
+                <span id="cmsFieldModalUploadStatus" class="block text-xs text-black/50"></span>
+            </div>
+            <p id="cmsFieldModalError" class="hidden text-sm text-[#8F383A]"></p>
+        </div>
+        <div class="p-4 border-t border-black/10 bg-black/[0.02] flex justify-end gap-3">
+            <button type="button" id="cmsFieldModalCancel" class="px-4 py-2 rounded-DEFAULT border border-black/15 text-sm font-semibold text-black/60 hover:border-[#355970] transition-colors">Cancel</button>
+            <button type="button" id="cmsFieldModalSave" class="px-4 py-2 rounded-DEFAULT bg-[#355970] hover:bg-[#1c4258] text-white text-sm font-semibold transition-colors">Save</button>
+        </div>
+    </div>
+</div>
+
+<form id="cmsAntiForgeryForm" class="hidden">@Html.AntiForgeryToken()</form>
+
+<script>
+    (function () {
+        var pageId = @(ViewData["PageId"] as int? ?? 0);
+        var globalPageId = @(ViewData["GlobalPageId"] as int? ?? 0);
+        var langId = @(ViewData["LangId"] as int? ?? 0);
+
+        var modal = document.getElementById('cmsFieldModal');
+        var titleEl = document.getElementById('cmsFieldModalTitle');
+        var labelEl = document.getElementById('cmsFieldModalLabel');
+        var textInput = document.getElementById('cmsFieldModalTextInput');
+        var imageArea = document.getElementById('cmsFieldModalImageArea');
+        var imagePreview = document.getElementById('cmsFieldModalImagePreview');
+        var imageFile = document.getElementById('cmsFieldModalImageFile');
+        var uploadStatus = document.getElementById('cmsFieldModalUploadStatus');
+        var errorEl = document.getElementById('cmsFieldModalError');
+        var saveBtn = document.getElementById('cmsFieldModalSave');
+        var closeBtn = document.getElementById('cmsFieldModalClose');
+        var cancelBtn = document.getElementById('cmsFieldModalCancel');
+
+        var current = null; // { field, type, button }
+
+        window.cmsPendingChanges = window.cmsPendingChanges || {};
+
+        function tokenValue() {
+            var input = document.querySelector('#cmsAntiForgeryForm input[name="__RequestVerificationToken"]');
+            return input ? input.value : '';
+        }
+
+        // The actual network save — called once per pending field by the preview bar's Save button,
+        // not from this modal (this modal only stages changes locally, see saveBtn handler below).
+        // scope 'global' routes the save to the shared Global page (nav/footer content, editable
+        // from any page's preview) instead of the page currently being edited.
+        window.cmsPersistField = function (field, type, value, scope) {
+            var formData = new FormData();
+            formData.append('pageId', scope === 'global' ? globalPageId : pageId);
+            formData.append('langId', langId);
+            formData.append('attributeName', field);
+            formData.append('attributeType', type);
+            formData.append('value', value);
+            formData.append('__RequestVerificationToken', tokenValue());
+
+            return fetch('@Url.Action("SaveField", "Pages", new { area = "Cms" })', { method: 'POST', body: formData })
+                .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                .then(function (result) {
+                    if (!result.ok || !result.data.success) throw new Error((result.data && result.data.error) || ('Save failed for ' + field));
+                    return result.data;
+                });
+        };
+
+        function updateImagePreview() {
+            if (textInput.value) {
+                imagePreview.src = textInput.value;
+                imagePreview.classList.remove('hidden');
+            } else {
+                imagePreview.classList.add('hidden');
+            }
+        }
+
+        function isImageType(type) {
+            return type === 'Image' || type === 'BackgroundImage';
+        }
+
+        function openModal(button) {
+            current = { field: button.dataset.field, type: button.dataset.type || 'Text', scope: button.dataset.scope || 'page', button: button };
+            titleEl.textContent = button.dataset.label || current.field;
+            labelEl.textContent = isImageType(current.type) ? 'Image URL' : 'Value';
+            textInput.value = button.dataset.value || '';
+            errorEl.classList.add('hidden');
+            uploadStatus.textContent = '';
+            if (isImageType(current.type)) {
+                imageArea.classList.remove('hidden');
+                updateImagePreview();
+            } else {
+                imageArea.classList.add('hidden');
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            if (window.cmsSetOverlayVisible) window.cmsSetOverlayVisible(false);
+            textInput.focus();
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (window.cmsSetOverlayVisible) window.cmsSetOverlayVisible(true);
+            current = null;
+        }
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.cms-edit-btn');
+            if (btn) openModal(btn);
+        });
+
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+        textInput.addEventListener('input', function () { if (current && isImageType(current.type)) updateImagePreview(); });
+
+        if (imageFile) {
+            imageFile.addEventListener('change', function () {
+                if (!imageFile.files.length) return;
+                var formData = new FormData();
+                formData.append('file', imageFile.files[0]);
+                formData.append('__RequestVerificationToken', tokenValue());
+                uploadStatus.textContent = 'Uploading...';
+                fetch('@Url.Action("UploadImage", "Pages", new { area = "Cms" })', { method: 'POST', body: formData })
+                    .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                    .then(function (result) {
+                        if (!result.ok) throw new Error(result.data.error || 'Upload failed');
+                        textInput.value = result.data.url;
+                        updateImagePreview();
+                        uploadStatus.textContent = 'Uploaded.';
+                    })
+                    .catch(function (err) { uploadStatus.textContent = err.message || 'Upload failed.'; });
+            });
+        }
+
+        saveBtn.addEventListener('click', function () {
+            if (!current) return;
+            var targetPageId = current.scope === 'global' ? globalPageId : pageId;
+            if (!targetPageId || !langId) {
+                errorEl.textContent = current.scope === 'global' ? 'Missing Global page context.' : 'Missing page context.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            var value = textInput.value;
+            // "Placeholder"/"BackgroundImage" are DOM-patch hints, not real PageAttributeTypes.
+            var storageType = current.type === 'Placeholder' ? 'Text' : current.type === 'BackgroundImage' ? 'Image' : current.type;
+
+            // Match by field name, but patch each element using ITS OWN data-cms-type — the same
+            // field can render in more than one place with different DOM shapes (e.g. an href AND
+            // its visible text, or the desktop nav vs. the mobile drawer), so the clicked pencil's
+            // type isn't assumed for all.
+            document.querySelectorAll('[data-cms-field="' + current.field + '"]').forEach(function (el) {
+                window.cmsPatchField(el, el.dataset.cmsType || current.type, value);
+            });
+
+            // Staged only — not sent to the server until the preview bar's Save button is clicked.
+            window.cmsPendingChanges[current.field] = { type: storageType, value: value, scope: current.scope };
+            current.button.dataset.value = value;
+            if (window.cmsOnFieldStaged) window.cmsOnFieldStaged();
+            closeModal();
+            if (window.cmsRelayoutOverlay) window.cmsRelayoutOverlay();
+        });
+    })();
+</script>

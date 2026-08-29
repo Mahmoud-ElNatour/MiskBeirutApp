@@ -1,0 +1,187 @@
+@model InvestorDetailsViewModel
+@using MiskBeirut.Web.Areas.Admin.Models.Investors
+@using MiskBeirut.Core.Enums
+@{
+    ViewData["Title"] = Model.Investor.Name;
+    var currentMonth = ViewData["CurrentMonth"] as int?;
+    var currentYear = ViewData["CurrentYear"] as int?;
+}
+
+<div class="flex flex-wrap items-center justify-between gap-3 mb-stack-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@Model.Investor.Name</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Investor since @Model.Investor.CreatedAt.ToString("yyyy-MM-dd")</p>
+    </div>
+    <div class="flex flex-wrap items-end gap-2">
+        <form method="get" asp-action="Details" asp-route-id="@Model.Investor.Id" class="flex flex-wrap items-end gap-2">
+            <select name="month" class="rounded-DEFAULT border border-border-subtle font-body-md text-body-md">
+                <option value="">All Months</option>
+                @for (int m = 1; m <= 12; m++)
+                {
+                    <option value="@m" selected="@(m == currentMonth ? "selected" : null)">@(new DateTime(2000, m, 1).ToString("MMMM"))</option>
+                }
+            </select>
+            <select name="year" class="rounded-DEFAULT border border-border-subtle font-body-md text-body-md">
+                <option value="">All Years</option>
+                @for (int y = 2023; y <= 2030; y++)
+                {
+                    <option value="@y" selected="@(y == currentYear ? "selected" : null)">@y</option>
+                }
+            </select>
+            <button type="submit" class="px-3 py-1.5 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">Filter</button>
+        </form>
+        <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            Back to Investors
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+    <div class="lg:col-span-2 space-y-stack-lg">
+        <!-- Receiver Breakdown -->
+        <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">Expenses by Receiver</h3>
+            <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+                <table class="w-full font-data-tabular text-data-tabular text-left" data-sortable data-paginate="10">
+                    <thead class="bg-surface-bright text-on-surface-variant uppercase font-label-sm text-label-sm">
+                        <tr>
+                            <th class="px-4 py-2" data-sort="text">Receiver</th>
+                            <th class="px-4 py-2 text-right" data-sort="number">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ReceiverBreakdown)
+                        {
+                            <tr class="border-b border-surface-container-high last:border-b-0">
+                                <td class="px-4 py-2 font-medium text-on-surface">@item.ReceiverName</td>
+                                <td class="px-4 py-2 text-right">$@item.Total.ToString("N2")</td>
+                            </tr>
+                        }
+                        @if (!Model.ReceiverBreakdown.Any())
+                        {
+                            <tr><td class="px-4 py-3 text-on-surface-variant" colspan="2">No expenses recorded yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Expenses -->
+        <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">Expenses</h3>
+            <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+                <table class="w-full font-data-tabular text-data-tabular text-left" data-sortable data-paginate="10">
+                    <thead class="bg-surface-bright text-on-surface-variant uppercase font-label-sm text-label-sm">
+                        <tr>
+                            <th class="px-4 py-2" data-sort="date">Date</th>
+                            <th class="px-4 py-2" data-sort="text">Receiver</th>
+                            <th class="px-4 py-2 text-right" data-sort="number">Amount</th>
+                            <th class="px-4 py-2">Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in Model.Expenses)
+                        {
+                            <tr class="border-b border-surface-container-high last:border-b-0 hover:bg-surface-bright transition-colors">
+                                <td class="px-4 py-2">@entry.Date.ToString("yyyy-MM-dd")</td>
+                                <td class="px-4 py-2">@(entry.ReceiverName ?? "Unknown")</td>
+                                <td class="px-4 py-2 text-right">$@entry.Amount.ToString("N2")</td>
+                                <td class="px-4 py-2 text-on-surface-variant">@entry.Note</td>
+                            </tr>
+                        }
+                        @if (!Model.Expenses.Any())
+                        {
+                            <tr><td class="px-4 py-3 text-on-surface-variant" colspan="4">No expenses yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Withdrawals -->
+        <div>
+            <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">Withdrawals</h3>
+            <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+                <table class="w-full font-data-tabular text-data-tabular text-left" data-sortable data-paginate="10">
+                    <thead class="bg-surface-bright text-on-surface-variant uppercase font-label-sm text-label-sm">
+                        <tr>
+                            <th class="px-4 py-2" data-sort="date">Date</th>
+                            <th class="px-4 py-2 text-right" data-sort="number">Amount</th>
+                            <th class="px-4 py-2">Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in Model.Withdrawals)
+                        {
+                            <tr class="border-b border-surface-container-high last:border-b-0 hover:bg-surface-bright transition-colors">
+                                <td class="px-4 py-2">@entry.Date.ToString("yyyy-MM-dd")</td>
+                                <td class="px-4 py-2 text-right">$@entry.Amount.ToString("N2")</td>
+                                <td class="px-4 py-2 text-on-surface-variant">@entry.Note</td>
+                            </tr>
+                        }
+                        @if (!Model.Withdrawals.Any())
+                        {
+                            <tr><td class="px-4 py-3 text-on-surface-variant" colspan="3">No withdrawals yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-sm">Add Transaction</h3>
+        <form asp-action="AddTransaction" method="post" class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT p-stack-md space-y-3">
+            <input type="hidden" asp-for="NewTransaction.InvestorId" />
+            <div>
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Daily Closing</label>
+                <select asp-for="NewTransaction.DailyClosingId" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md">
+                    <option value="">Select date...</option>
+                    @foreach (var closing in Model.RecentClosings)
+                    {
+                        <option value="@closing.Id">@closing.Date.ToString("yyyy-MM-dd")</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Type</label>
+                <select asp-for="NewTransaction.TransactionType" id="transactionType" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md">
+                    <option value="Expense">Expense (requires a receiver)</option>
+                    <option value="Withdrawal">Withdrawal</option>
+                </select>
+            </div>
+            <div id="receiverField">
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Receiver</label>
+                <select asp-for="NewTransaction.ReceiverId" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md">
+                    <option value="">Select receiver...</option>
+                    @foreach (var receiver in Model.Receivers)
+                    {
+                        <option value="@receiver.Id">@receiver.Name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Amount</label>
+                <input asp-for="NewTransaction.Amount" type="number" step="0.01" min="0.01" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md" />
+            </div>
+            <input asp-for="NewTransaction.Note" placeholder="Note (optional)" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md" />
+            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary-container text-white font-label-md text-label-md rounded-DEFAULT">+ Add Transaction</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Receiver is only required/relevant for Expense transactions.
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('transactionType');
+        const receiverField = document.getElementById('receiverField');
+        function toggle() {
+            receiverField.style.display = typeSelect.value === 'Expense' ? '' : 'none';
+        }
+        typeSelect.addEventListener('change', toggle);
+        toggle();
+    });
+</script>
+}

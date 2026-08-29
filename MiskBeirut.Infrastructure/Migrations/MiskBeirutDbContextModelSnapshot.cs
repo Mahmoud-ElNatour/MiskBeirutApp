@@ -206,6 +206,168 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.ToTable("AuditLogs", "backoffice");
                 });
 
+            modelBuilder.Entity("MiskBeirut.Core.Entities.BackofficePage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("PageName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageName")
+                        .IsUnique();
+
+                    b.ToTable("pages", "backoffice");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.BackofficePageAttribute", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttributeName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AttributeType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("Text");
+
+                    b.Property<int>("PageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageId", "AttributeName")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_pageattributes_PageAttr");
+
+                    b.ToTable("pageattributes", "backoffice", t =>
+                        {
+                            t.HasCheckConstraint("CK_pageattributes_type", "[AttributeType] IN ('Text', 'RichText', 'Image', 'Link', 'Video', 'Number', 'Date', 'Boolean')");
+                        });
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.ContactInquiry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsDone")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("ReasonId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReasonId");
+
+                    b.ToTable("contact_inquiries", "customer");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.ContactInquiryWhatsAppMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("ContactInquiryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ExternalMessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("SentAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<int?>("SentByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SentByUsername")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ToPhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactInquiryId");
+
+                    b.ToTable("contact_inquiry_whatsapp_messages", "customer");
+                });
+
             modelBuilder.Entity("MiskBeirut.Core.Entities.Customer", b =>
                 {
                     b.Property<int>("Id")
@@ -255,11 +417,16 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
-                    b.Property<int>("DailyClosingId")
+                    b.Property<int?>("DailyClosingId")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
+
+                    b.Property<bool>("IsManualEntry")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
@@ -386,7 +553,7 @@ namespace MiskBeirut.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("DailyClosingId")
+                    b.Property<int?>("DailyClosingId")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("Date")
@@ -437,6 +604,10 @@ namespace MiskBeirut.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("BaseSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("DeductionsTotal")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -478,7 +649,8 @@ namespace MiskBeirut.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                    b.HasIndex("EmployeeId", "Year", "Month")
+                        .IsUnique();
 
                     b.ToTable("employee_working", "backoffice");
                 });
@@ -495,11 +667,16 @@ namespace MiskBeirut.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("DailyClosingId")
+                    b.Property<int?>("DailyClosingId")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
+
+                    b.Property<bool>("IsManualEntry")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
@@ -560,6 +737,34 @@ namespace MiskBeirut.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_google_reviews_rating", "[Rating] BETWEEN 1 AND 5");
                         });
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.InquiryReason", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("inquiry_reasons", "customer");
                 });
 
             modelBuilder.Entity("MiskBeirut.Core.Entities.Investor", b =>
@@ -637,6 +842,58 @@ namespace MiskBeirut.Infrastructure.Migrations
 
                             t.HasCheckConstraint("CK_investor_txn_type", "[TransactionType] IN ('Withdrawal', 'Expense')");
                         });
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.JobApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("CvUrl")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("DecisionTaken")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("VacancyId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VacancyId");
+
+                    b.ToTable("job_applications", "customer");
                 });
 
             modelBuilder.Entity("MiskBeirut.Core.Entities.Language", b =>
@@ -775,6 +1032,39 @@ namespace MiskBeirut.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MiskBeirut.Core.Entities.Privilege", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsSection")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SectionKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("privileges", "backoffice");
+                });
+
             modelBuilder.Entity("MiskBeirut.Core.Entities.Receiver", b =>
                 {
                     b.Property<int>("Id")
@@ -791,6 +1081,30 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("receivers", "backoffice");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.RolePrivilege", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PrivilegeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrivilegeId");
+
+                    b.HasIndex("RoleId", "PrivilegeId")
+                        .IsUnique();
+
+                    b.ToTable("role_privileges", "backoffice");
                 });
 
             modelBuilder.Entity("MiskBeirut.Core.Entities.User", b =>
@@ -876,6 +1190,67 @@ namespace MiskBeirut.Infrastructure.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("users", "backoffice");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.Vacancy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("EmploymentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("vacancies", "customer");
                 });
 
             modelBuilder.Entity("MiskBeirut.Core.Entities.WebsiteLead", b =>
@@ -967,6 +1342,39 @@ namespace MiskBeirut.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MiskBeirut.Core.Entities.BackofficePageAttribute", b =>
+                {
+                    b.HasOne("MiskBeirut.Core.Entities.BackofficePage", "Page")
+                        .WithMany("Attributes")
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Page");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.ContactInquiry", b =>
+                {
+                    b.HasOne("MiskBeirut.Core.Entities.InquiryReason", "Reason")
+                        .WithMany()
+                        .HasForeignKey("ReasonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Reason");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.ContactInquiryWhatsAppMessage", b =>
+                {
+                    b.HasOne("MiskBeirut.Core.Entities.ContactInquiry", "ContactInquiry")
+                        .WithMany()
+                        .HasForeignKey("ContactInquiryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ContactInquiry");
+                });
+
             modelBuilder.Entity("MiskBeirut.Core.Entities.CustomerLedger", b =>
                 {
                     b.HasOne("MiskBeirut.Core.Entities.Customer", "Customer")
@@ -978,8 +1386,7 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.HasOne("MiskBeirut.Core.Entities.DailyClosing", "DailyClosing")
                         .WithMany("CustomerLedgerEntries")
                         .HasForeignKey("DailyClosingId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Customer");
 
@@ -1001,8 +1408,7 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.HasOne("MiskBeirut.Core.Entities.DailyClosing", "DailyClosing")
                         .WithMany("EmployeeLedgerEntries")
                         .HasForeignKey("DailyClosingId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MiskBeirut.Core.Entities.Employee", "Employee")
                         .WithMany("LedgerEntries")
@@ -1031,8 +1437,7 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.HasOne("MiskBeirut.Core.Entities.DailyClosing", "DailyClosing")
                         .WithMany("Expenses")
                         .HasForeignKey("DailyClosingId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MiskBeirut.Core.Entities.Receiver", "Receiver")
                         .WithMany("Expenses")
@@ -1071,6 +1476,17 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.Navigation("Receiver");
                 });
 
+            modelBuilder.Entity("MiskBeirut.Core.Entities.JobApplication", b =>
+                {
+                    b.HasOne("MiskBeirut.Core.Entities.Vacancy", "Vacancy")
+                        .WithMany()
+                        .HasForeignKey("VacancyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Vacancy");
+                });
+
             modelBuilder.Entity("MiskBeirut.Core.Entities.NonCashPayment", b =>
                 {
                     b.HasOne("MiskBeirut.Core.Entities.DailyClosing", "DailyClosing")
@@ -1099,6 +1515,28 @@ namespace MiskBeirut.Infrastructure.Migrations
                     b.Navigation("Language");
 
                     b.Navigation("Page");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.RolePrivilege", b =>
+                {
+                    b.HasOne("MiskBeirut.Core.Entities.Privilege", "Privilege")
+                        .WithMany("RolePrivileges")
+                        .HasForeignKey("PrivilegeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Privilege");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.BackofficePage", b =>
+                {
+                    b.Navigation("Attributes");
                 });
 
             modelBuilder.Entity("MiskBeirut.Core.Entities.Customer", b =>
@@ -1139,6 +1577,11 @@ namespace MiskBeirut.Infrastructure.Migrations
             modelBuilder.Entity("MiskBeirut.Core.Entities.Page", b =>
                 {
                     b.Navigation("Attributes");
+                });
+
+            modelBuilder.Entity("MiskBeirut.Core.Entities.Privilege", b =>
+                {
+                    b.Navigation("RolePrivileges");
                 });
 
             modelBuilder.Entity("MiskBeirut.Core.Entities.Receiver", b =>

@@ -1,0 +1,79 @@
+@model EmployeesPageViewModel
+@using MiskBeirut.Core.Constants
+<!-- Edit Employee Modal -->
+<div class="modal fade" id="editEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editEmployeeForm">
+                <!-- edit-id is the EmployeeWorking (payroll) record's own id — 0 if this employee has
+                     no working record for the selected month yet. edit-employee-id is the actual
+                     Employee's id. They must stay separate: reusing edit-id as "the employee id" was
+                     the root cause of edits silently targeting the wrong employee (or a nonexistent
+                     one, crashing on the foreign key) whenever a working record's own id didn't
+                     happen to match the employee's id. -->
+                <input type="hidden" name="id" id="edit-id">
+                <input type="hidden" name="employee_id" id="edit-employee-id">
+                <input type="hidden" name="year" id="edit-year" value="@Model.CurrentYear">
+                <input type="hidden" name="month" id="edit-month" value="@Model.CurrentMonth">
+                <div class="modal-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                        <div class="space-y-stack-md">
+                            <div>
+                                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Name</label>
+                                <input type="text" name="name" id="edit-name" required maxlength="@FieldLengths.Name"
+                                       class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                            </div>
+                            <div>
+                                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Phone Number</label>
+                                <input type="tel" name="phone_number" id="edit-phone" maxlength="@FieldLengths.PhoneNumber"
+                                       class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                            </div>
+                            <div>
+                                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Position</label>
+                                <input type="text" name="position" id="edit-position" maxlength="@FieldLengths.Position"
+                                       class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                            </div>
+                        </div>
+                        <div class="space-y-stack-md">
+                            <div>
+                                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Base Salary</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+                                    <input type="number" name="base_salary" id="edit-base-salary" min="0" step="0.01"
+                                           class="w-full pl-7 rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Working Days</label>
+                                <input type="number" name="working_days" id="edit-working-days" min="0" step="0.5"
+                                       class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Working Status Toggle -->
+                    <div class="mt-stack-lg pt-stack-lg border-t border-surface-container-high col-span-2">
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Status</label>
+                        <div class="flex items-center gap-4 p-3 bg-surface-bright rounded-DEFAULT border border-surface-container-high w-full">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="is_working" id="edit-is-working" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-slate-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                <span class="ml-3 font-body-md text-body-md text-on-surface" id="status-label">Working This Month</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button"
+                            class="px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-colors">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

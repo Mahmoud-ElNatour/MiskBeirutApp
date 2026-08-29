@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MiskBeirut.Core.Entities;
+using MiskBeirut.Core.Enums;
 using MiskBeirut.Core.Repositories;
 using MiskBeirut.Infrastructure.DbContexts;
 
@@ -35,5 +36,41 @@ public class CustomerRepository : Repository<Customer>, ICustomerRepository
         Context.CustomerLedgers.Add(entry);
         await Context.SaveChangesAsync(cancellationToken);
         return entry;
+    }
+
+    /// <summary>Reverses the entry's effect on the customer's running balance, then removes it.</summary>
+    public async Task DeleteLedgerEntryAsync(CustomerLedger entry, CancellationToken cancellationToken = default)
+    {
+        var customer = await Context.Customers.FirstAsync(c => c.Id == entry.CustomerId, cancellationToken);
+        customer.Balance -= entry.Amount;
+
+        Context.CustomerLedgers.Remove(entry);
+        await Context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CustomerLedger>> GetLedgerByTypeAsync(CustomerLedgerType type, int? month, int? year, CancellationToken cancellationToken = default)
+    {
+        var query = Context.CustomerLedgers
+            .AsNoTracking()
+            .Include(l => l.Customer)
+            .Where(l => l.Type == type);
+
+        if (month.HasValue)
+            query = query.Where(l => l.Date.Month == month.Value);
+        if (year.HasValue)
+            query = query.Where(l => l.Date.Year == year.Value);
+
+        return await query.OrderByDescending(l => l.Date).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CustomerLedger>> GetUnattachedLedgerByDateAsync(DateOnly date, CancellationToken cancellationToken = default)
+        => await Context.CustomerLedgers
+            .Where(l => l.DailyClosingId == null && l.Date == date)
+            .ToListAsync(cancellationToken);
+
+    public async Task UpdateLedgerEntryAsync(CustomerLedger entry, CancellationToken cancellationToken = default)
+    {
+        Context.CustomerLedgers.Update(entry);
+        await Context.SaveChangesAsync(cancellationToken);
     }
 }

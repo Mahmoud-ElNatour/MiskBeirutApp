@@ -1,0 +1,48 @@
+@using MiskBeirut.Application.Dtos.Leads
+@model IReadOnlyList<WebsiteLeadDto>
+@{
+    ViewData["Title"] = "Website Leads";
+}
+
+<div class="mb-stack-lg flex justify-between items-end">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Website Leads</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Leads captured by the website's discount popup, most recent first.</p>
+    </div>
+    <a asp-action="Export" class="inline-flex items-center gap-2 px-stack-md py-stack-sm bg-slate-blue hover:bg-primary text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors">
+        <span class="material-symbols-outlined text-sm">download</span>
+        Export to Excel
+    </a>
+</div>
+
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+            <thead>
+                <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    <th class="py-3 px-stack-md" data-sort="text">Name</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Phone</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Email</th>
+                    <th class="py-3 px-stack-md" data-sort="date">Captured</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var lead in Model)
+                {
+                    <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors">
+                        <td class="py-4 px-stack-md text-on-surface font-medium">@lead.Name</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@lead.PhoneNumber</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@lead.Email</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@lead.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="py-10 px-stack-md text-center text-on-surface-variant">No leads captured yet.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

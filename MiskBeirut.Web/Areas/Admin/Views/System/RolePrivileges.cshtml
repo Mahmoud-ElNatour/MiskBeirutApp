@@ -1,0 +1,85 @@
+@model RolePrivilegesViewModel
+@using MiskBeirut.Web.Areas.Admin.Models.Roles
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = $"{Model.RoleName} Privileges";
+}
+
+<div class="flex items-center justify-between mb-stack-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@Model.RoleName</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Check a section to grant every page under it. Individual pages can also be granted on their own.</p>
+    </div>
+    <a asp-action="Roles" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        Back to Roles
+    </a>
+</div>
+
+@if (Model.IsAdminRole)
+{
+    <div class="mb-stack-lg p-stack-md bg-primary/10 text-primary border border-primary/20 rounded-DEFAULT font-body-md text-body-md">
+        The Admin role always has full access to every page and section, regardless of what's checked here.
+    </div>
+}
+
+<form asp-action="SaveRolePrivileges" method="post" class="space-y-stack-md">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="roleId" value="@Model.RoleId" />
+
+    @foreach (var sec in Model.Sections)
+    {
+        <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+            <div class="bg-surface-bright border-b border-surface-container-high px-stack-md py-4 flex items-center gap-3">
+                <input type="checkbox" name="privilegeIds" value="@sec.SectionPrivilegeId" id="section-@sec.SectionPrivilegeId"
+                       class="size-5 rounded border-border-subtle text-primary focus:ring-slate-blue section-toggle"
+                       data-section-id="@sec.SectionPrivilegeId"
+                       checked="@(sec.SectionGranted ? "checked" : null)" />
+                <label for="section-@sec.SectionPrivilegeId" class="font-headline-sm text-headline-sm text-on-surface cursor-pointer">@sec.SectionName</label>
+                <span class="font-label-sm text-label-sm text-on-surface-variant ml-auto normal-case tracking-normal">Grants every page below</span>
+            </div>
+            <div class="p-stack-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                @foreach (var pg in sec.Pages)
+                {
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-DEFAULT border border-surface-container-high hover:bg-surface-bright cursor-pointer">
+                        <input type="checkbox" name="privilegeIds" value="@pg.PrivilegeId"
+                               class="size-4 rounded border-border-subtle text-primary focus:ring-slate-blue page-checkbox"
+                               data-section-id="@sec.SectionPrivilegeId"
+                               checked="@(pg.Granted ? "checked" : null)" />
+                        <span class="font-body-md text-body-md text-on-surface-variant">@pg.Name</span>
+                    </label>
+                }
+                @if (!sec.Pages.Any())
+                {
+                    <p class="font-body-md text-body-md text-on-surface-variant italic">No individual pages in this section.</p>
+                }
+            </div>
+        </div>
+    }
+
+    <button type="submit" class="px-6 py-3 bg-primary hover:bg-primary-container text-white font-label-lg text-label-lg rounded-DEFAULT transition-colors">Save Privileges</button>
+</form>
+
+@section Scripts {
+<script>
+    // Checking a section auto-checks (and visually implies) every page beneath it.
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.section-toggle').forEach(function (sectionBox) {
+            sectionBox.addEventListener('change', function () {
+                var sectionId = sectionBox.dataset.sectionId;
+                document.querySelectorAll('.page-checkbox[data-section-id="' + sectionId + '"]').forEach(function (pageBox) {
+                    if (sectionBox.checked) {
+                        pageBox.checked = true;
+                        pageBox.disabled = true;
+                    } else {
+                        pageBox.disabled = false;
+                    }
+                });
+            });
+            if (sectionBox.checked) {
+                sectionBox.dispatchEvent(new Event('change'));
+            }
+        });
+    });
+</script>
+}

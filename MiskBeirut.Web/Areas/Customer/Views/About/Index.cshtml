@@ -7,14 +7,14 @@
 <!-- Hero Header -->
 <section class="relative bg-primary-container/10 pt-[80px] pb-stack-lg px-6 md:px-margin-desktop">
 <div class="max-w-[1280px] mx-auto">
-<h1 class="font-headline-lg text-headline-lg md:text-display-lg text-onyx-text mb-6">@Model.Text("hero_title", "About Misk Beirut")</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+<h1 class="font-headline-lg text-headline-lg md:text-display-lg text-onyx-text mb-6" data-cms-field="hero_title" data-cms-type="Text">@Model.Text("hero_title", "About Misk Beirut")</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl" data-cms-field="hero_subtitle" data-cms-type="Text">
                     @Model.Text("hero_subtitle", "A timeless sanctuary of Levantine hospitality, where every dish tells a story of heritage and every visit feels like coming home.")
                 </p>
 </div>
 <!-- Decorative Element -->
 <div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
-<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
+<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
 </div>
 </section>
 <!-- Founder Story Section -->
@@ -24,27 +24,27 @@
 <div class="md:col-span-5 reveal-on-scroll">
 <div class="relative group">
 <div class="absolute -inset-4 border border-slate-blue/10 pointer-events-none transition-transform duration-500 group-hover:scale-[1.02]"></div>
-<img alt="@Model.Text("founder_name", "Elias Mansour")" class="w-full h-auto object-cover grayscale hover:grayscale-0 transition-all duration-700 shadow-sm" src="@Model.Image("founder_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuA2y7a7-zElnk20Xu4CUOsjUdqyUXYehOnwqWx7ei1y4VcdtdXC6YwHbhMgG9BDcLzLxs1Zo1H80TxcmJtpS3GCE2xDe7QZQ-vwY-DCIDSEgGgxz75B2IXO0xx8PBTMDIwsrhbK6Aws7m2_Z0xJlOXPPgZP36FsINRKypve8QfUFVEgbeX6ephE1zZSJ6alXgkmuh9Kj2AfsGqHhIfBt8pUJN1SnJ6NE53EbR64Pruapj2FaCFMV5MDVe47Mit9dzNy-buhhS9_dz0")">
+<img alt="@Model.Text("founder_name", "Elias Mansour")" class="w-full h-auto object-cover grayscale hover:grayscale-0 transition-all duration-700 shadow-sm" data-cms-field="founder_image" data-cms-type="Image" src="@Model.Image("founder_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuA2y7a7-zElnk20Xu4CUOsjUdqyUXYehOnwqWx7ei1y4VcdtdXC6YwHbhMgG9BDcLzLxs1Zo1H80TxcmJtpS3GCE2xDe7QZQ-vwY-DCIDSEgGgxz75B2IXO0xx8PBTMDIwsrhbK6Aws7m2_Z0xJlOXPPgZP36FsINRKypve8QfUFVEgbeX6ephE1zZSJ6alXgkmuh9Kj2AfsGqHhIfBt8pUJN1SnJ6NE53EbR64Pruapj2FaCFMV5MDVe47Mit9dzNy-buhhS9_dz0")">
 <div class="mt-6">
-<p class="font-headline-md text-headline-md text-primary italic">@Model.Text("founder_name", "Elias Mansour")</p>
-<p class="font-label-lg text-label-lg text-on-surface-variant uppercase tracking-widest mt-1">@Model.Text("founder_role", "Founder & Visionary")</p>
+<p class="font-headline-md text-headline-md text-primary italic" data-cms-field="founder_name" data-cms-type="Text">@Model.Text("founder_name", "Elias Mansour")</p>
+<p class="font-label-lg text-label-lg text-on-surface-variant uppercase tracking-widest mt-1" data-cms-field="founder_role" data-cms-type="Text">@Model.Text("founder_role", "Founder & Visionary")</p>
 </div>
 </div>
 </div>
 <!-- Right Column: Story -->
 <div class="md:col-span-6 md:col-start-7 mt-12 md:mt-0 reveal-on-scroll" style="transition-delay: 200ms">
-<span class="font-label-lg text-label-lg text-brick-red uppercase tracking-widest mb-4 block">@Model.Text("founder_eyebrow", "Since 1982")</span>
-<h2 class="font-headline-lg text-headline-lg text-primary mb-8">@Model.Text("founder_title", "Our Story")</h2>
+<span class="font-label-lg text-label-lg text-brick-red uppercase tracking-widest mb-4 block" data-cms-field="founder_eyebrow" data-cms-type="Text">@Model.Text("founder_eyebrow", "Since 1982")</span>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-8" data-cms-field="founder_title" data-cms-type="Text">@Model.Text("founder_title", "Our Story")</h2>
 <div class="space-y-6">
-<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed" data-cms-field="founder_body_1" data-cms-type="Text">
                             @Model.Text("founder_body_1", "Misk Beirut began as a modest kitchen in the heart of pre-war Beirut, driven by Elias Mansour's unwavering belief that the soul of Lebanese culture resides in its flavors. What started as a small gathering place for poets and painters blossomed into a sanctuary for authentic Levantine gastronomy.")
                         </p>
-<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed" data-cms-field="founder_body_2" data-cms-type="Text">
                             @Model.Text("founder_body_2", "Over four decades, we have remained anchored in our commitment to artisanal Levant techniques—sourcing the finest sumac from the mountains, olive oil from the groves of Koura, and hospitality from the depths of our heritage.")
                         </p>
 </div>
 <blockquote class="mt-12 pl-8 border-l-2 border-brick-red">
-<p class="font-headline-md text-headline-md text-primary italic leading-tight">
+<p class="font-headline-md text-headline-md text-primary italic leading-tight" data-cms-field="founder_quote" data-cms-type="Text">
                             @Model.Text("founder_quote", "\"An honest approach to food, focusing on the integrity of ingredients and the warmth of Lebanese tradition.\"")
                         </p>
 </blockquote>
@@ -55,7 +55,7 @@
 <section class="bg-marble-white py-section-gap">
 <div class="max-w-[1280px] mx-auto px-margin-desktop">
 <div class="text-center mb-16 reveal-on-scroll">
-<h2 class="font-headline-lg text-headline-lg text-primary">@Model.Text("values_title", "The Pillars of Misk")</h2>
+<h2 class="font-headline-lg text-headline-lg text-primary" data-cms-field="values_title" data-cms-type="Text">@Model.Text("values_title", "The Pillars of Misk")</h2>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
 @{
@@ -74,8 +74,8 @@
         <div class="w-12 h-12 mx-auto flex items-center justify-center text-brick-red mb-8">
             <span class="material-symbols-outlined text-4xl">@valueIcons[i - 1]</span>
         </div>
-        <h3 class="font-headline-md text-[clamp(18px,2.6vw,32px)] leading-[1.25] text-primary mb-4 whitespace-nowrap">@Model.Text($"value_{i}_title", titleDefault)</h3>
-        <p class="font-body-md text-body-md text-on-surface-variant">
+        <h3 class="font-headline-md text-[clamp(18px,2.6vw,32px)] leading-[1.25] text-primary mb-4 whitespace-nowrap" data-cms-field="value_@(i)_title" data-cms-type="Text">@Model.Text($"value_{i}_title", titleDefault)</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant" data-cms-field="value_@(i)_body" data-cms-type="Text">
             @Model.Text($"value_{i}_body", bodyDefault)
         </p>
     </div>
@@ -86,7 +86,7 @@
 <!-- Journey Timeline -->
 <section class="py-section-gap px-margin-desktop max-w-[1280px] mx-auto">
 <div class="text-center mb-24 reveal-on-scroll">
-<h2 class="font-headline-lg text-headline-lg text-primary">@Model.Text("timeline_title", "Our Journey Through Time")</h2>
+<h2 class="font-headline-lg text-headline-lg text-primary" data-cms-field="timeline_title" data-cms-type="Text">@Model.Text("timeline_title", "Our Journey Through Time")</h2>
 </div>
 <div class="relative">
 <!-- Vertical Line -->
@@ -96,43 +96,43 @@
 <!-- 1982 -->
 <div class="relative grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-32 items-center reveal-on-scroll">
 <div class="md:text-right">
-<span class="font-display-lg text-display-lg text-brick-red/20 block mb-2 leading-none">@Model.Text("timeline_1_year", "1982")</span>
-<h4 class="font-headline-md text-headline-md text-primary mb-4">@Model.Text("timeline_1_title", "The Founding")</h4>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-md md:ml-auto">
+<span class="font-display-lg text-display-lg text-brick-red/20 block mb-2 leading-none" data-cms-field="timeline_1_year" data-cms-type="Text">@Model.Text("timeline_1_year", "1982")</span>
+<h4 class="font-headline-md text-headline-md text-primary mb-4" data-cms-field="timeline_1_title" data-cms-type="Text">@Model.Text("timeline_1_title", "The Founding")</h4>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md md:ml-auto" data-cms-field="timeline_1_body" data-cms-type="Text">
                                 @Model.Text("timeline_1_body", "Elias Mansour opens the first Misk oven in Beirut, focused on artisanal manousheh and traditional mezze.")
                             </p>
 </div>
 <div class="hidden md:block relative">
 <div class="w-4 h-4 rounded-full bg-brick-red absolute left-[-16px] top-1/2 -translate-x-1/2 -translate-y-1/2 ring-8 ring-surface"></div>
-<div class="aspect-video bg-cover bg-center rounded-lg shadow-sm" style="background-image: url('@Model.Image("timeline_1_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCCdF6LEY22Ddw6q2vZg0lDg2V4zik2-XFh2jDO-e1O-59q-2YCEhy-v8f8vZ1Omofg_ZWGnjsLwa123CsEsk1Ph9l7-H0Mcl_hycSRn5Ty4ARuTMylkzV0L6W-D-z45T_SnERDINs18P6dBEt6pbBx7FX9meHBeYkAqJn1VuIcztrk4gA7nMYSFdAbmVTNq4czenSkN4cWsQJg7rvOjqvfpCcIroep_CpG7CZP8LMwSVqde0JR0F3Zknifm74-YFnl8N3_aZcq6_c")')"></div>
+<div class="aspect-video bg-cover bg-center rounded-lg shadow-sm" data-cms-field="timeline_1_image" data-cms-type="BackgroundImage" style="background-image: url('@Model.Image("timeline_1_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCCdF6LEY22Ddw6q2vZg0lDg2V4zik2-XFh2jDO-e1O-59q-2YCEhy-v8f8vZ1Omofg_ZWGnjsLwa123CsEsk1Ph9l7-H0Mcl_hycSRn5Ty4ARuTMylkzV0L6W-D-z45T_SnERDINs18P6dBEt6pbBx7FX9meHBeYkAqJn1VuIcztrk4gA7nMYSFdAbmVTNq4czenSkN4cWsQJg7rvOjqvfpCcIroep_CpG7CZP8LMwSVqde0JR0F3Zknifm74-YFnl8N3_aZcq6_c")')"></div>
 </div>
 </div>
 <!-- 2004 -->
 <div class="relative grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-32 items-center reveal-on-scroll">
 <div class="md:order-2">
-<span class="font-display-lg text-display-lg text-brick-red/20 block mb-2 leading-none">@Model.Text("timeline_2_year", "2004")</span>
-<h4 class="font-headline-md text-headline-md text-primary mb-4">@Model.Text("timeline_2_title", "Expansion")</h4>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-md">
+<span class="font-display-lg text-display-lg text-brick-red/20 block mb-2 leading-none" data-cms-field="timeline_2_year" data-cms-type="Text">@Model.Text("timeline_2_year", "2004")</span>
+<h4 class="font-headline-md text-headline-md text-primary mb-4" data-cms-field="timeline_2_title" data-cms-type="Text">@Model.Text("timeline_2_title", "Expansion")</h4>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md" data-cms-field="timeline_2_body" data-cms-type="Text">
                                 @Model.Text("timeline_2_body", "Relocation to a historic manor in the Central District, transforming into a full-scale culinary destination.")
                             </p>
 </div>
 <div class="hidden md:block relative md:order-1">
 <div class="w-4 h-4 rounded-full bg-brick-red absolute right-[-16px] top-1/2 translate-x-1/2 -translate-y-1/2 ring-8 ring-surface"></div>
-<div class="aspect-video bg-cover bg-center rounded-lg shadow-sm" style="background-image: url('@Model.Image("timeline_2_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuDdGG6jGIU1UZ_A7e7h6wLUr1fsaH56V9cITtL_b0KOxiD1ajBB-IJgi92YIh1kkia1mpNNKD841B-SjoNF6888vQA4P0XlOE4B7anbEsAYDdNG--ifAK8-X2h2ph9y51-RpksVBJkefd3GpWzp37zzeENXVH2E3EJf2eTtw5dWlaN271s5xK8nighbmq8AisL1PRr77xCO6jgVHMJFJ5heHaN4eHVS5xcRmwiVftmR03zIPXlZN5SQtpclgtSB3Nr5XR6Rayu8nMQ")')"></div>
+<div class="aspect-video bg-cover bg-center rounded-lg shadow-sm" data-cms-field="timeline_2_image" data-cms-type="BackgroundImage" style="background-image: url('@Model.Image("timeline_2_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuDdGG6jGIU1UZ_A7e7h6wLUr1fsaH56V9cITtL_b0KOxiD1ajBB-IJgi92YIh1kkia1mpNNKD841B-SjoNF6888vQA4P0XlOE4B7anbEsAYDdNG--ifAK8-X2h2ph9y51-RpksVBJkefd3GpWzp37zzeENXVH2E3EJf2eTtw5dWlaN271s5xK8nighbmq8AisL1PRr77xCO6jgVHMJFJ5heHaN4eHVS5xcRmwiVftmR03zIPXlZN5SQtpclgtSB3Nr5XR6Rayu8nMQ")')"></div>
 </div>
 </div>
 <!-- Today -->
 <div class="relative grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-32 items-center reveal-on-scroll">
 <div class="md:text-right">
-<span class="font-display-lg text-display-lg text-brick-red/20 block mb-2 leading-none">@Model.Text("timeline_3_year", "Today")</span>
-<h4 class="font-headline-md text-headline-md text-primary mb-4">@Model.Text("timeline_3_title", "Contemporary Sanctuary")</h4>
-<p class="font-body-md text-body-md text-on-surface-variant max-w-md md:ml-auto">
+<span class="font-display-lg text-display-lg text-brick-red/20 block mb-2 leading-none" data-cms-field="timeline_3_year" data-cms-type="Text">@Model.Text("timeline_3_year", "Today")</span>
+<h4 class="font-headline-md text-headline-md text-primary mb-4" data-cms-field="timeline_3_title" data-cms-type="Text">@Model.Text("timeline_3_title", "Contemporary Sanctuary")</h4>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-md md:ml-auto" data-cms-field="timeline_3_body" data-cms-type="Text">
                                 @Model.Text("timeline_3_body", "Now a multi-award winning institution, bridging traditional Levantine warmth with modern luxury across the globe.")
                             </p>
 </div>
 <div class="hidden md:block relative">
 <div class="w-4 h-4 rounded-full bg-brick-red absolute left-[-16px] top-1/2 -translate-x-1/2 -translate-y-1/2 ring-8 ring-surface"></div>
-<div class="aspect-video bg-cover bg-center rounded-lg shadow-sm" style="background-image: url('@Model.Image("timeline_3_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuC2L5NgH4nGpGkzbLByRfzw9pbhHOYkY16GWKCXNN4U7tORFVysXUyjnpnivnvX7H_g1QozXbL5tEjNlGS3C9VcoegIo_nvlok3biGhhjZNqYDqYLpcmhYcdXoCMXtj2RtDZpIHoaYNmS4QGiHIbclMxiFFi5jnvhEeCbhL-imJ0gBPyojEgJgQ8qv9Tkq4VvMJ6QtWjZvhJP5lX3ALysr9tsqvzb2HaFW3zI8Ab3bGPXKlG8oJpcMh4hMnrI53k3GgUhbHL83IPsQ")')"></div>
+<div class="aspect-video bg-cover bg-center rounded-lg shadow-sm" data-cms-field="timeline_3_image" data-cms-type="BackgroundImage" style="background-image: url('@Model.Image("timeline_3_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuC2L5NgH4nGpGkzbLByRfzw9pbhHOYkY16GWKCXNN4U7tORFVysXUyjnpnivnvX7H_g1QozXbL5tEjNlGS3C9VcoegIo_nvlok3biGhhjZNqYDqYLpcmhYcdXoCMXtj2RtDZpIHoaYNmS4QGiHIbclMxiFFi5jnvhEeCbhL-imJ0gBPyojEgJgQ8qv9Tkq4VvMJ6QtWjZvhJP5lX3ALysr9tsqvzb2HaFW3zI8Ab3bGPXKlG8oJpcMh4hMnrI53k3GgUhbHL83IPsQ")')"></div>
 </div>
 </div>
 </div>

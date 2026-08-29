@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Misk Beirut CMS</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#f9f9fa",
+                        "surface": "#f9f9fa",
+                        "border-subtle": "#E2E2E4",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#264b61",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e2e2e3",
+                        "primary-fixed": "#c7e7ff",
+                        "on-surface": "#1a1c1d",
+                        "surface-tint": "#3f627a",
+                        "surface-variant": "#e2e2e3",
+                        "slate-blue": "#4E7289",
+                        "inverse-primary": "#a7cbe6",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e8e8e9",
+                        "on-tertiary-container": "#c9cacb",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#ffdad8",
+                        "outline-variant": "#c2c7cd",
+                        "secondary": "#9b4143",
+                        "surface-dim": "#dadadb",
+                        "primary": "#1c4258",
+                        "outline": "#72787d",
+                        "on-primary-fixed": "#001e2e",
+                        "on-primary-container": "#aacfea",
+                        "marble-white": "#F5F5F6",
+                        "surface-container": "#eeeeef",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#762529",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f3f3f4",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f9f9fa",
+                        "on-secondary-fixed-variant": "#7d2a2e",
+                        "primary-container": "#355970",
+                        "on-background": "#1a1c1d",
+                        "tertiary": "#3c3e3f",
+                        "on-secondary-fixed": "#410008",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "tertiary-fixed": "#e2e2e3",
+                        "inverse-surface": "#2f3132",
+                        "error": "#ba1a1a",
+                        "onyx-text": "#1A1A1A",
+                        "secondary-container": "#fd8e8e",
+                        "secondary-fixed-dim": "#ffb3b1",
+                        "on-surface-variant": "#42474c",
+                        "tertiary-container": "#535556",
+                        "status-pending": "#D97706",
+                        "tertiary-fixed-dim": "#c6c6c7",
+                        "status-urgent": "#BA1A1A",
+                        "on-tertiary-fixed": "#1a1c1d",
+                        "status-success": "#2D6A4F",
+                        "brick-red": "#8F383A",
+                        "primary-fixed-dim": "#a7cbe6"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "stack-lg": "24px",
+                        "container-padding": "32px",
+                        "stack-sm": "8px",
+                        "row-height-dense": "48px",
+                        "stack-md": "16px",
+                        "sidebar-width": "260px",
+                        "gutter": "24px",
+                        "row-height-default": "64px",
+                        "stack-xs": "4px"
+                    },
+                    fontFamily: {
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-md": ["EB Garamond"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["EB Garamond"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "headline-sm": ["EB Garamond"],
+                        "label-lg": ["Hanken Grotesk"],
+                        "data-tabular": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "500" }],
+                        "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "data-tabular": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* <details>/<summary> accordion: hide the default disclosure marker, rotate our own chevron */
+        .cms-nav-details summary {
+            list-style: none;
+        }
+
+        .cms-nav-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .cms-nav-details[open] .cms-chevron {
+            transform: rotate(180deg);
+        }
+    </style>
+    @RenderSection("ExtraHead", required: false)
+</head>
+<body class="bg-marble-white text-on-surface font-body-md text-body-md overflow-x-hidden min-h-screen">
+    <!-- Sidebar -->
+    <nav class="w-sidebar-width h-screen fixed left-0 top-0 bg-primary flex flex-col py-stack-lg z-50">
+        <a asp-area="Cms" asp-controller="Home" asp-action="Index" class="px-container-padding mb-12 block hover:opacity-90 transition-opacity">
+            <h1 class="font-headline-sm text-headline-sm text-marble-white">Misk Beirut</h1>
+            <p class="font-body-md text-body-md text-on-primary opacity-70">Content Management</p>
+        </a>
+        <ul class="flex flex-col flex-grow">
+            <li>
+                <a asp-area="Cms" asp-controller="Home" asp-action="Index"
+                   class="flex items-center px-container-padding py-stack-sm transition-all @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "text-on-primary font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+                    <span class="material-symbols-outlined mr-4">dashboard</span>
+                    Dashboard
+                </a>
+            </li>
+            @await Component.InvokeAsync("PagesNav", new { currentPageId = ViewData["CurrentPageId"] as int? })
+            <li>
+                <a asp-area="Cms" asp-controller="JobApplications" asp-action="Index"
+                   class="flex items-center px-container-padding py-stack-sm transition-all @(ViewContext.RouteData.Values["controller"]?.ToString() == "JobApplications" ? "text-on-primary font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+                    <span class="material-symbols-outlined mr-4">work</span>
+                    Job Applications
+                </a>
+            </li>
+            <li>
+                <a asp-area="Cms" asp-controller="ContactInquiries" asp-action="Index"
+                   class="flex items-center px-container-padding py-stack-sm transition-all @(ViewContext.RouteData.Values["controller"]?.ToString() == "ContactInquiries" ? "text-on-primary font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+                    <span class="material-symbols-outlined mr-4">forum</span>
+                    Contact Inquiries
+                </a>
+            </li>
+            <li>
+                <a asp-area="Cms" asp-controller="WebsiteLeads" asp-action="Index"
+                   class="flex items-center px-container-padding py-stack-sm transition-all @(ViewContext.RouteData.Values["controller"]?.ToString() == "WebsiteLeads" ? "text-on-primary font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+                    <span class="material-symbols-outlined mr-4">contact_mail</span>
+                    Website Leads
+                </a>
+            </li>
+        </ul>
+        <div class="mt-auto">
+            <a asp-area="Cms" asp-controller="Auth" asp-action="Logout" class="flex items-center px-container-padding py-stack-sm text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container transition-all">
+                <span class="material-symbols-outlined mr-4">logout</span>
+                Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="ml-sidebar-width min-h-screen flex flex-col">
+        <header class="h-row-height-default w-full sticky top-0 bg-surface-bright border-b border-border-subtle flex justify-between items-center px-container-padding z-40">
+            <form asp-controller="Pages" asp-action="Index" method="get" class="relative text-on-surface-variant flex items-center">
+                <span class="material-symbols-outlined absolute left-3">search</span>
+                <input name="q" value="@ViewData["SearchQuery"]" class="pl-10 pr-4 py-2 border border-border-subtle rounded bg-surface-container-lowest focus:outline-none focus:border-slate-blue font-body-md text-body-md text-on-surface w-64 transition-colors" placeholder="Search pages..." type="search" />
+            </form>
+            <div class="flex items-center space-x-6">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="text-right hidden sm:block">
+                        <p class="font-label-md text-label-md text-on-surface leading-none">@User.Identity.Name</p>
+                        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1">@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</p>
+                    </div>
+                    <div class="h-8 w-8 rounded-full overflow-hidden border border-border-subtle bg-primary text-on-primary font-bold flex items-center justify-center">
+                        @(User.Identity.Name?[..1].ToUpper() ?? "U")
+                    </div>
+                }
+            </div>
+        </header>
+
+        <main class="flex-grow p-container-padding">
+            @await Html.PartialAsync("_Toast")
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Generic click-to-sort for any table on any Cms page: mark the <table> with data-sortable and
+         each sortable <th> with data-sort="text|number|date". A <td> can override what actually gets
+         compared via data-sort-value (e.g. a status badge whose visible text includes an icon
+         ligature) — otherwise its own trimmed text is used. -->
+    <script>
+        (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                function cellValue(row, index) {
+                    var cell = row.children[index];
+                    if (!cell) return '';
+                    return cell.dataset.sortValue !== undefined ? cell.dataset.sortValue : cell.textContent.trim();
+                }
+
+                function compare(a, b, type) {
+                    if (type === 'number') {
+                        return (parseFloat(a) || 0) - (parseFloat(b) || 0);
+                    }
+                    if (type === 'date') {
+                        return (new Date(a).getTime() || 0) - (new Date(b).getTime() || 0);
+                    }
+                    return a.localeCompare(b, undefined, { sensitivity: 'base' });
+                }
+
+                document.querySelectorAll('table[data-sortable]').forEach(function (table) {
+                    var tbody = table.tBodies[0];
+                    if (!tbody) return;
+                    var headers = Array.prototype.slice.call(table.querySelectorAll('thead th'));
+
+                    headers.forEach(function (th, index) {
+                        var type = th.dataset.sort;
+                        if (!type) return;
+
+                        th.classList.add('cursor-pointer', 'select-none');
+                        var indicator = document.createElement('span');
+                        indicator.className = 'ml-1 inline-block text-[10px] opacity-0';
+                        indicator.textContent = '▲';
+                        th.appendChild(indicator);
+
+                        var direction = null;
+
+                        th.addEventListener('click', function () {
+                            direction = direction === 'asc' ? 'desc' : 'asc';
+
+                            headers.forEach(function (other) {
+                                if (other === th) return;
+                                var otherIndicator = other.querySelector('span');
+                                if (otherIndicator) otherIndicator.style.opacity = '0';
+                            });
+
+                            var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'))
+                                .filter(function (r) { return r.children.length > index; });
+
+                            rows.sort(function (rowA, rowB) {
+                                var result = compare(cellValue(rowA, index), cellValue(rowB, index), type);
+                                return direction === 'asc' ? result : -result;
+                            });
+
+                            rows.forEach(function (row) { tbody.appendChild(row); });
+
+                            indicator.textContent = direction === 'asc' ? '▲' : '▼';
+                            indicator.style.opacity = '1';
+
+                            // Sorting physically reorders the <tr> nodes, so any pager below (see the
+                            // data-paginate script) needs to recompute which rows land on which page.
+                            table.dispatchEvent(new CustomEvent('cms-table-sorted'));
+                        });
+                    });
+                });
+            });
+        })();
+    </script>
+
+    <!-- Generic client-side pagination for any table on any Cms page: mark the <table> with
+         data-paginate="10" (the page size) and this shows 10 rows at a time with a "Showing X–Y of Z"
+         + Prev/page-number/Next bar underneath. A single <td colspan> "empty state" row (e.g. "No
+         leads captured yet.") is left alone rather than counted/hidden as a data row. Cooperates with
+         the data-sortable behavior above via the "cms-table-sorted" event: a sort reorders the actual
+         DOM rows, so pagination just needs to jump back to page 1 and recompute from the new order. -->
+    <script>
+        (function () {
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('table[data-paginate]').forEach(function (table) {
+                    var pageSize = parseInt(table.dataset.paginate, 10) || 10;
+                    var tbody = table.tBodies[0];
+                    if (!tbody) return;
+
+                    function dataRows() {
+                        return Array.prototype.slice.call(tbody.rows).filter(function (row) {
+                            return !(row.cells.length === 1 && row.cells[0].hasAttribute('colspan'));
+                        });
+                    }
+
+                    if (dataRows().length <= pageSize) return; // nothing to paginate
+
+                    var currentPage = 1;
+
+                    var bar = document.createElement('div');
+                    bar.className = 'flex flex-col sm:flex-row items-center justify-between gap-3 px-stack-md py-3 border-t border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant';
+
+                    var rangeEl = document.createElement('span');
+                    var nav = document.createElement('div');
+                    nav.className = 'flex items-center gap-1';
+
+                    function pageButton(label, page, disabled, active) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.textContent = label;
+                        btn.disabled = !!disabled;
+                        btn.className = 'min-w-[28px] h-7 px-2 rounded-DEFAULT font-label-sm text-label-sm font-medium transition-colors ' +
+                            (active ? 'bg-primary text-white' : disabled ? 'opacity-40 cursor-default' : 'hover:bg-surface-container-high text-on-surface-variant');
+                        if (!disabled && !active) btn.addEventListener('click', function () { setPage(page); });
+                        return btn;
+                    }
+
+                    function render() {
+                        var rows = dataRows(); // re-read: data-sortable moves the actual <tr> nodes
+                        var totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+                        if (currentPage > totalPages) currentPage = totalPages;
+
+                        rows.forEach(function (row, i) {
+                            row.style.display = (Math.floor(i / pageSize) + 1 === currentPage) ? '' : 'none';
+                        });
+
+                        var start = rows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                        var end = Math.min(currentPage * pageSize, rows.length);
+                        rangeEl.textContent = 'Showing ' + start + '–' + end + ' of ' + rows.length;
+
+                        nav.innerHTML = '';
+                        nav.appendChild(pageButton('Prev', currentPage - 1, currentPage === 1, false));
+
+                        // Windowed page numbers (first, last, current +/-1) so a big table doesn't
+                        // render one button per page all at once.
+                        var lastRendered = null;
+                        for (var p = 1; p <= totalPages; p++) {
+                            if (p !== 1 && p !== totalPages && Math.abs(p - currentPage) > 1) {
+                                if (lastRendered !== '…') {
+                                    var ellipsis = document.createElement('span');
+                                    ellipsis.textContent = '…';
+                                    ellipsis.className = 'px-1';
+                                    nav.appendChild(ellipsis);
+                                    lastRendered = '…';
+                                }
+                                continue;
+                            }
+                            nav.appendChild(pageButton(String(p), p, false, p === currentPage));
+                            lastRendered = p;
+                        }
+
+                        nav.appendChild(pageButton('Next', currentPage + 1, currentPage === totalPages, false));
+                    }
+
+                    function setPage(page) {
+                        currentPage = page;
+                        render();
+                    }
+
+                    bar.appendChild(rangeEl);
+                    bar.appendChild(nav);
+                    (table.closest('.overflow-x-auto') || table).insertAdjacentElement('afterend', bar);
+
+                    render();
+                    table.addEventListener('cms-table-sorted', function () { setPage(1); });
+                });
+            });
+        })();
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

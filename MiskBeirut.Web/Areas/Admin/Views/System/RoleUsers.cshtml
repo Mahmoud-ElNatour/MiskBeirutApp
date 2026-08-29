@@ -1,0 +1,67 @@
+@model RoleUsersViewModel
+@using MiskBeirut.Web.Areas.Admin.Models.Roles
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = $"{Model.RoleName} Users";
+}
+
+<div class="flex items-center justify-between mb-stack-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@Model.RoleName</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-1">Check every user who should hold this role. This is the same membership as each user's own Roles checklist — edited here for the whole role at once.</p>
+    </div>
+    <a asp-action="Roles" class="inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        Back to Roles
+    </a>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="mb-stack-lg p-stack-md bg-error-container text-on-error-container rounded-DEFAULT text-body-md" role="alert">
+        <ul class="list-disc pl-5">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (Model.IsAdminRole)
+{
+    <div class="mb-stack-lg p-stack-md bg-primary/10 text-primary border border-primary/20 rounded-DEFAULT font-body-md text-body-md">
+        At least one user must always hold the Admin role — removing the last one is blocked.
+    </div>
+}
+
+<form asp-action="SaveRoleUsers" method="post" class="space-y-stack-md">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="roleId" value="@Model.RoleId" />
+
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            @foreach (var u in Model.Users)
+            {
+                <label class="flex items-center gap-2 px-3 py-2 rounded-DEFAULT border border-surface-container-high hover:bg-surface-bright cursor-pointer">
+                    <input type="checkbox" name="userIds" value="@u.UserId"
+                           class="size-4 rounded border-border-subtle text-primary focus:ring-slate-blue"
+                           checked="@(u.Assigned ? "checked" : null)" />
+                    <span class="flex flex-col">
+                        <span class="font-body-md text-body-md text-on-surface">@u.Username</span>
+                        @if (!string.IsNullOrEmpty(u.Email))
+                        {
+                            <span class="font-label-sm text-label-sm text-on-surface-variant normal-case tracking-normal">@u.Email</span>
+                        }
+                    </span>
+                </label>
+            }
+            @if (!Model.Users.Any())
+            {
+                <p class="font-body-md text-body-md text-on-surface-variant italic">No users exist yet.</p>
+            }
+        </div>
+    </div>
+
+    <button type="submit" class="px-6 py-3 bg-primary hover:bg-primary-container text-white font-label-lg text-label-lg rounded-DEFAULT transition-colors">Save Users</button>
+</form>

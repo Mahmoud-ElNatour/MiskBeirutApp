@@ -11,6 +11,7 @@ public sealed record EmployeeWorkingDto
     public int? ActualWorkingDays { get; init; }
     public decimal? DeductionsTotal { get; init; }
     public decimal? AdvanceTotal { get; init; }
+    public decimal BaseSalary { get; init; }
     public decimal? ActualSalary { get; init; }
     public decimal? Total { get; init; }
     public DateOnly? StartedAt { get; init; }

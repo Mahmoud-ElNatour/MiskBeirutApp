@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using MiskBeirut.Core.Constants;
 using MiskBeirut.Core.Entities;
 using MiskBeirut.Core.Enums;
 
@@ -39,7 +40,16 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
     public DbSet<Language> Languages => Set<Language>();
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<PageAttribute> PageAttributes => Set<PageAttribute>();
+    public DbSet<BackofficePage> BackofficePages => Set<BackofficePage>();
+    public DbSet<BackofficePageAttribute> BackofficePageAttributes => Set<BackofficePageAttribute>();
+    public DbSet<Privilege> Privileges => Set<Privilege>();
+    public DbSet<RolePrivilege> RolePrivileges => Set<RolePrivilege>();
     public DbSet<GoogleReview> GoogleReviews => Set<GoogleReview>();
+    public DbSet<Vacancy> Vacancies => Set<Vacancy>();
+    public DbSet<JobApplication> JobApplications => Set<JobApplication>();
+    public DbSet<InquiryReason> InquiryReasons => Set<InquiryReason>();
+    public DbSet<ContactInquiry> ContactInquiries => Set<ContactInquiry>();
+    public DbSet<ContactInquiryWhatsAppMessage> ContactInquiryWhatsAppMessages => Set<ContactInquiryWhatsAppMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,8 +82,8 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
         modelBuilder.Entity<Customer>(entity =>
         {
             entity.ToTable("customers", "backoffice");
-            entity.Property(c => c.Name).HasMaxLength(200).IsRequired();
-            entity.Property(c => c.PhoneNumber).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.Name).HasMaxLength(FieldLengths.Name).IsRequired();
+            entity.Property(c => c.PhoneNumber).HasMaxLength(FieldLengths.PhoneNumber).IsRequired();
             entity.Property(c => c.Balance).HasPrecision(18, 2).HasDefaultValue(0m);
             entity.Property(c => c.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
@@ -81,9 +91,9 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
         modelBuilder.Entity<Employee>(entity =>
         {
             entity.ToTable("employees", "backoffice");
-            entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
-            entity.Property(e => e.PhoneNumber).HasMaxLength(50);
-            entity.Property(e => e.Position).HasMaxLength(100);
+            entity.Property(e => e.Name).HasMaxLength(FieldLengths.Name).IsRequired();
+            entity.Property(e => e.PhoneNumber).HasMaxLength(FieldLengths.PhoneNumber);
+            entity.Property(e => e.Position).HasMaxLength(FieldLengths.Position);
             entity.Property(e => e.BaseSalary).HasPrecision(18, 2).HasDefaultValue(0m);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
@@ -100,10 +110,18 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
             entity.Property(w => w.Status).HasMaxLength(50);
             entity.Property(w => w.DeductionsTotal).HasPrecision(18, 2);
             entity.Property(w => w.AdvanceTotal).HasPrecision(18, 2);
+            entity.Property(w => w.BaseSalary).HasPrecision(18, 2);
             entity.Property(w => w.ActualSalary).HasPrecision(18, 2);
             entity.Property(w => w.Total).HasPrecision(18, 2);
             entity.Property(w => w.IsWorking).HasDefaultValue(true);
             entity.Property(w => w.Note).HasMaxLength(500);
+
+            // One working record per employee per month — without this, two concurrent saves (e.g.
+            // an Advance/Deduct ledger entry's find-or-create in EmployeeRepository racing a Payroll
+            // Edit save) can each decide no record exists yet and both insert one, leaving two rows
+            // for the same employee+month with no defined "current" one. PayrollController.Index's
+            // records.ToDictionary(r => r.EmployeeId) would throw on that.
+            entity.HasIndex(w => new { w.EmployeeId, w.Year, w.Month }).IsUnique();
 
             entity.HasOne(w => w.Employee)
                 .WithMany(e => e.WorkingRecords)
@@ -152,10 +170,15 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
             entity.ToTable("expenses", "backoffice");
             entity.Property(e => e.Amount).HasPrecision(18, 2);
             entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.IsManualEntry).HasDefaultValue(false);
 
+            // Optional: a manual expense (see IsManualEntry) is entered with no closing yet and
+            // sits with DailyClosingId null until DailyClosingManager attaches it — see that
+            // entity's XML doc.
             entity.HasOne(e => e.DailyClosing)
                 .WithMany(d => d.Expenses)
                 .HasForeignKey(e => e.DailyClosingId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.Receiver)
@@ -230,9 +253,9 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
         modelBuilder.Entity<WebsiteLead>(entity =>
         {
             entity.ToTable("customers", "customer");
-            entity.Property(l => l.Name).HasMaxLength(200).IsRequired();
-            entity.Property(l => l.PhoneNumber).HasMaxLength(50).IsRequired();
-            entity.Property(l => l.Email).HasMaxLength(256).IsRequired();
+            entity.Property(l => l.Name).HasMaxLength(FieldLengths.Name).IsRequired();
+            entity.Property(l => l.PhoneNumber).HasMaxLength(FieldLengths.PhoneNumber).IsRequired();
+            entity.Property(l => l.Email).HasMaxLength(FieldLengths.Email).IsRequired();
             entity.Property(l => l.DiscountRedeemed).HasDefaultValue(false);
             entity.Property(l => l.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         });
@@ -248,15 +271,20 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
             entity.Property(l => l.Amount).HasPrecision(18, 2);
             entity.Property(l => l.Type).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(l => l.Note).HasMaxLength(500);
+            entity.Property(l => l.IsManualEntry).HasDefaultValue(false);
 
             entity.HasOne(l => l.Customer)
                 .WithMany(c => c.LedgerEntries)
                 .HasForeignKey(l => l.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Optional: a manual credit/cashback (see IsManualEntry) is entered with no closing yet
+            // and sits with DailyClosingId null until DailyClosingManager attaches it — see that
+            // entity's XML doc.
             entity.HasOne(l => l.DailyClosing)
                 .WithMany(d => d.CustomerLedgerEntries)
                 .HasForeignKey(l => l.DailyClosingId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -306,6 +334,64 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<BackofficePage>(entity =>
+        {
+            entity.ToTable("pages", "backoffice");
+            entity.HasIndex(p => p.PageName).IsUnique();
+            entity.Property(p => p.PageName).HasMaxLength(200).IsRequired();
+        });
+
+        modelBuilder.Entity<BackofficePageAttribute>(entity =>
+        {
+            entity.ToTable("pageattributes", "backoffice", t =>
+            {
+                t.HasCheckConstraint("CK_pageattributes_type",
+                    "[AttributeType] IN ('Text', 'RichText', 'Image', 'Link', 'Video', 'Number', 'Date', 'Boolean')");
+            });
+            entity.HasIndex(a => new { a.PageId, a.AttributeName })
+                .IsUnique()
+                .HasDatabaseName("UQ_pageattributes_PageAttr");
+            entity.Property(a => a.AttributeName).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.AttributeType)
+                .HasConversion<string>()
+                .HasMaxLength(30)
+                .IsRequired()
+                .HasDefaultValue(PageAttributeType.Text);
+
+            entity.HasOne(a => a.Page)
+                .WithMany(p => p.Attributes)
+                .HasForeignKey(a => a.PageId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Privilege>(entity =>
+        {
+            entity.ToTable("privileges", "backoffice");
+            entity.HasIndex(p => p.Key).IsUnique();
+            entity.Property(p => p.Key).HasMaxLength(100).IsRequired();
+            entity.Property(p => p.Name).HasMaxLength(200).IsRequired();
+            entity.Property(p => p.SectionKey).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<RolePrivilege>(entity =>
+        {
+            entity.ToTable("role_privileges", "backoffice");
+            entity.HasIndex(rp => new { rp.RoleId, rp.PrivilegeId }).IsUnique();
+
+            entity.HasOne(rp => rp.Privilege)
+                .WithMany(p => p.RolePrivileges)
+                .HasForeignKey(rp => rp.PrivilegeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // RoleId references AspNetRoles (backoffice.roles) — IdentityDbContext owns that
+            // entity's mapping, so this side is configured as a plain shadow-FK relationship
+            // rather than a navigation property on Privilege/RolePrivilege.
+            entity.HasOne<IdentityRole<int>>()
+                .WithMany()
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<GoogleReview>(entity =>
         {
             entity.ToTable("google_reviews", "customer", t =>
@@ -317,6 +403,79 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
             entity.Property(r => r.RelativeTime).HasMaxLength(100);
             entity.Property(r => r.DisplayOrder).HasDefaultValue(0);
             entity.Property(r => r.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+        });
+
+        modelBuilder.Entity<Vacancy>(entity =>
+        {
+            entity.ToTable("vacancies", "customer");
+            entity.HasIndex(v => v.Slug).IsUnique();
+            entity.Property(v => v.Slug).HasMaxLength(100).IsRequired();
+            entity.Property(v => v.Title).HasMaxLength(200).IsRequired();
+            entity.Property(v => v.Department).HasMaxLength(100).IsRequired();
+            entity.Property(v => v.Location).HasMaxLength(100).IsRequired();
+            entity.Property(v => v.EmploymentType).HasMaxLength(50).IsRequired();
+            entity.Property(v => v.Icon).HasMaxLength(50).IsRequired();
+            entity.Property(v => v.IsActive).HasDefaultValue(true);
+            entity.Property(v => v.DisplayOrder).HasDefaultValue(0);
+            entity.Property(v => v.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+        });
+
+        modelBuilder.Entity<JobApplication>(entity =>
+        {
+            entity.ToTable("job_applications", "customer");
+            entity.Property(a => a.Name).HasMaxLength(FieldLengths.Name).IsRequired();
+            entity.Property(a => a.PhoneNumber).HasMaxLength(FieldLengths.PhoneNumber).IsRequired();
+            entity.Property(a => a.Email).HasMaxLength(FieldLengths.Email).IsRequired();
+            entity.Property(a => a.Address).HasMaxLength(FieldLengths.Address);
+            entity.Property(a => a.CvUrl).HasMaxLength(300).IsRequired();
+            entity.Property(a => a.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(a => a.DecisionTaken).HasDefaultValue(false);
+
+            entity.HasOne(a => a.Vacancy)
+                .WithMany()
+                .HasForeignKey(a => a.VacancyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<InquiryReason>(entity =>
+        {
+            entity.ToTable("inquiry_reasons", "customer");
+            entity.Property(r => r.Name).HasMaxLength(100).IsRequired();
+            entity.Property(r => r.IsActive).HasDefaultValue(true);
+            entity.Property(r => r.DisplayOrder).HasDefaultValue(0);
+        });
+
+        modelBuilder.Entity<ContactInquiry>(entity =>
+        {
+            entity.ToTable("contact_inquiries", "customer");
+            entity.Property(i => i.FullName).HasMaxLength(FieldLengths.Name).IsRequired();
+            entity.Property(i => i.PhoneNumber).HasMaxLength(FieldLengths.PhoneNumber).IsRequired();
+            entity.Property(i => i.Email).HasMaxLength(FieldLengths.Email);
+            entity.Property(i => i.Message).HasMaxLength(FieldLengths.Message).IsRequired();
+            entity.Property(i => i.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(i => i.IsDone).HasDefaultValue(false);
+
+            entity.HasOne(i => i.Reason)
+                .WithMany()
+                .HasForeignKey(i => i.ReasonId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ContactInquiryWhatsAppMessage>(entity =>
+        {
+            entity.ToTable("contact_inquiry_whatsapp_messages", "customer");
+            entity.Property(m => m.ToPhoneNumber).HasMaxLength(50).IsRequired();
+            entity.Property(m => m.TemplateName).HasMaxLength(200).IsRequired();
+            entity.Property(m => m.Body).HasMaxLength(2000).IsRequired();
+            entity.Property(m => m.ExternalMessageId).HasMaxLength(200);
+            entity.Property(m => m.ErrorMessage).HasMaxLength(2000);
+            entity.Property(m => m.SentByUsername).HasMaxLength(256);
+            entity.Property(m => m.SentAt).HasDefaultValueSql("SYSUTCDATETIME()");
+
+            entity.HasOne(m => m.ContactInquiry)
+                .WithMany()
+                .HasForeignKey(m => m.ContactInquiryId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

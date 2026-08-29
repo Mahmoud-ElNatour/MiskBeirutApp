@@ -1,0 +1,36 @@
+@using MiskBeirut.Core.Constants
+<!-- Edit Customer Modal -->
+<div class="modal fade" id="editCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCustomerForm">
+                <input type="hidden" name="id" id="edit-customer-id">
+                <div class="modal-body space-y-stack-md">
+                    <div>
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Username</label>
+                        <input type="text" name="username" id="edit-customer-username" required maxlength="@FieldLengths.Name" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    </div>
+                    <div>
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Phone Number</label>
+                        <input type="tel" name="phone_number" id="edit-customer-phone" maxlength="@FieldLengths.PhoneNumber" class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                    </div>
+                    <div>
+                        <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Balance</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+                            <input type="number" name="balance" id="edit-customer-balance" step="0.01" class="w-full pl-7 rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-colors">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

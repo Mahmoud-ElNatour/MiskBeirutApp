@@ -1,0 +1,669 @@
+@model MiskBeirut.Web.Areas.Admin.Models.Reports.ReportsViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Reports & Analytics";
+    var currentMonthDefault = DateTime.UtcNow.Month;
+    var currentYearDefault = DateTime.UtcNow.Year;
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
+}
+
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">@content.Text("title", "Reports & Analytics")</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">@content.Text("subtitle", "Business insights and performance metrics.")</p>
+    </div>
+    <div class="flex gap-3 w-full md:w-auto">
+        <button onclick="exportCurrentReport()"
+            class="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">download</span>
+            Export
+        </button>
+        <button onclick="window.print()"
+            class="flex-1 md:flex-none inline-flex justify-center items-center gap-2 px-stack-md py-stack-sm bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors">
+            <span class="material-symbols-outlined text-sm">print</span>
+            Print
+        </button>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter mb-stack-lg">
+    <div class="bg-primary text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+            <span class="material-symbols-outlined text-8xl">calendar_today</span>
+        </div>
+        <div class="relative z-10">
+            <h4 class="font-headline-lg text-headline-lg mb-stack-xs">@Model.TotalDailyClosings</h4>
+            <p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80">Daily Closings</p>
+        </div>
+    </div>
+
+    <div class="bg-status-success text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+            <span class="material-symbols-outlined text-8xl">receipt_long</span>
+        </div>
+        <div class="relative z-10">
+            <h4 class="font-headline-lg text-headline-lg mb-stack-xs">@Model.TotalExpenses</h4>
+            <p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80">Total Expenses</p>
+        </div>
+    </div>
+
+    <div class="bg-slate-blue text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+            <span class="material-symbols-outlined text-8xl">group</span>
+        </div>
+        <div class="relative z-10">
+            <h4 class="font-headline-lg text-headline-lg mb-stack-xs">@Model.TotalCustomers</h4>
+            <p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80">Customers</p>
+        </div>
+    </div>
+
+    <div class="bg-status-pending text-white rounded-DEFAULT p-stack-lg relative overflow-hidden">
+        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+            <span class="material-symbols-outlined text-8xl">badge</span>
+        </div>
+        <div class="relative z-10">
+            <h4 class="font-headline-lg text-headline-lg mb-stack-xs">@Model.TotalEmployees</h4>
+            <p class="font-label-sm text-label-sm uppercase tracking-wider opacity-80">Employees</p>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range Reports -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter mb-stack-lg">
+    <!-- Sales Report -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden flex flex-col h-full">
+        <div class="bg-surface-bright px-stack-md py-4 border-b border-surface-container-high flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">shopping_cart</span>
+            <h5 class="font-headline-sm text-headline-sm text-on-surface m-0">Sales Report</h5>
+        </div>
+        <div class="p-stack-md flex-1">
+            <form id="salesReportForm" class="space-y-stack-md">
+                <div>
+                    <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Month</label>
+                    <select name="month" required
+                        class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+                        <option value="">Select Month</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Year</label>
+                    <select name="year" required
+                        class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+                        <option value="">Select Year</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                <button type="submit"
+                    class="w-full inline-flex justify-center items-center gap-2 px-stack-md py-2 mt-2 bg-primary hover:bg-primary-container text-white rounded-DEFAULT font-label-md text-label-md transition-colors">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    Generate Sales Report
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payroll Report -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden flex flex-col h-full">
+        <div class="bg-surface-bright px-stack-md py-4 border-b border-surface-container-high flex items-center gap-2">
+            <span class="material-symbols-outlined text-status-success">payments</span>
+            <h5 class="font-headline-sm text-headline-sm text-on-surface m-0">Payroll Report</h5>
+        </div>
+        <div class="p-stack-md flex-1">
+            <form id="payrollReportForm" class="space-y-stack-md">
+                <div>
+                    <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Month</label>
+                    <select name="month" required
+                        class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+                        <option value="">Select Month</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Year</label>
+                    <select name="year" required
+                        class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+                        <option value="">Select Year</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                <button type="submit"
+                    class="w-full inline-flex justify-center items-center gap-2 px-stack-md py-2 mt-2 bg-status-success hover:opacity-90 text-white rounded-DEFAULT font-label-md text-label-md transition-colors">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    Generate Payroll Report
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expenses Report -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden flex flex-col h-full">
+        <div class="bg-surface-bright px-stack-md py-4 border-b border-surface-container-high flex items-center gap-2">
+            <span class="material-symbols-outlined text-status-pending">receipt_long</span>
+            <h5 class="font-headline-sm text-headline-sm text-on-surface m-0">Expenses Report</h5>
+        </div>
+        <div class="p-stack-md flex-1">
+            <form id="expensesReportForm" class="space-y-stack-md">
+                <div>
+                    <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Month</label>
+                    <select name="month" required
+                        class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+                        <option value="">Select Month</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Year</label>
+                    <select name="year" required
+                        class="w-full rounded-DEFAULT border border-border-subtle font-body-md text-body-md focus:ring-slate-blue focus:border-slate-blue text-on-surface">
+                        <option value="">Select Year</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+                <button type="submit"
+                    class="w-full inline-flex justify-center items-center gap-2 px-stack-md py-2 mt-2 bg-status-pending hover:opacity-90 text-white rounded-DEFAULT font-label-md text-label-md transition-colors">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    Generate Expenses Report
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Report Results -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="bg-surface-bright px-stack-md py-4 border-b border-surface-container-high flex items-center gap-2">
+        <span class="material-symbols-outlined text-on-surface-variant">table_chart</span>
+        <h5 class="font-headline-sm text-headline-sm text-on-surface m-0">Report Results</h5>
+    </div>
+    <div class="p-stack-md">
+        <div id="reportResults">
+            <div class="flex flex-col items-center justify-center py-12 text-on-surface-variant">
+                <span class="material-symbols-outlined text-5xl mb-4 text-on-surface-variant/40">bar_chart</span>
+                <p class="font-body-lg text-body-lg font-medium">Select a report type and date range to generate results</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Sales Report Form Handler
+    document.getElementById('salesReportForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        if (!data.month || !data.year) {
+            if (typeof showAlert === 'function') showAlert('Please select both month and year', 'error');
+            else alert('Please select both month and year');
+            return;
+        }
+
+        fetch('/api/reports/sales', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                month: parseInt(data.month),
+                year: parseInt(data.year)
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayReportResults('sales', data.data);
+                } else {
+                    if (typeof showAlert === 'function') showAlert('Error generating sales report: ' + data.message, 'error');
+                    else alert('Error generating sales report: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof showAlert === 'function') showAlert('Error generating sales report', 'error');
+                else alert('Error generating sales report');
+            });
+    });
+
+    // Payroll Report Form Handler
+    document.getElementById('payrollReportForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        if (!data.month || !data.year) {
+            if (typeof showAlert === 'function') showAlert('Please select both month and year', 'error');
+            else alert('Please select both month and year');
+            return;
+        }
+
+        fetch('/api/reports/payroll', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                month: parseInt(data.month),
+                year: parseInt(data.year)
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayReportResults('payroll', data.data);
+                } else {
+                    if (typeof showAlert === 'function') showAlert('Error generating payroll report: ' + data.message, 'error');
+                    else alert('Error generating payroll report: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof showAlert === 'function') showAlert('Error generating payroll report', 'error');
+                else alert('Error generating payroll report');
+            });
+    });
+
+    // Expenses Report Form Handler
+    document.getElementById('expensesReportForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+
+        if (!data.month || !data.year) {
+            if (typeof showAlert === 'function') showAlert('Please select both month and year', 'error');
+            else alert('Please select both month and year');
+            return;
+        }
+
+        fetch('/api/reports/expenses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                month: parseInt(data.month),
+                year: parseInt(data.year)
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayReportResults('expenses', data.data);
+                } else {
+                    if (typeof showAlert === 'function') showAlert('Error generating expenses report: ' + data.message, 'error');
+                    else alert('Error generating expenses report: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof showAlert === 'function') showAlert('Error generating expenses report', 'error');
+                else alert('Error generating expenses report');
+            });
+    });
+
+    let currentReportState = null;
+
+    function displayReportResults(type, data) {
+        currentReportState = { type: type, data: data };
+        const resultsDiv = document.getElementById('reportResults');
+
+        if (type === 'sales') {
+            const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthName = monthNames[parseInt(data.month)];
+            resultsDiv.innerHTML = `
+                <div class="print-header hidden print:block text-center mb-6">
+                    <h2 class="text-2xl font-bold">Misk Beirut - Sales Report</h2>
+                    <p class="text-lg">${monthName} ${data.year}</p>
+                </div>
+                <h4 class="text-xl font-bold text-on-surface mb-4 border-b border-surface-container-high pb-2">Sales Report (${monthName} ${data.year})</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-primary text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">shopping_cart</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Total Sales</h5>
+                            <h2 class="text-3xl font-bold">$${(data.total_sales || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        </div>
+                    </div>
+                    <div class="bg-status-success text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">payments</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Actual Cash</h5>
+                            <h2 class="text-3xl font-bold">$${(data.actual_cash || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        </div>
+                    </div>
+                    <div class="bg-slate-blue text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">group</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Customers Balance</h5>
+                            <h2 class="text-3xl font-bold">$${(data.total_customer_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-surface-container-high rounded">
+                    <table id="sales-report-table" class="w-full text-left text-sm whitespace-nowrap" data-sortable data-paginate="10">
+                        <thead class="bg-surface-bright border-b border-surface-container-high text-on-surface-variant">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold" data-sort="date">Date</th>
+                                <th class="px-6 py-3 font-semibold text-right" data-sort="number">Main Reading</th>
+                                <th class="px-6 py-3 font-semibold text-right" data-sort="number">Adjusted Reading</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-container-high">
+                            ${data.sales && data.sales.length > 0 ? data.sales.map(sale => `
+                                <tr class="hover:bg-surface-bright">
+                                    <td class="px-6 py-3 font-medium text-on-surface font-mono text-xs">${sale.date}</td>
+                                    <td class="px-6 py-3 text-right text-on-surface-variant font-mono font-medium">$${(sale.main_reading || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    <td class="px-6 py-3 text-right font-bold text-on-surface font-mono">$${(sale.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="3" class="px-6 py-4 text-center text-on-surface-variant">No sales records found</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            window.wireTablePagination(document.getElementById('sales-report-table'));
+        } else if (type === 'payroll') {
+            const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthName = monthNames[parseInt(data.month)];
+            resultsDiv.innerHTML = `
+                <div class="print-header hidden print:block text-center mb-6">
+                    <h2 class="text-2xl font-bold">Misk Beirut - Payroll Report</h2>
+                    <p class="text-lg">${monthName} ${data.year}</p>
+                </div>
+                <h4 class="text-xl font-bold text-on-surface mb-4 border-b border-surface-container-high pb-2">Payroll Report (${monthName} ${data.year})</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-primary text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">payments</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Total Payroll</h5>
+                            <h2 class="text-3xl font-bold">$${(data.total_payroll || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        </div>
+                    </div>
+                    <div class="bg-status-success text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">group</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Total Employees</h5>
+                            <h2 class="text-3xl font-bold">${data.total_employees || 0}</h2>
+                        </div>
+                    </div>
+                    <div class="bg-slate-blue text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">money_off</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Total Deductions</h5>
+                            <h2 class="text-3xl font-bold">$${(data.total_deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-surface-container-high rounded">
+                    <table id="payroll-report-table" class="w-full text-left text-sm whitespace-nowrap" data-sortable data-paginate="10">
+                        <thead class="bg-surface-bright border-b border-surface-container-high text-on-surface-variant">
+                            <tr>
+                                <th class="px-6 py-3 font-semibold" data-sort="text">Employee</th>
+                                <th class="px-6 py-3 font-semibold" data-sort="text">Position</th>
+                                <th class="px-6 py-3 font-semibold text-right" data-sort="number">Base Salary</th>
+                                <th class="px-6 py-3 font-semibold text-right" data-sort="number">Advance</th>
+                                <th class="px-6 py-3 font-semibold text-right" data-sort="number">Deductions</th>
+                                <th class="px-6 py-3 font-semibold text-right" data-sort="number">Actual Salary</th>
+                                <th class="px-6 py-3 font-semibold text-right" data-sort="number">Net Payable</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-container-high">
+                            ${data.employees && data.employees.length > 0 ? data.employees.map(emp => `
+                                <tr class="hover:bg-surface-bright">
+                                    <td class="px-6 py-3 font-medium text-on-surface">${emp.name}</td>
+                                    <td class="px-6 py-3 text-on-surface-variant">${emp.position || 'N/A'}</td>
+                                    <td class="px-6 py-3 text-right font-mono font-medium">$${(emp.base_salary || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    <td class="px-6 py-3 text-right font-mono font-medium">$${(emp.advance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    <td class="px-6 py-3 text-right font-mono font-medium">$${(emp.deductions || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    <td class="px-6 py-3 text-right font-mono font-medium">$${(emp.actual_salary || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    <td class="px-6 py-3 text-right font-bold text-on-surface font-mono">$${(emp.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="7" class="px-6 py-4 text-center text-on-surface-variant">No payroll records found</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            window.wireTablePagination(document.getElementById('payroll-report-table'));
+        } else if (type === 'expenses') {
+            const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthName = monthNames[parseInt(data.month)];
+            resultsDiv.innerHTML = `
+                <div class="print-header hidden print:block text-center mb-6">
+                    <h2 class="text-2xl font-bold">Misk Beirut - Expenses Report</h2>
+                    <p class="text-lg">${monthName} ${data.year}</p>
+                </div>
+                <h4 class="text-xl font-bold text-on-surface mb-4 border-b border-surface-container-high pb-2">Expenses Report (${monthName} ${data.year})</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-primary text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">payments</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Total Monthly Expenses</h5>
+                            <h2 class="text-3xl font-bold">$${(data.total_expenses || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+                        </div>
+                    </div>
+                    <div class="bg-status-success text-white rounded p-6 overflow-hidden relative">
+                        <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                            <span class="material-symbols-outlined text-8xl">group</span>
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-center items-center text-center">
+                            <h5 class="text-sm font-semibold uppercase tracking-wider mb-2 opacity-80">Unique General Receivers</h5>
+                            <h2 class="text-3xl font-bold">${data.total_receivers || 0}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h5 class="text-lg font-bold text-on-surface mb-3 flex items-center gap-2">
+                            <span class="w-2 h-6 bg-primary rounded-full"></span>
+                            General Receivers Breakdown
+                        </h5>
+                        <div class="overflow-x-auto rounded border border-surface-container-high">
+                            <table id="general-receivers-table" class="w-full text-left text-sm whitespace-nowrap" data-sortable data-paginate="10">
+                                <thead class="bg-surface-bright border-b border-surface-container-high text-on-surface-variant">
+                                    <tr>
+                                        <th class="px-4 py-2 font-semibold" data-sort="text">Receiver</th>
+                                        <th class="px-4 py-2 font-semibold text-right" data-sort="number">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-surface-container-high">
+                                    ${Object.entries(data.receiver_breakdown || {}).sort((a, b) => b[1] - a[1]).map(([name, amount]) => `
+                                        <tr class="hover:bg-surface-bright">
+                                            <td class="px-4 py-2 font-medium text-on-surface">${name}</td>
+                                            <td class="px-4 py-2 text-right font-bold text-on-surface-variant">$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        </tr>
+                                    `).join('')}
+                                    ${Object.keys(data.receiver_breakdown || {}).length === 0 ? '<tr><td colspan="2" class="px-4 py-4 text-center text-on-surface-variant">No general expenses</td></tr>' : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h5 class="text-lg font-bold text-on-surface mb-3 flex items-center gap-2">
+                            <span class="w-2 h-6 bg-brick-red rounded-full"></span>
+                            Investor Expenses
+                        </h5>
+                        ${data.investor_breakdown && data.investor_breakdown.length > 0 ? data.investor_breakdown.map(inv => `
+                            <div class="mb-4 last:mb-0">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h6 class="font-semibold text-on-surface">${inv.investor_name}</h6>
+                                    <span class="font-bold text-brick-red">$${inv.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                <div class="overflow-x-auto rounded border border-surface-container-high">
+                                    <table class="investor-receiver-table w-full text-left text-sm whitespace-nowrap" data-sortable data-paginate="10">
+                                        <thead class="bg-surface-bright border-b border-surface-container-high text-on-surface-variant">
+                                            <tr>
+                                                <th class="px-4 py-2 font-semibold" data-sort="text">Receiver</th>
+                                                <th class="px-4 py-2 font-semibold text-right" data-sort="number">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-surface-container-high">
+                                            ${Object.keys(inv.receivers || {}).length > 0 ? Object.entries(inv.receivers).sort((a, b) => b[1] - a[1]).map(([name, amount]) => `
+                                                <tr class="hover:bg-surface-bright">
+                                                    <td class="px-4 py-2 font-medium text-on-surface">${name}</td>
+                                                    <td class="px-4 py-2 text-right font-bold text-on-surface-variant">$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                </tr>
+                                            `).join('') : '<tr><td colspan="2" class="px-4 py-3 text-center text-on-surface-variant">No expenses this month</td></tr>'}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `).join('') : '<p class="text-sm text-on-surface-variant">No active investors</p>'}
+                    </div>
+                </div>
+
+                <div>
+                    <h5 class="text-lg font-bold text-on-surface mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-on-surface-variant">list</span>
+                        All Individual Expenses
+                    </h5>
+                    <div class="overflow-x-auto rounded border border-surface-container-high">
+                        <table id="all-expenses-table" class="w-full text-left text-sm whitespace-nowrap" data-sortable data-paginate="10">
+                            <thead class="bg-surface-bright border-b border-surface-container-high text-on-surface-variant">
+                                <tr>
+                                    <th class="px-4 py-2 font-semibold" data-sort="text">Type</th>
+                                    <th class="px-4 py-2 font-semibold" data-sort="date">Date</th>
+                                    <th class="px-4 py-2 font-semibold" data-sort="text">Receiver</th>
+                                    <th class="px-4 py-2 font-semibold">Note</th>
+                                    <th class="px-4 py-2 font-semibold text-right" data-sort="number">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-surface-container-high">
+                                ${data.expenses && data.expenses.length > 0 ? data.expenses.map(expense => `
+                                    <tr class="hover:bg-surface-bright">
+                                        <td class="px-4 py-2">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${expense.type === 'Investor' ? 'bg-error-container text-on-error-container' : 'bg-surface-container-high text-on-surface-variant'}">
+                                                ${expense.type}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-2 font-medium text-on-surface-variant font-mono text-xs">${expense.date}</td>
+                                        <td class="px-4 py-2 text-on-surface-variant font-medium">${expense.receiver || 'N/A'}</td>
+                                        <td class="px-4 py-2 text-on-surface-variant">${expense.note || ''}</td>
+                                        <td class="px-4 py-2 text-right font-bold text-on-surface font-mono">$${(expense.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="5" class="px-4 py-3 text-center text-on-surface-variant">No expenses data found</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            window.wireTablePagination(document.getElementById('general-receivers-table'));
+            resultsDiv.querySelectorAll('.investor-receiver-table').forEach(window.wireTablePagination);
+            window.wireTablePagination(document.getElementById('all-expenses-table'));
+        }
+    }
+
+    function exportCurrentReport() {
+        if (!currentReportState) {
+            if (typeof showAlert === 'function') showAlert('Please generate a report first before exporting.', 'warning');
+            else alert('Please generate a report first before exporting.');
+            return;
+        }
+
+        const type = currentReportState.type;
+        const data = currentReportState.data;
+        const params = new URLSearchParams();
+        if (data.month) params.append('month', data.month);
+        if (data.year) params.append('year', data.year);
+
+        let endpoint = '';
+        if (type === 'sales') {
+            endpoint = '/api/exports/sales';
+        } else if (type === 'payroll') {
+            endpoint = '/api/exports/payroll';
+        } else if (type === 'expenses') {
+            endpoint = '/api/exports/reports';
+        }
+
+        if (endpoint) {
+            window.location.href = `${endpoint}?${params.toString()}`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentMonth = @currentMonthDefault;
+        const currentYear = @currentYearDefault;
+
+        const forms = ['#payrollReportForm', '#salesReportForm', '#expensesReportForm'];
+
+        forms.forEach(formId => {
+            const monthSelect = document.querySelector(`${formId} select[name="month"]`);
+            const yearSelect = document.querySelector(`${formId} select[name="year"]`);
+
+            if (monthSelect && !monthSelect.value) {
+                monthSelect.value = currentMonth;
+            }
+            if (yearSelect && !yearSelect.value) {
+                yearSelect.value = currentYear;
+            }
+        });
+    });
+</script>
+}

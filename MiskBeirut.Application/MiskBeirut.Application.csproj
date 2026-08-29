@@ -4,6 +4,14 @@
     <ProjectReference Include="..\MiskBeirut.Core\MiskBeirut.Core.csproj" />
   </ItemGroup>
 
+  <!-- AuditLogManager needs IHttpContextAccessor to capture the caller's IP address. This project
+       only ever runs hosted inside MiskBeirut.Web, so taking the ASP.NET Core shared framework here
+       is a pragmatic, zero-cost trade-off rather than plumbing the IP through every one of the ~20
+       LogAsync call sites across the app. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

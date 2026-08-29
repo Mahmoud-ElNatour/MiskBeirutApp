@@ -1,0 +1,28 @@
+@model List<PageDto>
+@{
+    var currentPageId = ViewBag.CurrentPageId as int?;
+    var isExpanded = currentPageId.HasValue;
+}
+<li>
+    <details class="cms-nav-details" open="@(isExpanded ? "open" : null)">
+        <summary class="flex items-center justify-between px-container-padding py-stack-sm text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container transition-all cursor-pointer select-none">
+            <span class="flex items-center">
+                <span class="material-symbols-outlined mr-4">description</span>
+                Pages
+            </span>
+            <span class="material-symbols-outlined text-sm cms-chevron transition-transform">expand_more</span>
+        </summary>
+        <ul class="bg-black/10">
+            @foreach (var entry in Model)
+            {
+                var isActive = entry.Id == currentPageId;
+                <li>
+                    <a asp-area="Cms" asp-controller="Pages" asp-action="Edit" asp-route-id="@entry.Id"
+                       class="block pl-16 pr-container-padding py-stack-sm text-sm transition-all @(isActive ? "text-marble-white font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+                        @entry.PageName
+                    </a>
+                </li>
+            }
+        </ul>
+    </details>
+</li>

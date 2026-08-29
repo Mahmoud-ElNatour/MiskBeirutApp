@@ -1,0 +1,55 @@
+@model IReadOnlyList<PageDto>
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="mb-stack-lg flex justify-between items-end">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Dashboard Overview</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">Content summary for Misk Beirut.</p>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-12 gap-gutter mb-stack-lg">
+    <div class="col-span-12 md:col-span-4 bg-surface-container-lowest p-stack-lg border border-surface-container-high rounded-DEFAULT">
+        <h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-sm">Total Pages</h3>
+        <div class="font-headline-lg text-headline-lg text-slate-blue">@Model.Count</div>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-2">Editable via the sidebar</p>
+    </div>
+    <div class="col-span-12 md:col-span-4 bg-surface-container-lowest p-stack-lg border border-surface-container-high rounded-DEFAULT">
+        <h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-sm">Languages</h3>
+        <div class="font-headline-lg text-headline-lg text-slate-blue">EN / AR</div>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-2">Every page is bilingual</p>
+    </div>
+    <div class="col-span-12 md:col-span-4 bg-primary text-on-primary p-stack-lg border border-primary-container rounded-DEFAULT overflow-hidden relative">
+        <div class="relative z-10">
+            <h3 class="font-label-md text-label-md opacity-70 uppercase tracking-wider mb-stack-sm">Get Started</h3>
+            <p class="font-body-md text-body-md opacity-90">Open <strong>Pages</strong> in the sidebar and pick a page to edit its content.</p>
+        </div>
+        <div class="absolute -bottom-4 -right-4 opacity-20 pointer-events-none">
+            <span class="material-symbols-outlined text-9xl">edit_note</span>
+        </div>
+    </div>
+</div>
+
+<!-- Pages Grid -->
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
+        <h3 class="font-headline-sm text-headline-sm text-on-surface">Pages</h3>
+    </div>
+    <div class="p-stack-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        @foreach (var entry in Model.OrderBy(p => p.PageName))
+        {
+            <a asp-area="Cms" asp-controller="Pages" asp-action="Edit" asp-route-id="@entry.Id" class="group flex items-start gap-4 p-stack-md border border-surface-container-high rounded-DEFAULT hover:border-slate-blue hover:shadow-sm transition-all">
+                <div class="bg-primary/10 text-primary p-3 rounded-DEFAULT group-hover:bg-primary group-hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-2xl">description</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">@entry.PageName</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant">@(entry.MetaTitle ?? "No meta title set yet.")</p>
+                </div>
+            </a>
+        }
+    </div>
+</div>

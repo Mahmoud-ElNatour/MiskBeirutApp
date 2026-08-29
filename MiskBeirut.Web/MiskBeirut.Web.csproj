@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
     <ProjectReference Include="..\MiskBeirut.Application\MiskBeirut.Application.csproj" />
@@ -6,16 +6,31 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Legacy reference copies from .net\MiskBeirut.Web, kept for porting old logic into the new Admin area. Not compiled/routed. -->
+    <Compile Remove="Areas\Admin\_Legacy\**\*.cs" />
+    <Content Remove="Areas\Admin\_Legacy\**\*.cshtml" />
+    <RazorGenerate Remove="Areas\Admin\_Legacy\**\*.cshtml" />
+    <None Include="Areas\Admin\_Legacy\**\*.cs;Areas\Admin\_Legacy\**\*.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
   </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Ported legacy views reference old DTO/entity names being rewired page by page.
+         Compiling views at runtime (instead of at dotnet build) means a broken page
+         throws only when visited, instead of failing the whole build. -->
+    <RazorCompileOnBuild>false</RazorCompileOnBuild>
+    <RazorCompileOnPublish>false</RazorCompileOnPublish>
+    <UserSecretsId>d3127589-9a69-4aaa-982c-b7a9d7d237cc</UserSecretsId>
   </PropertyGroup>
 
 </Project>

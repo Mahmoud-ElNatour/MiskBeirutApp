@@ -7,4 +7,5 @@ public class UserListItem
     public string? Email { get; set; }
     public IReadOnlyList<string> Roles { get; set; } = [];
     public DateTime CreatedAt { get; set; }
+    public string? AssignedEmployeeName { get; set; }
 }

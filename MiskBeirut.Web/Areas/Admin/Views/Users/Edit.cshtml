@@ -4,37 +4,37 @@
     var allRoles = (IReadOnlyList<string>)ViewData["AllRoles"]!;
 }
 
-<div class="max-w-lg mx-auto bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-8 shadow-sm">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Edit User: @Model.Username</h2>
+<div class="max-w-lg mx-auto bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT p-container-padding">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-lg">Edit User: @Model.Username</h2>
 
-    <div asp-validation-summary="ModelOnly" class="mb-4 text-sm text-rose-600 dark:text-rose-400"></div>
+    <div asp-validation-summary="All" class="mb-stack-md font-body-md text-body-md text-brick-red"></div>
 
-    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="space-y-6">
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" class="space-y-stack-md">
         <input type="hidden" asp-for="Id" />
         <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Username</label>
-            <input value="@Model.Username" disabled class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2 opacity-60" />
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Username</label>
+            <input value="@Model.Username" disabled class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 opacity-60" />
         </div>
         <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Email</label>
-            <input asp-for="Email" type="email" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Email</label>
+            <input asp-for="Email" type="email" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
         </div>
         <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Phone</label>
-            <input asp-for="PhoneNumber" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-4 py-2" />
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Phone</label>
+            <input asp-for="PhoneNumber" class="w-full rounded-DEFAULT border border-border-subtle px-4 py-2 focus:border-slate-blue focus:ring-slate-blue" />
         </div>
         <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Roles</label>
+            <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Roles</label>
             <div class="space-y-2">
                 @foreach (var role in allRoles)
                 {
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" name="SelectedRoles" value="@role" class="rounded border-slate-300" @(Model.SelectedRoles.Contains(role) ? "checked" : "") />
-                        <span>@role</span>
+                        <input type="checkbox" name="SelectedRoles" value="@role" class="rounded border-border-subtle text-primary focus:ring-slate-blue" @(Model.SelectedRoles.Contains(role) ? "checked" : "") />
+                        <span class="font-body-md text-body-md text-on-surface-variant">@role</span>
                     </label>
                 }
             </div>
         </div>
-        <button type="submit" class="w-full py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg transition-colors">Save Changes</button>
+        <button type="submit" class="w-full py-3 bg-primary hover:bg-primary-container text-white font-label-lg text-label-lg rounded-DEFAULT transition-colors">Save Changes</button>
     </form>
 </div>

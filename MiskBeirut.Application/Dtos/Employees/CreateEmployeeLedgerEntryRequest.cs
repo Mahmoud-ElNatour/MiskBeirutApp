@@ -13,5 +13,7 @@ public sealed record CreateEmployeeLedgerEntryRequest
     public EmployeeLedgerType Type { get; init; }
     public string? Note { get; init; }
     public int EmployeeId { get; init; }
-    public int DailyClosingId { get; init; }
+
+    /// <summary>Null for an entry not tied to any specific day's cash register (e.g. a carried-over shortfall).</summary>
+    public int? DailyClosingId { get; init; }
 }

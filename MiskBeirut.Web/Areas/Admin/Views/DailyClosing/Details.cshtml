@@ -1,127 +1,131 @@
-@model DailyClosingDetailsViewModel
+@model MiskBeirut.Web.Areas.Admin.Models.DailyClosing.DailyClosingDetailsViewModel
 @{
-    ViewData["Title"] = $"Daily Closing — {Model.Closing.Date:yyyy-MM-dd}";
+    Layout = "_Layout";
+    ViewData["Title"] = $"Daily Close — {Model.Closing.Date:yyyy-MM-dd}";
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
+    var receiverNames = Model.Receivers.ToDictionary(r => r.Id, r => r.Name);
+    var summary = Model.Summary;
+    var totalDeductions = Model.Breakdown.Deductions.Sum(d => Math.Abs(d.Amount));
+
+    var hasAnyItems = Model.Expenses.Any()
+        || Model.NonCashPayments.Any()
+        || Model.Breakdown.Advances.Any()
+        || Model.Breakdown.Deductions.Any()
+        || Model.Breakdown.Credits.Any()
+        || Model.Breakdown.Cashbacks.Any()
+        || Model.Breakdown.InvestorExpenses.Any();
 }
 
-<div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Daily Closing — @Model.Closing.Date.ToString("yyyy-MM-dd")</h2>
-    @if (Model.CanManageHeader)
+@section ExtraHead {
+<style>
+    @@media print {
+        header, nav, .no-print {
+            display: none !important;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tr {
+            break-inside: avoid;
+        }
+    }
+</style>
+}
+
+<!-- Header -->
+<div class="flex items-start justify-between mb-stack-lg">
+    <div>
+        <h1 class="font-headline-lg text-headline-lg text-on-surface">@content.Text("title", "Daily Close Details")</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant font-medium mt-1">@Model.Closing.Date.ToString("dddd, dd MMMM yyyy")</p>
+    </div>
+    <div class="no-print flex gap-2">
+        <a asp-action="Index"
+            class="inline-flex items-center gap-2 px-stack-md py-stack-sm bg-surface-container-lowest hover:bg-surface-container-high text-on-surface-variant border border-border-subtle font-label-md text-label-md rounded-DEFAULT transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            Back
+        </a>
+        <button onclick="window.print()"
+            class="inline-flex items-center gap-2 px-stack-md py-stack-sm bg-primary hover:bg-primary-container text-white font-label-md text-label-md rounded-DEFAULT shadow transition-colors">
+            <span class="material-symbols-outlined text-sm">print</span>
+            Print
+        </button>
+    </div>
+</div>
+
+<hr class="mb-stack-lg border-surface-container-high" />
+
+<!-- Summary -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-stack-lg">
+    <div class="border border-surface-container-high bg-surface-bright rounded-DEFAULT p-stack-md shadow-sm">
+        <div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-bold mb-stack-xs">Main Reading</div>
+        <div class="text-xl font-black text-on-surface">$@Model.Closing.MainReading.ToString("F2")</div>
+    </div>
+    <div class="border border-surface-container-high bg-surface-bright rounded-DEFAULT p-stack-md shadow-sm">
+        <div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-bold mb-stack-xs">Adjusted Reading</div>
+        <div class="text-xl font-black text-on-surface">$@((Model.Closing.AdjustedReading ?? 0).ToString("F2"))</div>
+    </div>
+    <div class="border border-status-urgent/20 bg-error-container rounded-DEFAULT p-stack-md shadow-sm">
+        <div class="font-label-sm text-label-sm text-status-urgent uppercase tracking-wider font-bold mb-stack-xs">Total Deductions</div>
+        <div class="text-xl font-black text-status-urgent">$@totalDeductions.ToString("F2")</div>
+    </div>
+    <div class="border border-status-success/20 bg-[#E8F5E9] rounded-DEFAULT p-stack-md shadow-sm">
+        <div class="font-label-sm text-label-sm text-status-success uppercase tracking-wider font-bold mb-stack-xs">Actual Cash</div>
+        <div class="text-xl font-black text-status-success">$@((Model.Closing.ActualCash ?? 0).ToString("F2"))</div>
+    </div>
+</div>
+
+@{
+    void RenderSectionTable(string title, IEnumerable<(string Target, string? Note, decimal Amount)> rows)
     {
-        <div class="flex gap-2">
-            <a asp-action="Index" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-300">Back to List</a>
-            <a asp-action="Edit" asp-route-id="@Model.Closing.Id" class="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">Edit</a>
+        var list = rows.ToList();
+        if (list.Count == 0)
+            return;
+
+        <div class="mb-stack-lg bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden shadow-sm">
+            <div class="bg-surface-bright px-stack-md py-3 border-b border-surface-container-high">
+                <h2 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-bold">@title</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full font-data-tabular text-data-tabular border-collapse" data-sortable data-paginate="10">
+                    <thead>
+                        <tr class="border-b border-surface-container-high text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+                            <th class="text-left py-3 px-stack-md font-semibold" data-sort="text">Target</th>
+                            <th class="text-left py-3 px-stack-md font-semibold">Note</th>
+                            <th class="text-right py-3 px-stack-md font-semibold" data-sort="number">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in list)
+                        {
+                            <tr class="border-b border-surface-container-high last:border-b-0 hover:bg-surface-bright transition-colors">
+                                <td class="py-3 px-stack-md font-medium text-on-surface">@(string.IsNullOrEmpty(row.Target) ? "N/A" : row.Target)</td>
+                                <td class="py-3 px-stack-md text-on-surface-variant">@(row.Note ?? "")</td>
+                                <td class="py-3 px-stack-md text-right font-bold text-on-surface-variant">$@Math.Abs(row.Amount).ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
-</div>
+}
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
-        <p class="text-xs text-slate-500 uppercase font-semibold">Main Reading</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">@Model.Closing.MainReading.ToString("N2")</p>
-    </div>
-    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
-        <p class="text-xs text-slate-500 uppercase font-semibold">Adjusted Reading</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">@(Model.Closing.AdjustedReading?.ToString("N2") ?? "-")</p>
-    </div>
-    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
-        <p class="text-xs text-slate-500 uppercase font-semibold">Actual Cash</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">@(Model.Closing.ActualCash?.ToString("N2") ?? "-")</p>
-    </div>
-    <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4">
-        <p class="text-xs text-slate-500 uppercase font-semibold">Total Expenses</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">@(Model.Summary?.TotalExpenses.ToString("N2") ?? "0.00")</p>
-    </div>
-</div>
+@{
+    RenderSectionTable("Employee Advances", Model.Breakdown.Advances.Select(a => (a.EmployeeName, a.Note, a.Amount)));
+    RenderSectionTable("Employee Deductions", Model.Breakdown.Deductions.Select(d => (d.EmployeeName, d.Note, d.Amount)));
+    RenderSectionTable("Customer Credits", Model.Breakdown.Credits.Select(c => (c.CustomerName, c.Note, c.Amount)));
+    RenderSectionTable("Customer Cashbacks", Model.Breakdown.Cashbacks.Select(c => (c.CustomerName, c.Note, c.Amount)));
+    RenderSectionTable("General Expenses", Model.Expenses.Select(e => (receiverNames.GetValueOrDefault(e.ReceiverId, "Unassigned"), e.Note, e.Amount)));
+    RenderSectionTable("Investor Expenses", Model.Breakdown.InvestorExpenses.Select(t => ($"{t.InvestorName} — {t.ReceiverName ?? "Unassigned"}", t.Note, t.Amount)));
+    RenderSectionTable("Non-Cash Payments", Model.NonCashPayments.Select(p => (p.PaymentMethod, p.Note, p.Amount)));
+}
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <div>
-        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Expenses</h3>
-        <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-hidden mb-4">
-            <table class="w-full text-sm text-left">
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach (var e in Model.Expenses)
-                    {
-                        var receiver = Model.Receivers.FirstOrDefault(r => r.Id == e.ReceiverId);
-                        <tr>
-                            <td class="px-4 py-2">@(receiver?.Name ?? $"#{e.ReceiverId}")</td>
-                            <td class="px-4 py-2">@e.Amount.ToString("N2")</td>
-                            <td class="px-4 py-2 text-slate-500">@e.Note</td>
-                            @if (Model.CanManageHeader)
-                            {
-                                <td class="px-4 py-2 text-right">
-                                    <form asp-action="DeleteExpense" method="post" class="inline">
-                                        <input type="hidden" name="id" value="@e.Id" />
-                                        <input type="hidden" name="dailyClosingId" value="@Model.Closing.Id" />
-                                        <button type="submit" class="text-rose-600 hover:underline text-xs">Delete</button>
-                                    </form>
-                                </td>
-                            }
-                        </tr>
-                    }
-                    @if (!Model.Expenses.Any())
-                    {
-                        <tr><td class="px-4 py-3 text-slate-400" colspan="4">No expenses yet.</td></tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <form asp-action="AddExpense" method="post" class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4 space-y-3">
-            <input type="hidden" asp-for="NewExpense.DailyClosingId" />
-            <div class="grid grid-cols-2 gap-3">
-                <select asp-for="NewExpense.ReceiverId" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm">
-                    <option value="">Receiver...</option>
-                    @foreach (var r in Model.Receivers)
-                    {
-                        <option value="@r.Id">@r.Name</option>
-                    }
-                </select>
-                <input asp-for="NewExpense.Amount" type="number" step="0.01" placeholder="Amount" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
-            </div>
-            <input asp-for="NewExpense.Note" placeholder="Note (optional)" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
-            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ Add Expense</button>
-        </form>
+@if (!hasAnyItems)
+{
+    <div class="text-center text-on-surface-variant bg-surface-bright rounded-DEFAULT py-12 border border-surface-container-high">
+        <span class="material-symbols-outlined text-4xl mb-stack-sm text-on-surface-variant/40 block">receipt_long</span>
+        No detailed items recorded for this close.
     </div>
-
-    <div>
-        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Non-Cash Payments</h3>
-        <div class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl shadow-sm overflow-hidden mb-4">
-            <table class="w-full text-sm text-left">
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach (var p in Model.NonCashPayments)
-                    {
-                        <tr>
-                            <td class="px-4 py-2">@p.PaymentMethod</td>
-                            <td class="px-4 py-2">@p.Amount.ToString("N2")</td>
-                            <td class="px-4 py-2 text-slate-500">@p.Note</td>
-                            @if (Model.CanManageHeader)
-                            {
-                                <td class="px-4 py-2 text-right">
-                                    <form asp-action="DeleteNonCashPayment" method="post" class="inline">
-                                        <input type="hidden" name="id" value="@p.Id" />
-                                        <input type="hidden" name="dailyClosingId" value="@Model.Closing.Id" />
-                                        <button type="submit" class="text-rose-600 hover:underline text-xs">Delete</button>
-                                    </form>
-                                </td>
-                            }
-                        </tr>
-                    }
-                    @if (!Model.NonCashPayments.Any())
-                    {
-                        <tr><td class="px-4 py-3 text-slate-400" colspan="4">No non-cash payments yet.</td></tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <form asp-action="AddNonCashPayment" method="post" class="bg-white dark:bg-slate-900 border border-primary/10 rounded-xl p-4 space-y-3">
-            <input type="hidden" asp-for="NewNonCashPayment.DailyClosingId" />
-            <div class="grid grid-cols-2 gap-3">
-                <input asp-for="NewNonCashPayment.PaymentMethod" placeholder="Method (e.g. Card)" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
-                <input asp-for="NewNonCashPayment.Amount" type="number" step="0.01" placeholder="Amount" class="rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
-            </div>
-            <input asp-for="NewNonCashPayment.Note" placeholder="Note (optional)" class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 px-3 py-2 text-sm" />
-            <button type="submit" class="w-full py-2 bg-primary hover:bg-primary/95 text-white font-bold rounded-lg text-sm">+ Add Payment</button>
-        </form>
-    </div>
-</div>
+}

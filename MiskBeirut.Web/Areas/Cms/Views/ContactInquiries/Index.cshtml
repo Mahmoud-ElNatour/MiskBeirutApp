@@ -1,0 +1,159 @@
+@using MiskBeirut.Application.Dtos.Contact
+@model IReadOnlyList<ContactInquiryDto>
+@{
+    ViewData["Title"] = "Contact Inquiries";
+}
+
+<div class="mb-stack-lg">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Contact Inquiries</h2>
+    <p class="font-body-md text-body-md text-on-surface-variant">Submissions from the website's Contact/Reservations page, most recent first.</p>
+</div>
+
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+            <thead>
+                <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    <th class="py-3 px-stack-md" data-sort="text">Name</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Phone</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Email</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Reason</th>
+                    <th class="py-3 px-stack-md">Message</th>
+                    <th class="py-3 px-stack-md" data-sort="date">Received</th>
+                    <th class="py-3 px-stack-md" data-sort="number">Status</th>
+                    <th class="py-3 px-stack-md text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inquiry in Model)
+                {
+                    var waMeLink = $"https://wa.me/{Uri.EscapeDataString(System.Text.RegularExpressions.Regex.Replace(inquiry.PhoneNumber, "[^\\d]", ""))}";
+                    var hasEmail = !string.IsNullOrWhiteSpace(inquiry.Email);
+                    <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors align-top">
+                        <td class="py-4 px-stack-md text-on-surface font-medium whitespace-nowrap">@inquiry.FullName</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@inquiry.PhoneNumber</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@(hasEmail ? inquiry.Email : "—")</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@inquiry.ReasonName</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant max-w-xs">@inquiry.Message</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@inquiry.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="py-4 px-stack-md whitespace-nowrap" data-sort-value="@(inquiry.IsDone ? 1 : 0)">
+                            @if (inquiry.IsDone)
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#E8F5E9] text-status-success">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                                    Done
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#FFF3E0] text-status-pending">
+                                    <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+                                    Not Yet
+                                </span>
+                            }
+                        </td>
+                        <td class="py-4 px-stack-md">
+                            <div class="flex items-center justify-end gap-3 flex-wrap">
+                                @if (hasEmail)
+                                {
+                                    <button type="button" class="inquiry-email-btn text-slate-blue hover:text-primary inline-flex items-center gap-1"
+                                        data-id="@inquiry.Id" data-name="@inquiry.FullName" data-email="@inquiry.Email" data-reason="@inquiry.ReasonName" title="Email Sender">
+                                        <span class="material-symbols-outlined text-sm">mail</span>
+                                    </button>
+                                }
+                                <a href="@waMeLink" target="_blank" rel="noopener" class="text-slate-blue hover:text-primary inline-flex items-center" title="Open a chat with this number in WhatsApp Web/Desktop — no template required">
+                                    <span class="material-symbols-outlined text-sm">chat</span>
+                                </a>
+                                <form asp-action="SetDone" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@inquiry.Id" />
+                                    <input type="hidden" name="isDone" value="@(!inquiry.IsDone ? "true" : "false")" />
+                                    <button type="submit" class="text-slate-blue hover:text-primary hover:underline text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                        @(inquiry.IsDone ? "Mark Not Yet" : "Mark Done")
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="py-10 px-stack-md text-center text-on-surface-variant">No inquiries yet.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Email Sender modal — one shared modal, populated per-row by JS (see button.inquiry-email-btn above) -->
+<div id="emailInquiryModal" class="hidden fixed inset-0 z-[10050] items-center justify-center bg-black/50 p-4">
+    <div class="bg-white rounded-DEFAULT shadow-xl w-full max-w-lg overflow-hidden font-body-md">
+        <form asp-action="SendEmail" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="emailInquiryId" />
+            <div class="p-4 border-b border-black/10 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-[#1A1A1A]">Email Sender</h3>
+                    <p class="text-xs text-black/50 mt-0.5">To: <span id="emailInquiryRecipient"></span></p>
+                </div>
+                <button type="button" id="emailInquiryClose" class="text-black/50 hover:text-[#355970]">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-black/50 mb-1">Subject</label>
+                    <input type="text" name="subject" id="emailInquirySubject" required
+                        class="w-full rounded-DEFAULT border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-[#355970]" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-black/50 mb-1">Message</label>
+                    <textarea name="body" id="emailInquiryBody" rows="6" required
+                        class="w-full rounded-DEFAULT border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-[#355970]"></textarea>
+                </div>
+                <p class="text-xs text-black/50">Sent from inquiries@miskbeirut.com — replies will land in that inbox.</p>
+            </div>
+            <div class="p-4 border-t border-black/10 bg-black/[0.02] flex justify-end gap-3">
+                <button type="button" id="emailInquiryCancel" class="px-4 py-2 rounded-DEFAULT border border-black/15 text-sm font-semibold text-black/60 hover:border-[#355970] transition-colors">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-DEFAULT bg-[#355970] hover:bg-[#1c4258] text-white text-sm font-semibold transition-colors">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        var modal = document.getElementById('emailInquiryModal');
+        var idInput = document.getElementById('emailInquiryId');
+        var recipientEl = document.getElementById('emailInquiryRecipient');
+        var subjectInput = document.getElementById('emailInquirySubject');
+        var bodyInput = document.getElementById('emailInquiryBody');
+
+        function openModal(btn) {
+            idInput.value = btn.dataset.id;
+            recipientEl.textContent = btn.dataset.name + ' <' + btn.dataset.email + '>';
+            subjectInput.value = 'Regarding your inquiry — ' + (btn.dataset.reason || 'Misk Beirut');
+            bodyInput.value = 'Hi ' + btn.dataset.name + ',\n\n';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            bodyInput.focus();
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.querySelectorAll('.inquiry-email-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () { openModal(btn); });
+        });
+
+        document.getElementById('emailInquiryClose').addEventListener('click', closeModal);
+        document.getElementById('emailInquiryCancel').addEventListener('click', closeModal);
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+    })();
+</script>
+}

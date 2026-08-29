@@ -6,6 +6,7 @@ public sealed record ExpenseDto
     public DateOnly Date { get; init; }
     public decimal Amount { get; init; }
     public string? Note { get; init; }
-    public int DailyClosingId { get; init; }
+    public int? DailyClosingId { get; init; }
     public int ReceiverId { get; init; }
+    public bool IsManualEntry { get; init; }
 }

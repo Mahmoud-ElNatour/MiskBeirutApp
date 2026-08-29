@@ -1,0 +1,176 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Control Panel";
+    var content = (MiskBeirut.Web.Support.BackofficePageContent)ViewData["Content"]!;
+}
+
+<!-- Hero Section -->
+<div class="mb-stack-lg">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">@content.Text("title", "Control Panel")</h2>
+    <p class="font-body-lg text-body-lg text-on-surface-variant mt-2">@content.Text("subtitle", "Manage all aspects of your business operations from a central dashboard.")</p>
+</div>
+
+<!-- Section 1 -->
+<section class="mb-stack-lg">
+    <div class="flex items-center gap-3 mb-stack-md">
+        <div class="h-px flex-1 bg-surface-container-high"></div>
+        <h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-[0.2em]">@content.Text("section1_title", "Operations")</h3>
+        <div class="h-px flex-1 bg-surface-container-high"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        <a asp-area="Admin" asp-controller="Employees" asp-action="Index" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">badge</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("employees_title", "Employees")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("employees_body", "Manage staff profiles, shifts, and weekly performance schedules.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="Customers" asp-action="Index" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">groups</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("customers_title", "Customers")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("customers_body", "Access loyalty balances, purchase history, and contact database.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="Payroll" asp-action="Index" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("payroll_title", "Payroll")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("payroll_body", "Review and manage monthly staff salaries.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="Customers" asp-action="Credits" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">credit_card</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("credits_title", "Credits")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("credits_body", "Review customer credit sales across every account.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="Customers" asp-action="Cashbacks" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">paid</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("cashbacks_title", "Cashbacks")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("cashbacks_body", "Review cashback payouts made to customers.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="Employees" asp-action="DeductionsAdvances" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">currency_exchange</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("deductions_advances_title", "Deductions & Advances")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("deductions_advances_body", "Review salary deductions and advance payments issued to staff.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="Expenses" asp-action="Index" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">account_balance</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("expenses_title", "Expenses")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("expenses_body", "Track and review business expenses across every receiver.")</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
+
+<!-- Section 2 -->
+<section class="mb-stack-lg">
+    <div class="flex items-center gap-3 mb-stack-md">
+        <div class="h-px flex-1 bg-surface-container-high"></div>
+        <h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-[0.2em]">@content.Text("section2_title", "Investors")</h3>
+        <div class="h-px flex-1 bg-surface-container-high"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        <a asp-area="Admin" asp-controller="Investors" asp-action="Index" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-primary/10 text-primary p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <span class="material-symbols-outlined text-2xl">handshake</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("investors_title", "Investors")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("investors_body", "Manage investors and drill into each one's expenses by receiver and withdrawal history.")</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
+
+<!-- Section 3 -->
+<section class="mb-stack-lg">
+    <div class="flex items-center gap-3 mb-stack-md">
+        <div class="h-px flex-1 bg-surface-container-high"></div>
+        <h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-[0.2em]">@content.Text("section3_title", "Administration")</h3>
+        <div class="h-px flex-1 bg-surface-container-high"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+        <a asp-area="Admin" asp-controller="System" asp-action="Reports" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-surface-container-high text-on-surface-variant p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                    <span class="material-symbols-outlined text-2xl">analytics</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("reports_title", "Reports")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("reports_body", "Generate financial summaries, operational insights, and export data.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-surface-container-high text-on-surface-variant p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                    <span class="material-symbols-outlined text-2xl">manage_accounts</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("users_title", "Users")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("users_body", "Manage system accounts, permissions, and user access levels.")</p>
+                </div>
+            </div>
+        </a>
+
+        <a asp-area="Admin" asp-controller="System" asp-action="Roles" class="group bg-surface-container-lowest p-stack-md rounded-DEFAULT border border-surface-container-high transition-all cursor-pointer block hover:-translate-y-1 hover:shadow-sm">
+            <div class="flex items-start gap-4">
+                <div class="bg-surface-container-high text-on-surface-variant p-3 rounded-full group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                    <span class="material-symbols-outlined text-2xl">admin_panel_settings</span>
+                </div>
+                <div>
+                    <h4 class="font-headline-sm text-headline-sm text-on-surface mb-stack-xs">@content.Text("role_manager_title", "Role Manager")</h4>
+                    <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">@content.Text("role_manager_body", "Create roles and manage which pages and sections each one can access.")</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
