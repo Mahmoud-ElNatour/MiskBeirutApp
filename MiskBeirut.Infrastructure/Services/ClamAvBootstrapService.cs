@@ -200,7 +200,25 @@ public class ClamAvBootstrapService : IHostedService
         GitHubRelease? release;
         try
         {
-            release = await http.GetFromJsonAsync<GitHubRelease>(LatestReleaseApiUrl, cancellationToken);
+            // Read the response explicitly rather than via GetFromJsonAsync: on a non-success status
+            // that helper throws with only the status code, discarding the body. GitHub puts the
+            // actual reason there ("rate limit exceeded", "User-Agent required", ...), which is the
+            // difference between a diagnosable log line and a bare 403.
+            using var response = await http.GetAsync(LatestReleaseApiUrl, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                if (body.Length > 500)
+                    body = body[..500] + "…";
+
+                _logger.LogError(
+                    "GitHub returned {StatusCode} ({Reason}) when checking the latest ClamAV release; auto-install skipped for this app start. " +
+                    "Rate limiting (60 requests/hour per IP for unauthenticated calls) and a rejected User-Agent both surface as 403 here. Response body: {Body}",
+                    (int)response.StatusCode, response.ReasonPhrase, body);
+                return null;
+            }
+
+            release = await response.Content.ReadFromJsonAsync<GitHubRelease>(cancellationToken);
         }
         catch (Exception ex)
         {

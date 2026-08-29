@@ -110,7 +110,15 @@ builder.Services.AddSingleton<IVirusScanner>(sp =>
 // fall back to. Set VirusScanning:AutoInstallClamAv=false to disable (see ClamAvBootstrapService
 // for why this needs the app pool identity to have installer permissions, and what happens if it
 // doesn't). Fire-and-forget in the background — never blocks the app from starting.
-builder.Services.AddHttpClient(nameof(ClamAvBootstrapService), c => c.Timeout = TimeSpan.FromMinutes(15));
+builder.Services.AddHttpClient(nameof(ClamAvBootstrapService), c =>
+{
+    c.Timeout = TimeSpan.FromMinutes(15);
+    // GitHub's REST API rejects any request without a User-Agent with 403 Forbidden — it's a hard
+    // documented requirement, not a nicety. Omitting it is why the release lookup failed outright.
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("MiskBeirut-ClamAvBootstrap/1.0");
+    c.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+    c.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+});
 builder.Services.AddHostedService(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
