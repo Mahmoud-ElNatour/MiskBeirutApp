@@ -287,7 +287,13 @@ public class EmployeesController : AdminControllerBase
                 EmployeeId = employee.Id,
                 Year = request.Year,
                 Month = request.Month,
+                Status = "active",
                 WorkingDays = (int)request.WorkingDays,
+                // Must be set explicitly: RecomputeSalary multiplies by ActualWorkingDays, so leaving
+                // it null computes a 0 salary for the new employee's first month — and
+                // EnsureCurrentMonthWorkingRecordsAsync won't repair it, since it skips employees who
+                // already have a record. Defaults to WorkingDays, matching what the edit modal sends.
+                ActualWorkingDays = (int)request.WorkingDays,
                 IsWorking = true
             });
         }

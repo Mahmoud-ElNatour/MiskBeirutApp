@@ -33,18 +33,44 @@ public class ClamAvBootstrapService : IHostedService
     /// <summary>Official CVD mirror hostname every ClamAV install (Linux, macOS, Windows) points freshclam at by default.</summary>
     private const string DefaultDatabaseMirror = "database.clamav.net";
 
+    /// <summary>
+    /// How long to wait before retrying after a failed install. Without this, a host where the
+    /// install can never succeed (no permission to run installers — the likely case on locked-down
+    /// shared hosting) would re-download a ~200 MB MSI on every single app start, and IIS recycles
+    /// app pools routinely. The marker file makes the retry periodic instead of per-recycle.
+    /// </summary>
+    private static readonly TimeSpan RetryAfterFailure = TimeSpan.FromHours(24);
+
     private readonly bool _enabled;
+    private readonly string _configuredClamScanPath;
+    private readonly string _stateDirectory;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IHostApplicationLifetime _lifetime;
     private readonly ILogger<ClamAvBootstrapService> _logger;
 
-    public ClamAvBootstrapService(bool enabled, IHttpClientFactory httpClientFactory, IHostApplicationLifetime lifetime, ILogger<ClamAvBootstrapService> logger)
+    /// <param name="configuredClamScanPath">
+    /// The same clamscan.exe path <see cref="ClamAvVirusScanner"/> was registered with, so an
+    /// operator who installed ClamAV somewhere non-default and pointed VirusScanning:ClamAvPath at
+    /// it is detected as "already installed" rather than having a second copy installed over the top.
+    /// </param>
+    /// <param name="stateDirectory">Where the failed-attempt marker lives (App_Data).</param>
+    public ClamAvBootstrapService(
+        bool enabled,
+        string configuredClamScanPath,
+        string stateDirectory,
+        IHttpClientFactory httpClientFactory,
+        IHostApplicationLifetime lifetime,
+        ILogger<ClamAvBootstrapService> logger)
     {
         _enabled = enabled;
+        _configuredClamScanPath = configuredClamScanPath;
+        _stateDirectory = stateDirectory;
         _httpClientFactory = httpClientFactory;
         _lifetime = lifetime;
         _logger = logger;
     }
+
+    private string FailureMarkerPath => Path.Combine(_stateDirectory, "clamav-install-failed.marker");
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -54,9 +80,18 @@ public class ClamAvBootstrapService : IHostedService
             return Task.CompletedTask;
         }
 
-        if (File.Exists(ClamAvVirusScanner.FindDefaultClamAvPath()))
+        if (File.Exists(_configuredClamScanPath) || File.Exists(ClamAvVirusScanner.FindDefaultClamAvPath()))
         {
             _logger.LogInformation("ClamAV already present; skipping auto-install.");
+            return Task.CompletedTask;
+        }
+
+        if (RecentlyFailed(out var lastAttempt))
+        {
+            _logger.LogWarning(
+                "Skipping ClamAV auto-install: the last attempt failed at {LastAttempt} and retries are throttled to once every {Hours}h. " +
+                "Delete {Marker} to force a retry sooner.",
+                lastAttempt, RetryAfterFailure.TotalHours, FailureMarkerPath);
             return Task.CompletedTask;
         }
 
@@ -67,11 +102,48 @@ public class ClamAvBootstrapService : IHostedService
         return Task.CompletedTask;
     }
 
+    private bool RecentlyFailed(out DateTimeOffset lastAttempt)
+    {
+        lastAttempt = default;
+        try
+        {
+            if (!File.Exists(FailureMarkerPath))
+                return false;
+
+            lastAttempt = File.GetLastWriteTimeUtc(FailureMarkerPath);
+            return DateTimeOffset.UtcNow - lastAttempt < RetryAfterFailure;
+        }
+        catch (Exception ex)
+        {
+            // An unreadable marker shouldn't block a legitimate install attempt.
+            _logger.LogWarning(ex, "Could not read the ClamAV install failure marker; proceeding as if none exists.");
+            return false;
+        }
+    }
+
+    private void RecordFailedAttempt()
+    {
+        try
+        {
+            Directory.CreateDirectory(_stateDirectory);
+            File.WriteAllText(FailureMarkerPath,
+                $"Last failed ClamAV auto-install attempt: {DateTimeOffset.UtcNow:O}{Environment.NewLine}" +
+                $"Delete this file to allow an immediate retry.{Environment.NewLine}");
+        }
+        catch (Exception ex)
+        {
+            // Best effort — worst case the next start retries, which is the old behaviour.
+            _logger.LogWarning(ex, "Could not write the ClamAV install failure marker.");
+        }
+    }
+
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     private async Task RunAsync(CancellationToken cancellationToken)
     {
         string? msiPath = null;
+        var succeeded = false;
+        var interrupted = false;
         try
         {
             _logger.LogInformation("ClamAV not found — starting first-run install.");
@@ -88,15 +160,18 @@ public class ClamAvBootstrapService : IHostedService
             {
                 _logger.LogError(
                     "msiexec reported success but clamscan.exe still isn't at any known default location. " +
-                    "The install may have gone somewhere non-standard — ClamAV auto-install can't verify or use it.");
+                    "The install may have gone somewhere non-standard — ClamAV auto-install can't verify or use it. " +
+                    "If it did install elsewhere, point VirusScanning:ClamAvPath at it so this stops retrying.");
                 return;
             }
 
             await SetUpVirusDatabaseAsync(clamScanPath, cancellationToken);
+            succeeded = true;
             _logger.LogInformation("ClamAV first-run install complete ({Path}).", clamScanPath);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            interrupted = true;
             _logger.LogWarning("ClamAV auto-install was interrupted by app shutdown.");
         }
         catch (Exception ex)
@@ -110,6 +185,11 @@ public class ClamAvBootstrapService : IHostedService
         {
             if (msiPath is not null && File.Exists(msiPath))
                 File.Delete(msiPath);
+
+            // A shutdown interruption isn't a failure of the install itself — don't let a restart
+            // mid-download throttle the next genuine attempt.
+            if (!succeeded && !interrupted)
+                RecordFailedAttempt();
         }
     }
 

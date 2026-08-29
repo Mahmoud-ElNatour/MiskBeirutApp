@@ -91,9 +91,11 @@ public class PayrollManager
         existing.Status = request.Status;
         existing.WorkingDays = request.WorkingDays;
         existing.ActualWorkingDays = request.ActualWorkingDays;
-        // These aren't sent by every caller (e.g. the Employees page's own edit modal only ever
-        // sends Status/WorkingDays/IsWorking) — a caller that omits one keeps the existing value
-        // rather than silently zeroing out a total accumulated elsewhere (ledger-entry sync, etc.).
+        // These aren't sent by every caller (the Employees page's modals send Status/WorkingDays/
+        // ActualWorkingDays/IsWorking, but never these three) — a caller that omits one keeps the
+        // existing value rather than silently zeroing out a total accumulated elsewhere (ledger-entry
+        // sync, etc.). Note the fields above are assigned unconditionally by design: every caller is
+        // expected to send them, so a null there means "set it to null", not "leave it alone".
         existing.DeductionsTotal = request.DeductionsTotal ?? existing.DeductionsTotal;
         existing.AdvanceTotal = request.AdvanceTotal ?? existing.AdvanceTotal;
         existing.BaseSalary = request.BaseSalary ?? existing.BaseSalary;

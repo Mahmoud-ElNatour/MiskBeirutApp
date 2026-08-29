@@ -114,10 +114,19 @@ builder.Services.AddHttpClient(nameof(ClamAvBootstrapService), c => c.Timeout = 
 builder.Services.AddHostedService(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
+    var env = sp.GetRequiredService<IWebHostEnvironment>();
     var enabled = !string.Equals(config["VirusScanning:AutoInstallClamAv"], "false", StringComparison.OrdinalIgnoreCase);
+
+    // Resolved the same way as the scanner registration above, so a custom ClamAvPath counts as
+    // "already installed" instead of triggering a redundant second install over the top.
+    var clamAvPath = config["VirusScanning:ClamAvPath"];
+    if (string.IsNullOrWhiteSpace(clamAvPath))
+        clamAvPath = ClamAvVirusScanner.FindDefaultClamAvPath();
 
     return new ClamAvBootstrapService(
         enabled,
+        clamAvPath,
+        Path.Combine(env.ContentRootPath, "App_Data"),
         sp.GetRequiredService<IHttpClientFactory>(),
         sp.GetRequiredService<IHostApplicationLifetime>(),
         sp.GetRequiredService<ILogger<ClamAvBootstrapService>>());
