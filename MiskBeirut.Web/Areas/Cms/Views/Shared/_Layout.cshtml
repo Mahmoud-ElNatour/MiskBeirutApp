@@ -205,12 +205,36 @@
             <div class="flex items-center space-x-6 flex-shrink-0">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                    var cmsUserName = User.Identity.Name;
+                    var cmsUserRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
                     <div class="text-right hidden sm:block">
-                        <p class="font-label-md text-label-md text-on-surface leading-none">@User.Identity.Name</p>
-                        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1">@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value</p>
+                        <p class="font-label-md text-label-md text-on-surface leading-none">@cmsUserName</p>
+                        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1">@cmsUserRole</p>
                     </div>
-                    <div class="h-8 w-8 rounded-full overflow-hidden border border-border-subtle bg-primary text-on-primary font-bold flex items-center justify-center">
-                        @(User.Identity.Name?[..1].ToUpper() ?? "U")
+
+                    <!-- Account menu. The avatar used to be an inert <div>; it's a real button now,
+                         which also puts Logout in reach on mobile without opening the sidebar. -->
+                    <div class="relative">
+                        <button type="button" id="cms-account-button" onclick="toggleCmsAccountMenu()"
+                                aria-haspopup="true" aria-expanded="false" aria-controls="cms-account-menu" aria-label="Account menu"
+                                class="h-8 w-8 rounded-full overflow-hidden border border-border-subtle bg-primary text-on-primary font-bold flex items-center justify-center hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-slate-blue focus:ring-offset-1 transition-opacity">
+                            @(cmsUserName?[..1].ToUpper() ?? "U")
+                        </button>
+
+                        <div id="cms-account-menu" role="menu" aria-labelledby="cms-account-button"
+                             class="hidden absolute right-0 top-full mt-2 w-56 bg-surface-container-lowest border border-border-subtle rounded shadow-lg py-stack-sm z-50">
+                            <!-- Only below sm, where the inline name/role above is hidden. -->
+                            <div class="sm:hidden px-4 py-2 border-b border-border-subtle mb-1">
+                                <p class="font-label-md text-label-md text-on-surface leading-none truncate">@cmsUserName</p>
+                                <p class="font-label-sm text-label-sm text-on-surface-variant uppercase mt-1">@cmsUserRole</p>
+                            </div>
+                            <a asp-area="Cms" asp-controller="Auth" asp-action="Logout" role="menuitem"
+                               class="flex items-center gap-3 px-4 py-2 font-body-md text-body-md text-on-surface hover:bg-surface-container-high transition-colors">
+                                <span class="material-symbols-outlined text-lg">logout</span>
+                                Logout
+                            </a>
+                        </div>
                     </div>
                 }
             </div>
@@ -401,7 +425,31 @@
             backdrop.classList.toggle('hidden', !open);
             // Stop the page behind the overlay from scrolling while the menu is open.
             document.body.classList.toggle('overflow-hidden', open);
+            // The backdrop covers the header, so an open account menu would be stranded under it.
+            if (open) setCmsAccountMenu(false);
         }
+
+        function setCmsAccountMenu(open) {
+            var menu = document.getElementById('cms-account-menu');
+            var button = document.getElementById('cms-account-button');
+            if (!menu || !button) return;
+
+            menu.classList.toggle('hidden', !open);
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        function toggleCmsAccountMenu() {
+            var menu = document.getElementById('cms-account-menu');
+            if (menu) setCmsAccountMenu(menu.classList.contains('hidden'));
+        }
+
+        // Click anywhere outside the menu (or its button) closes it.
+        document.addEventListener('click', function (e) {
+            var button = document.getElementById('cms-account-button');
+            var menu = document.getElementById('cms-account-menu');
+            if (!button || !menu || menu.classList.contains('hidden')) return;
+            if (!button.contains(e.target) && !menu.contains(e.target)) setCmsAccountMenu(false);
+        });
 
         // Following a nav link leaves the menu open behind the new page otherwise.
         document.querySelectorAll('#cms-sidebar a').forEach(function (link) {
@@ -409,7 +457,9 @@
         });
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') toggleCmsSidebar(false);
+            if (e.key !== 'Escape') return;
+            toggleCmsSidebar(false);
+            setCmsAccountMenu(false);
         });
 
         // Resizing past the breakpoint with the menu open would otherwise leave body scroll locked.
