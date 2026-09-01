@@ -8,6 +8,12 @@
     var emailValue = Model.Text("info_email_value", "hello@miskbeirut.com");
     var reasons = ViewData["Reasons"] as IReadOnlyList<InquiryReasonDto> ?? Array.Empty<InquiryReasonDto>();
     var isCmsPreview = ViewData["IsCmsPreview"] as bool? == true;
+
+    var reasonPlaceholder = Model.Text("reason_placeholder", "Select a reason...", "اختر سبباً...");
+
+    const string inputClass = "peer w-full bg-transparent border-0 border-b border-slate-blue/40 py-2 font-body-md text-on-surface placeholder-transparent focus:ring-0 focus:border-slate-blue transition-all";
+    const string labelClass = "absolute left-0 -top-1 text-label-sm uppercase tracking-wider text-slate-blue transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-tertiary peer-focus:-top-1 peer-focus:text-label-sm peer-focus:text-slate-blue";
+    const string fieldErrorClass = "field-error hidden text-brick-red text-label-sm mt-1";
 }
 <main class="pt-24">
 <!-- Hero Header -->
@@ -19,7 +25,7 @@
                     </p>
 </div>
 <!-- Decorative Element -->
-<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
+<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-40 pointer-events-none hidden lg:block">
 <img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
 </div>
 </section>
@@ -48,50 +54,77 @@
 <span class="material-symbols-outlined text-slate-blue text-4xl flex-shrink-0">location_on</span>
 <div>
 <h3 class="font-label-lg text-label-lg uppercase text-slate-blue mb-1" data-cms-field="info_address_title" data-cms-type="Text">@Model.Text("info_address_title", "Address")</h3>
-<p class="font-body-md text-on-surface break-words" data-cms-field="info_address_value" data-cms-type="Text">@Model.Text("info_address_value", "Gemmayzeh, Pasteur Street, Beirut")</p>
+<p class="font-body-md text-on-surface break-words" data-cms-field="info_address_value" data-cms-type="Text">@Model.Text("info_address_value", "Gemmayzeh, Pasteur Street, Beirut", "الجميزة، شارع باستور، بيروت")</p>
 </div>
 </a>
 </div>
 <!-- Right: Contact Form -->
 <div class="md:col-span-7 md:col-start-6 bg-white p-12 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] reveal-on-scroll delay-100 visible">
-<form id="contact-inquiry-form" data-cms-preview="@(isCmsPreview ? "1" : "0")" class="space-y-[48px]">
+@* rtl-form flips the floating labels and text alignment for Arabic — see _PublicLayout.cshtml. *@
+<form id="contact-inquiry-form" class="rtl-form space-y-[48px]" novalidate
+      data-cms-preview="@(isCmsPreview ? "1" : "0")"
+      data-preview-message="@Model.Text("preview_notice", "Preview mode — inquiries are not submitted from the CMS.", "وضع المعاينة — لا تُرسل الطلبات من نظام إدارة المحتوى.")"
+      data-reason-placeholder="@reasonPlaceholder"
+      data-phone-pattern="@ValidationPatterns.PhoneNumber"
+      data-email-pattern="@ValidationPatterns.Email"
+      data-msg-name="@Model.Text("error_full_name", "Please enter your full name.", "يرجى إدخال اسمك الكامل.")"
+      data-msg-phone="@Model.Text("error_phone", "Please enter a valid phone number — digits only, e.g. +961 3 123 456.", "يرجى إدخال رقم هاتف صحيح — أرقام فقط، مثال: +961 3 123 456.")"
+      data-msg-email="@Model.Text("error_email", "Please enter a valid email address, e.g. name@example.com.", "يرجى إدخال بريد إلكتروني صحيح، مثال: name@example.com.")"
+      data-msg-message="@Model.Text("error_message", "Please enter your message.", "يرجى كتابة رسالتك.")"
+      data-msg-reason="@Model.Text("reason_error", "Please select a reason for contact.", "يرجى اختيار سبب التواصل.")"
+      data-msg-generic="@Model.Text("error_generic", "Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى.")"
+      data-msg-offline="@Model.Text("error_offline", "Something went wrong. Please check your connection and try again.", "حدث خطأ ما. يرجى التحقق من اتصالك والمحاولة مرة أخرى.")">
 @Html.AntiForgeryToken()
-<div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]"><div class="relative pt-4"><input class="peer w-full bg-transparent border-0 border-b border-slate-blue/40 py-2 font-body-md text-on-surface placeholder-transparent focus:ring-0 focus:border-slate-blue transition-all" id="name" name="FullName" placeholder="Full Name" required type="text" maxlength="@FieldLengths.Name"><label class="absolute left-0 -top-1 text-label-sm uppercase tracking-wider text-slate-blue transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-tertiary peer-focus:-top-1 peer-focus:text-label-sm peer-focus:text-slate-blue" for="name" data-cms-field="field_full_name" data-cms-type="Text">@Model.Text("field_full_name", "Full Name *")</label></div><div class="relative pt-4"><input class="peer w-full bg-transparent border-0 border-b border-slate-blue/40 py-2 font-body-md text-on-surface placeholder-transparent focus:ring-0 focus:border-slate-blue transition-all" id="phone" name="PhoneNumber" placeholder="Phone Number" required type="tel" maxlength="@FieldLengths.PhoneNumber"><label class="absolute left-0 -top-1 text-label-sm uppercase tracking-wider text-slate-blue transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-tertiary peer-focus:-top-1 peer-focus:text-label-sm peer-focus:text-slate-blue" for="phone" data-cms-field="field_phone" data-cms-type="Text">@Model.Text("field_phone", "Phone Number *")</label></div></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-[24px]">
+<div class="relative pt-4">
+<input class="@inputClass" id="name" name="FullName" placeholder="Full Name" required type="text" maxlength="@FieldLengths.Name">
+<label class="@labelClass" for="name" data-cms-field="field_full_name" data-cms-type="Text">@Model.Text("field_full_name", "Full Name *")</label>
+<p class="@fieldErrorClass" data-error-for="FullName"></p>
+</div>
+<div class="relative pt-4">
+<input class="@inputClass" id="phone" name="PhoneNumber" placeholder="Phone Number" required type="tel" inputmode="tel" pattern="@ValidationPatterns.PhoneNumber" maxlength="@FieldLengths.PhoneNumber">
+<label class="@labelClass" for="phone" data-cms-field="field_phone" data-cms-type="Text">@Model.Text("field_phone", "Phone Number *")</label>
+<p class="@fieldErrorClass" data-error-for="PhoneNumber"></p>
+</div>
+</div>
 <!-- Email Address -->
 <div class="relative pt-4">
-<input class="peer w-full bg-transparent border-0 border-b border-slate-blue/40 py-2 font-body-md text-on-surface placeholder-transparent focus:ring-0 focus:border-slate-blue transition-all" id="email" name="Email" placeholder="Email Address" type="email" maxlength="@FieldLengths.Email">
-<label class="absolute left-0 -top-1 text-label-sm uppercase tracking-wider text-slate-blue transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-tertiary peer-focus:-top-1 peer-focus:text-label-sm peer-focus:text-slate-blue" for="email" data-cms-field="field_email" data-cms-type="Text">@Model.Text("field_email", "Email Address (Optional)")</label>
+<input class="@inputClass" id="email" name="Email" placeholder="Email Address" type="email" inputmode="email" pattern="@ValidationPatterns.Email" maxlength="@FieldLengths.Email">
+<label class="@labelClass" for="email" data-cms-field="field_email" data-cms-type="Text">@Model.Text("field_email", "Email Address (Optional)")</label>
+<p class="@fieldErrorClass" data-error-for="Email"></p>
 </div>
 <!-- Reason for Contact -->
 <div class="relative pt-4 group" id="custom-dropdown-container">
-<input id="reason-input" name="ReasonId" required type="hidden">
+<input id="reason-input" name="ReasonId" type="hidden">
 <label class="absolute left-0 -top-1 text-label-sm uppercase tracking-wider text-slate-blue" for="reason-trigger" data-cms-field="field_reason" data-cms-type="Text">@Model.Text("field_reason", "Reason for Contact *")</label>
 <!-- Trigger -->
-<div class="flex justify-between items-center w-full bg-transparent border-0 border-b border-slate-blue/20 py-2 font-body-md text-on-surface cursor-pointer transition-all" id="reason-trigger">
-<span class="text-tertiary" id="trigger-text" data-cms-field="reason_placeholder" data-cms-type="Text">@Model.Text("reason_placeholder", "Select a reason...")</span>
+<div class="flex justify-between items-center w-full bg-transparent border-0 border-b border-slate-blue/20 py-2 font-body-md text-on-surface cursor-pointer transition-all" id="reason-trigger" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false">
+<span class="text-tertiary" id="trigger-text" data-cms-field="reason_placeholder" data-cms-type="Text">@reasonPlaceholder</span>
 <span class="material-symbols-outlined text-slate-blue transition-transform duration-300" id="chevron-icon">expand_more</span>
 </div>
 <!-- Dropdown Panel -->
-<ul class="absolute left-0 right-0 top-full mt-1 bg-white shadow-md rounded-sm z-10 hidden opacity-0 transition-opacity duration-200" id="dropdown-panel">
+<ul class="absolute left-0 right-0 top-full mt-1 bg-white shadow-md rounded-sm z-10 hidden opacity-0 transition-opacity duration-200" id="dropdown-panel" role="listbox">
 @foreach (var reason in reasons)
 {
-    <li class="py-3 px-4 font-body-md text-on-surface hover:bg-surface-container-low hover:text-primary cursor-pointer transition-colors" data-value="@reason.Id">@reason.Name</li>
+    <li class="py-3 px-4 font-body-md text-on-surface hover:bg-surface-container-low hover:text-primary cursor-pointer transition-colors" role="option" data-value="@reason.Id">@reason.Name</li>
 }
 </ul>
 <!-- Error Message -->
-<p class="hidden text-brick-red text-label-sm mt-1" id="dropdown-error" data-cms-field="reason_error" data-cms-type="Text">@Model.Text("reason_error", "Please select a reason for contact.")</p>
+<p class="@fieldErrorClass" data-error-for="ReasonId" id="dropdown-error"></p>
 </div>
 <!-- Message -->
 <div class="relative pt-4">
-<textarea class="peer w-full bg-transparent border-0 border-b border-slate-blue/40 py-2 font-body-md text-on-surface placeholder-transparent focus:ring-0 focus:border-slate-blue transition-all resize-none" id="message" name="Message" placeholder="Message" required rows="4" maxlength="@FieldLengths.Message"></textarea>
-<label class="absolute left-0 -top-1 text-label-sm uppercase tracking-wider text-slate-blue transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-tertiary peer-focus:-top-1 peer-focus:text-label-sm peer-focus:text-slate-blue" for="message" data-cms-field="field_message" data-cms-type="Text">@Model.Text("field_message", "Message *")</label>
+<textarea class="@inputClass resize-none" id="message" name="Message" placeholder="Message" required rows="4" maxlength="@FieldLengths.Message"></textarea>
+<label class="@labelClass" for="message" data-cms-field="field_message" data-cms-type="Text">@Model.Text("field_message", "Message *")</label>
+<p class="@fieldErrorClass" data-error-for="Message"></p>
 </div>
 <p class="hidden text-brick-red text-label-sm" id="submit-error"></p>
-<p class="hidden text-emerald-700 text-label-sm" id="submit-success" data-cms-field="success_message" data-cms-type="Text">@Model.Text("success_message", "Message sent successfully.")</p>
+<p class="hidden text-emerald-700 text-label-sm" id="submit-success" data-cms-field="success_message" data-cms-type="Text">@Model.Text("success_message", "Thank you for contacting us. We'll be in touch with you soon.", "شكراً لتواصلك معنا. سنعاود الاتصال بك قريباً.")</p>
 <div class="flex justify-start">
 <button class="group relative flex items-center gap-2 bg-slate-blue text-white font-label-lg text-label-lg uppercase tracking-widest px-8 py-4 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1" type="submit">
 <span class="relative z-10" data-cms-field="submit_label" data-cms-type="Text">@Model.Text("submit_label", "Send Inquiry")</span>
-<span class="material-symbols-outlined relative z-10 transition-transform duration-300 group-hover:translate-x-1">send</span>
+@* rtl-flip mirrors the paper plane so it points the way the text reads. *@
+<span class="material-symbols-outlined relative z-10 rtl-flip transition-transform duration-300 group-hover:translate-x-1">send</span>
 <div class="absolute inset-0 bg-primary opacity-0 group-hover:opacity-20 transition-opacity"></div>
 </button>
 </div>
@@ -121,8 +154,48 @@
         const chevron = document.getElementById('chevron-icon');
         const input = document.getElementById('reason-input');
         const triggerText = document.getElementById('trigger-text');
-        const errorMsg = document.getElementById('dropdown-error');
-        const form = container.closest('form');
+        const form = document.getElementById('contact-inquiry-form');
+        const d = form.dataset;
+
+        const phonePattern = new RegExp(d.phonePattern);
+        const emailPattern = new RegExp(d.emailPattern);
+
+        function errorEl(field) {
+            return form.querySelector('[data-error-for="' + field + '"]');
+        }
+
+        function showFieldError(field, message) {
+            const el = errorEl(field);
+            if (!el) return;
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+
+        function clearFieldErrors() {
+            form.querySelectorAll('.field-error').forEach(function (el) {
+                el.textContent = '';
+                el.classList.add('hidden');
+            });
+        }
+
+        // Mirrors the [RegularExpression] rules on ContactInquiryRequest, so the visitor is told
+        // which box is wrong and why BEFORE a round trip — the old form only ever said "please fill
+        // in all required fields", which was actively misleading when every box was filled in and
+        // the real problem was letters typed into the phone number.
+        function validate() {
+            const problems = {};
+            const name = form.elements['FullName'].value.trim();
+            const phone = form.elements['PhoneNumber'].value.trim();
+            const email = form.elements['Email'].value.trim();
+            const message = form.elements['Message'].value.trim();
+
+            if (!name) problems.FullName = d.msgName;
+            if (!phone || !phonePattern.test(phone)) problems.PhoneNumber = d.msgPhone;
+            if (email && !emailPattern.test(email)) problems.Email = d.msgEmail;
+            if (!input.value) problems.ReasonId = d.msgReason;
+            if (!message) problems.Message = d.msgMessage;
+            return problems;
+        }
 
         const toggleDropdown = () => {
             const isOpen = !panel.classList.contains('hidden');
@@ -130,10 +203,12 @@
                 panel.classList.add('opacity-0');
                 setTimeout(() => panel.classList.add('hidden'), 200);
                 chevron.style.transform = 'rotate(0deg)';
+                trigger.setAttribute('aria-expanded', 'false');
             } else {
                 panel.classList.remove('hidden');
                 setTimeout(() => panel.classList.remove('opacity-0'), 10);
                 chevron.style.transform = 'rotate(180deg)';
+                trigger.setAttribute('aria-expanded', 'true');
             }
         };
 
@@ -142,15 +217,24 @@
             toggleDropdown();
         });
 
+        function resetReason() {
+            input.value = '';
+            // Read the placeholder back from the form's data attribute rather than baking it into
+            // this script: a Razor value interpolated into a JS string literal arrives HTML-encoded,
+            // which textContent then renders verbatim ("&#x627;&#x62E;...") for Arabic visitors.
+            triggerText.textContent = d.reasonPlaceholder;
+            triggerText.classList.remove('text-on-surface');
+            triggerText.classList.add('text-tertiary');
+        }
+
         panel.querySelectorAll('li').forEach(option => {
             option.addEventListener('click', () => {
-                const val = option.getAttribute('data-value');
-                const text = option.textContent;
-                input.value = val;
-                triggerText.textContent = text;
+                input.value = option.getAttribute('data-value');
+                triggerText.textContent = option.textContent;
                 triggerText.classList.remove('text-tertiary');
                 triggerText.classList.add('text-on-surface');
-                errorMsg.classList.add('hidden');
+                const el = errorEl('ReasonId');
+                if (el) el.classList.add('hidden');
                 toggleDropdown();
             });
         });
@@ -160,17 +244,26 @@
                 panel.classList.add('opacity-0');
                 panel.classList.add('hidden');
                 chevron.style.transform = 'rotate(0deg)';
+                trigger.setAttribute('aria-expanded', 'false');
             }
+        });
+
+        // Re-check a field once the visitor leaves it, so a correction clears its message straight
+        // away instead of surviving until the next submit.
+        ['FullName', 'PhoneNumber', 'Email', 'Message'].forEach(function (field) {
+            const control = form.elements[field];
+            if (!control) return;
+            control.addEventListener('blur', function () {
+                const el = errorEl(field);
+                if (!el || el.classList.contains('hidden')) return;
+                if (!validate()[field]) el.classList.add('hidden');
+            });
         });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (form.dataset.cmsPreview === '1') {
-                alert('Preview mode — inquiries are not submitted from the CMS.');
-                return;
-            }
-            if (!input.value) {
-                errorMsg.classList.remove('hidden');
+                alert(d.previewMessage);
                 return;
             }
 
@@ -179,6 +272,17 @@
             const submitBtn = form.querySelector('button[type="submit"]');
             submitErrorEl.classList.add('hidden');
             submitSuccessEl.classList.add('hidden');
+            clearFieldErrors();
+
+            const problems = validate();
+            const problemFields = Object.keys(problems);
+            if (problemFields.length > 0) {
+                problemFields.forEach(function (field) { showFieldError(field, problems[field]); });
+                const firstControl = form.elements[problemFields[0]];
+                if (firstControl && firstControl.focus) firstControl.focus();
+                return;
+            }
+
             submitBtn.disabled = true;
 
             fetch('@Url.Action("Submit", "Contact")', { method: 'POST', body: new FormData(form) })
@@ -186,17 +290,18 @@
                     if (response.ok) {
                         submitSuccessEl.classList.remove('hidden');
                         form.reset();
-                        triggerText.textContent = '@Model.Text("reason_placeholder", "Select a reason...")';
-                        triggerText.classList.remove('text-on-surface');
-                        triggerText.classList.add('text-tertiary');
+                        resetReason();
                         return;
                     }
                     const data = await response.json().catch(() => null);
-                    submitErrorEl.textContent = (data && data.message) || 'Something went wrong. Please try again.';
+                    if (data && data.errors) {
+                        Object.keys(data.errors).forEach(function (field) { showFieldError(field, data.errors[field]); });
+                    }
+                    submitErrorEl.textContent = (data && data.message) || d.msgGeneric;
                     submitErrorEl.classList.remove('hidden');
                 })
                 .catch(() => {
-                    submitErrorEl.textContent = 'Something went wrong. Please check your connection and try again.';
+                    submitErrorEl.textContent = d.msgOffline;
                     submitErrorEl.classList.remove('hidden');
                 })
                 .finally(() => {
@@ -204,15 +309,5 @@
                 });
         });
     })();
-
-    document.querySelectorAll('input, textarea, select').forEach(element => {
-        element.addEventListener('blur', (e) => {
-            if (e.target.value !== "") {
-                e.target.classList.add('has-value');
-            } else {
-                e.target.classList.remove('has-value');
-            }
-        });
-    });
 </script>
 }

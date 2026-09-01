@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
+
+// Razor HTML-encodes every interpolated value, and the default encoder's allow-list is Basic Latin
+// only — so Arabic copy leaves the server as numeric character references ("&#x627;&#x62E;..."),
+// not as Arabic. A browser decodes those transparently in HTML text, which is why most of the site
+// looked fine; but any value that reaches JavaScript as a string literal and is then written with
+// textContent (e.g. the Contact form resetting its "Reason for Contact" label after a successful
+// submit) has nothing to decode it and renders the raw entities to the visitor. Widening the
+// allow-list emits real UTF-8 for every script the site uses.
+builder.Services.AddWebEncoders(options =>
+    options.TextEncoderSettings = new TextEncoderSettings(UnicodeRanges.All));
 
 // Needed by AuditLogManager to capture the caller's IP address on every logged action.
 builder.Services.AddHttpContextAccessor();

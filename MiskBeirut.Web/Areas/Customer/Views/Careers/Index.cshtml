@@ -14,6 +14,10 @@
         ("payments", "Competitive Benefits"),
         ("restaurant", "Culinary Excellence")
     };
+
+    const string applyInputClass = "w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all";
+    const string applyLabelClass = "font-label-lg text-label-lg uppercase block mb-1";
+    const string applyErrorClass = "field-error hidden text-sm text-brick-red mt-1";
 }
 <main class="pt-24">
 <!-- Hero Header -->
@@ -25,7 +29,7 @@
                 </p>
 </div>
 <!-- Decorative Element -->
-<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
+<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-40 pointer-events-none hidden lg:block">
 <img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
 </div>
 </section>
@@ -65,35 +69,53 @@
             <button class="bg-slate-blue text-white px-8 py-3 font-label-lg text-label-lg uppercase tracking-widest hover:bg-brick-red transition-colors w-full md:w-auto" data-cms-field="apply_now_label" data-cms-type="Text" onclick="toggleApplication('@v.Slug')">@Model.Text("apply_now_label", "Apply Now")</button>
         </div>
         <div class="max-height-0 overflow-hidden opacity-0 transition-form bg-white px-8 md:px-12 border-t border-slate-blue/10" id="form-@v.Slug">
-            <form class="job-application-form py-stack-lg space-y-8 max-w-3xl mx-auto" data-vacancy-slug="@v.Slug" data-cms-preview="@(isCmsPreview ? "1" : "0")" enctype="multipart/form-data">
+            @* rtl-form right-aligns the labels and inputs for Arabic — see _PublicLayout.cshtml. *@
+            <form class="job-application-form rtl-form py-stack-lg space-y-8 max-w-3xl mx-auto" novalidate
+                  data-vacancy-slug="@v.Slug"
+                  data-cms-preview="@(isCmsPreview ? "1" : "0")"
+                  data-phone-pattern="@ValidationPatterns.PhoneNumber"
+                  data-email-pattern="@ValidationPatterns.Email"
+                  data-preview-message="@Model.Text("preview_notice", "Preview mode — applications are not submitted from the CMS.", "وضع المعاينة — لا تُرسل الطلبات من نظام إدارة المحتوى.")"
+                  data-msg-name="@Model.Text("error_full_name", "Please enter your full name.", "يرجى إدخال اسمك الكامل.")"
+                  data-msg-phone="@Model.Text("error_phone", "Please enter a valid phone number — digits only, e.g. +961 3 123 456.", "يرجى إدخال رقم هاتف صحيح — أرقام فقط، مثال: +961 3 123 456.")"
+                  data-msg-email="@Model.Text("error_email", "Please enter a valid email address.", "يرجى إدخال بريد إلكتروني صحيح.")"
+                  data-msg-cv="@Model.Text("error_cv", "Please attach your CV as a PDF (5 MB or smaller).", "يرجى إرفاق سيرتك الذاتية بصيغة PDF (بحجم 5 ميغابايت أو أقل).")"
+                  data-msg-generic="@Model.Text("error_generic", "Something went wrong. Please try again.", "حدث خطأ ما. يرجى المحاولة مرة أخرى.")"
+                  data-msg-offline="@Model.Text("error_offline", "Something went wrong. Please check your connection and try again.", "حدث خطأ ما. يرجى التحقق من اتصالك والمحاولة مرة أخرى.")"
+                  enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="VacancyId" value="@v.Id"/>
-                <h4 class="font-headline-md text-headline-md mb-4" data-cms-field="apply_prefix_label" data-cms-type="Text">@Model.Text("apply_prefix_label", "Application for") @v.Title</h4>
+                <h4 class="font-headline-md text-headline-md mb-4"><span data-cms-field="apply_prefix_label" data-cms-type="Text">@Model.Text("apply_prefix_label", "Application for", "طلب توظيف لوظيفة")</span> @v.Title</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="relative">
-                        <label class="font-label-lg text-label-lg uppercase block mb-1" data-cms-field="form_field_full_name" data-cms-type="Text">@Model.Text("form_field_full_name", "Full Name")</label>
-                        <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" data-cms-field="form_placeholder_name" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_name", "YOUR NAME")" name="Name" required type="text" maxlength="@FieldLengths.Name"/>
+                        <label class="@applyLabelClass" data-cms-field="form_field_full_name" data-cms-type="Text">@Model.Text("form_field_full_name", "Full Name", "الاسم الكامل")</label>
+                        <input class="@applyInputClass" data-cms-field="form_placeholder_name" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_name", "YOUR NAME", "اسمك")" name="Name" required type="text" maxlength="@FieldLengths.Name"/>
+                        <p class="@applyErrorClass" data-error-for="Name"></p>
                     </div>
                     <div class="relative">
-                        <label class="font-label-lg text-label-lg uppercase block mb-1" data-cms-field="form_field_phone" data-cms-type="Text">@Model.Text("form_field_phone", "Phone Number")</label>
-                        <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" data-cms-field="form_placeholder_phone" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_phone", "+961 00 000 000")" name="PhoneNumber" required type="tel" maxlength="@FieldLengths.PhoneNumber"/>
+                        <label class="@applyLabelClass" data-cms-field="form_field_phone" data-cms-type="Text">@Model.Text("form_field_phone", "Phone Number", "رقم الهاتف")</label>
+                        <input class="@applyInputClass" data-cms-field="form_placeholder_phone" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_phone", "+961 00 000 000")" name="PhoneNumber" required type="tel" inputmode="tel" pattern="@ValidationPatterns.PhoneNumber" maxlength="@FieldLengths.PhoneNumber"/>
+                        <p class="@applyErrorClass" data-error-for="PhoneNumber"></p>
                     </div>
                 </div>
                 <div class="relative">
-                    <label class="font-label-lg text-label-lg uppercase block mb-1" data-cms-field="form_field_email" data-cms-type="Text">@Model.Text("form_field_email", "Email Address")</label>
-                    <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" data-cms-field="form_placeholder_email" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_email", "EMAIL@EXAMPLE.COM")" name="Email" required type="email" maxlength="@FieldLengths.Email"/>
+                    <label class="@applyLabelClass" data-cms-field="form_field_email" data-cms-type="Text">@Model.Text("form_field_email", "Email Address", "البريد الإلكتروني")</label>
+                    <input class="@applyInputClass" data-cms-field="form_placeholder_email" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_email", "EMAIL@EXAMPLE.COM")" name="Email" required type="email" inputmode="email" pattern="@ValidationPatterns.Email" maxlength="@FieldLengths.Email"/>
+                    <p class="@applyErrorClass" data-error-for="Email"></p>
                 </div>
                 <div class="relative">
-                    <label class="font-label-lg text-label-lg uppercase block mb-1" data-cms-field="form_field_address" data-cms-type="Text">@Model.Text("form_field_address", "Address")</label>
-                    <input class="w-full bg-transparent border-b border-slate-blue/30 py-2 form-input-focus transition-all" data-cms-field="form_placeholder_address" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_address", "YOUR ADDRESS")" name="Address" type="text" maxlength="@FieldLengths.Address"/>
+                    <label class="@applyLabelClass" data-cms-field="form_field_address" data-cms-type="Text">@Model.Text("form_field_address", "Address", "العنوان")</label>
+                    <input class="@applyInputClass" data-cms-field="form_placeholder_address" data-cms-type="Placeholder" placeholder="@Model.Text("form_placeholder_address", "YOUR ADDRESS", "عنوانك")" name="Address" type="text" maxlength="@FieldLengths.Address"/>
+                    <p class="@applyErrorClass" data-error-for="Address"></p>
                 </div>
                 <div class="relative">
-                    <label class="font-label-lg text-label-lg uppercase block mb-2" data-cms-field="form_field_upload_cv" data-cms-type="Text">@Model.Text("form_field_upload_cv", "Upload CV (PDF)")</label>
+                    <label class="font-label-lg text-label-lg uppercase block mb-2" data-cms-field="form_field_upload_cv" data-cms-type="Text">@Model.Text("form_field_upload_cv", "Upload CV (PDF)", "تحميل السيرة الذاتية (PDF)")</label>
                     <input class="block w-full text-sm text-slate-blue file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-label-lg file:bg-slate-blue/10 file:text-slate-blue hover:file:bg-slate-blue/20 cursor-pointer" name="Cv" accept="application/pdf" required type="file"/>
+                    <p class="@applyErrorClass" data-error-for="Cv"></p>
                 </div>
                 <p class="application-error hidden text-sm text-brick-red"></p>
-                <p class="application-success hidden text-sm text-emerald-700" data-cms-field="apply_success_message" data-cms-type="Text">@Model.Text("apply_success_message", "Thank you! Your application has been received.")</p>
-                <button class="bg-brick-red text-white px-12 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-opacity" data-cms-field="submit_label" data-cms-type="Text" type="submit">@Model.Text("submit_label", "Submit Application")</button>
+                <p class="application-success hidden text-sm text-emerald-700" data-cms-field="apply_success_message" data-cms-type="Text">@Model.Text("apply_success_message", "Thank you! Your application has been received.", "شكراً لك! تم استلام طلبك.")</p>
+                <button class="bg-brick-red text-white px-12 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-opacity" data-cms-field="submit_label" data-cms-type="Text" type="submit">@Model.Text("submit_label", "Submit Application", "إرسال الطلب")</button>
             </form>
         </div>
     </div>
@@ -147,18 +169,82 @@
             f.style.opacity = '0';
         });
 
+        const MAX_CV_BYTES = 5 * 1024 * 1024; // must match MaxCvSizeBytes in CareersController
+
         document.querySelectorAll('.job-application-form').forEach(form => {
+            const d = form.dataset;
+            const phonePattern = new RegExp(d.phonePattern);
+            const emailPattern = new RegExp(d.emailPattern);
+
+            function errorEl(field) {
+                return form.querySelector('[data-error-for="' + field + '"]');
+            }
+
+            function showFieldError(field, message) {
+                const el = errorEl(field);
+                if (!el) return;
+                el.textContent = message;
+                el.classList.remove('hidden');
+            }
+
+            function clearFieldErrors() {
+                form.querySelectorAll('.field-error').forEach(function (el) {
+                    el.textContent = '';
+                    el.classList.add('hidden');
+                });
+            }
+
+            // Same rules as JobApplicationRequest server-side, so a mistyped phone number or a CV
+            // that is too large is named on the field itself instead of coming back as one generic
+            // sentence under the whole form.
+            function validate() {
+                const problems = {};
+                const name = form.elements['Name'].value.trim();
+                const phone = form.elements['PhoneNumber'].value.trim();
+                const email = form.elements['Email'].value.trim();
+                const cv = form.elements['Cv'].files[0];
+
+                if (!name) problems.Name = d.msgName;
+                if (!phone || !phonePattern.test(phone)) problems.PhoneNumber = d.msgPhone;
+                if (!email || !emailPattern.test(email)) problems.Email = d.msgEmail;
+                if (!cv || cv.size === 0 || cv.size > MAX_CV_BYTES) problems.Cv = d.msgCv;
+                return problems;
+            }
+
+            ['Name', 'PhoneNumber', 'Email', 'Cv'].forEach(function (field) {
+                const control = form.elements[field];
+                if (!control) return;
+                const revalidate = function () {
+                    const el = errorEl(field);
+                    if (!el || el.classList.contains('hidden')) return;
+                    if (!validate()[field]) el.classList.add('hidden');
+                };
+                control.addEventListener('blur', revalidate);
+                control.addEventListener('change', revalidate);
+            });
+
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 if (form.dataset.cmsPreview === '1') {
-                    alert('Preview mode — applications are not submitted from the CMS.');
+                    alert(d.previewMessage);
                     return;
                 }
-                const errorEl = form.querySelector('.application-error');
+                const errorBox = form.querySelector('.application-error');
                 const successEl = form.querySelector('.application-success');
                 const submitBtn = form.querySelector('button[type="submit"]');
-                errorEl.classList.add('hidden');
+                errorBox.classList.add('hidden');
                 successEl.classList.add('hidden');
+                clearFieldErrors();
+
+                const problems = validate();
+                const problemFields = Object.keys(problems);
+                if (problemFields.length > 0) {
+                    problemFields.forEach(function (field) { showFieldError(field, problems[field]); });
+                    const firstControl = form.elements[problemFields[0]];
+                    if (firstControl && firstControl.focus) firstControl.focus();
+                    return;
+                }
+
                 submitBtn.disabled = true;
 
                 fetch('@Url.Action("Apply", "Careers")', { method: 'POST', body: new FormData(form) })
@@ -169,12 +255,15 @@
                             return;
                         }
                         const data = await response.json().catch(() => null);
-                        errorEl.textContent = (data && data.message) || 'Something went wrong. Please try again.';
-                        errorEl.classList.remove('hidden');
+                        if (data && data.errors) {
+                            Object.keys(data.errors).forEach(function (field) { showFieldError(field, data.errors[field]); });
+                        }
+                        errorBox.textContent = (data && data.message) || d.msgGeneric;
+                        errorBox.classList.remove('hidden');
                     })
                     .catch(() => {
-                        errorEl.textContent = 'Something went wrong. Please check your connection and try again.';
-                        errorEl.classList.remove('hidden');
+                        errorBox.textContent = d.msgOffline;
+                        errorBox.classList.remove('hidden');
                     })
                     .finally(() => {
                         submitBtn.disabled = false;

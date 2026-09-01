@@ -44,6 +44,7 @@ public class PagesController : CmsControllerBase
         ["Contact"] = "Contact",
         ["Events"] = "Events",
         ["Home"] = "Home",
+        ["Menu"] = "Menu",
         ["Spaces"] = "Spaces"
     };
 
@@ -85,7 +86,12 @@ public class PagesController : CmsControllerBase
         return View(filtered.OrderBy(p => p.PageName).ToList());
     }
 
-    public async Task<IActionResult> Edit(int id, string? lang)
+    /// <param name="view">
+    /// "page" opens the visual preview instead of a page's specialised editor. Only Menu has one of
+    /// those (the PDF upload screen), and it now also has real page copy around the embedded PDF —
+    /// so this is how the Cms reaches that copy's pencil buttons without losing the uploader.
+    /// </param>
+    public async Task<IActionResult> Edit(int id, string? lang, string? view)
     {
         var page = await _pages.GetPageAsync(id);
         if (page is null)
@@ -102,7 +108,9 @@ public class PagesController : CmsControllerBase
         var languageOptions = languages.OrderBy(l => l.Code)
             .Select(l => new LanguageOptionViewModel { Id = l.Id, Code = l.Code, Name = l.Name }).ToList();
 
-        if (string.Equals(page.PageName, MenuPageName, StringComparison.OrdinalIgnoreCase))
+        var wantsVisualPreview = string.Equals(view, "page", StringComparison.OrdinalIgnoreCase);
+
+        if (string.Equals(page.PageName, MenuPageName, StringComparison.OrdinalIgnoreCase) && !wantsVisualPreview)
         {
             var global = await _pages.GetPageByNameAsync(GlobalPageName)
                 ?? throw new InvalidOperationException("The Global page is missing — every install seeds it.");
@@ -145,7 +153,7 @@ public class PagesController : CmsControllerBase
             ViewData["Languages"] = languageOptions;
 
             if (string.Equals(page.PageName, "Careers", StringComparison.OrdinalIgnoreCase))
-                ViewData["Vacancies"] = await _vacancies.GetActiveAsync();
+                ViewData["Vacancies"] = await _vacancies.GetActiveAsync(language.Code);
 
             // The real nav/footer's own Home/About/Menu/... links point at the live public site by
             // design (that's what "render the actual view" below means) — this map lets

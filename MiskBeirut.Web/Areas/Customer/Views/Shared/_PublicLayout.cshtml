@@ -124,6 +124,16 @@
        CMS edit mode still lives in _CmsPreviewOverlay.cshtml, since body.cms-edit-mode can only ever
        be set from within a CMS preview anyway. */
     .cms-preview-edit-only { display: none; }
+    /* Same reasoning for the empty-image affordances. A real visitor gets the branded placeholder
+       (/img/cms-placeholder.svg) on its own; the "No image set" badge and the slot's caption text
+       are working notes that only mean something to whoever can fill the slot in, so they surface
+       inside a Cms preview and nowhere else. */
+    .cms-placeholder-badge { display: none; }
+    body.cms-preview .cms-placeholder-badge { display: block; }
+    body.cms-preview .cms-placeholder-caption {
+        position: static; width: auto; height: auto;
+        padding: 0; margin: 0; overflow: visible; clip: auto; white-space: normal;
+    }
     .hero-gradient {
         background: linear-gradient(to bottom, rgba(53, 89, 112, 0.4), rgba(53, 89, 112, 0.6));
     }
@@ -152,6 +162,59 @@
     .transition-form {
         transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out;
     }
+    /* Full-screen photo viewer (built in script at the bottom of this file). Styled here rather
+       than with inline styles so the mobile layout below can actually override it: at phone width
+       the two 56px chevrons sat on top of the photo itself, half-covering it and landing right where
+       a thumb swipes. On small screens they move to a control row beneath the image instead. */
+    #photo-lightbox {
+        position: fixed; inset: 0; z-index: 100; background: rgba(26,26,26,0.95);
+        align-items: center; justify-content: center;
+    }
+    #photo-lightbox .lb-btn {
+        position: absolute; width: 56px; height: 56px;
+        border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08); color: #fff;
+        display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s;
+    }
+    #photo-lightbox .lb-btn:hover { background: rgba(255,255,255,0.22); }
+    #photo-lightbox .lb-btn .material-symbols-outlined { font-size: 28px; }
+    #photo-lightbox .lb-close { top: 24px; right: 24px; }
+    #photo-lightbox .lb-prev { left: 16px; top: 50%; transform: translateY(-50%); }
+    #photo-lightbox .lb-next { right: 16px; top: 50%; transform: translateY(-50%); }
+    #photo-lightbox .lb-counter {
+        position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+        color: #fff; opacity: .7; letter-spacing: .2em; font-size: 13px; margin: 0;
+    }
+    #photo-lightbox .lb-stage { max-width: 90vw; max-height: 85vh; display: flex; align-items: center; justify-content: center; }
+    #photo-lightbox .lb-stage img { max-width: 90vw; max-height: 85vh; object-fit: contain; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    @@media (max-width: 767px) {
+        #photo-lightbox { align-items: flex-start; padding-top: 72px; }
+        #photo-lightbox .lb-stage { max-height: calc(100vh - 220px); }
+        #photo-lightbox .lb-stage img { max-height: calc(100vh - 220px); }
+        #photo-lightbox .lb-btn { width: 48px; height: 48px; }
+        #photo-lightbox .lb-btn .material-symbols-outlined { font-size: 24px; }
+        #photo-lightbox .lb-close { top: 12px; right: 12px; }
+        #photo-lightbox .lb-prev,
+        #photo-lightbox .lb-next {
+            top: auto; transform: none;
+            bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        }
+        #photo-lightbox .lb-prev { left: 50%; margin-left: -68px; }
+        #photo-lightbox .lb-next { right: 50%; margin-right: -68px; }
+        #photo-lightbox .lb-counter { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+    }
+    /* The chevrons are literal "back"/"forward" glyphs, so they have to swap with the reading order. */
+    /* The glyphs are literal back/forward arrows, so they flip with the reading order too. */
+    html[dir="rtl"] #photo-lightbox .lb-prev .material-symbols-outlined,
+    html[dir="rtl"] #photo-lightbox .lb-next .material-symbols-outlined { transform: scaleX(-1); }
+    html[dir="rtl"] #photo-lightbox .lb-prev { left: auto; right: 16px; }
+    html[dir="rtl"] #photo-lightbox .lb-next { right: auto; left: 16px; }
+    html[dir="rtl"] #photo-lightbox .lb-close { right: auto; left: 24px; }
+    @@media (max-width: 767px) {
+        html[dir="rtl"] #photo-lightbox .lb-prev { left: auto; right: 50%; margin-right: -68px; margin-left: 0; }
+        html[dir="rtl"] #photo-lightbox .lb-next { right: auto; left: 50%; margin-left: -68px; margin-right: 0; }
+        html[dir="rtl"] #photo-lightbox .lb-close { left: 12px; right: auto; }
+    }
+
     .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .insta-carousel, .space-carousel { scrollbar-width: thin; scrollbar-color: #8F383A rgba(78,114,137,0.12); }
@@ -165,8 +228,22 @@
     html[dir="rtl"] .text-center { text-align: center; }
     html[dir="rtl"] .border-l-2 { border-left-width: 0; border-right-width: 2px; }
     html[dir="rtl"] .border-l { border-left-width: 0; border-right-width: 1px; }
+    /* A quote's accent bar moves to the right in RTL (above), so its padding has to move with it —
+       otherwise the Arabic text sits flush against the bar with no breathing room. Both step sizes
+       the quotes use are listed; miss one and only that page looks cramped. */
     html[dir="rtl"] .pl-6 { padding-left: 0; padding-right: 1.5rem; }
+    html[dir="rtl"] .pl-8 { padding-left: 0; padding-right: 2rem; }
     html[dir="rtl"] .md\:text-right { text-align: left; }
+    /* Floating labels are absolutely positioned from the left; in RTL that leaves every label
+       stranded on the wrong side of its own field. */
+    html[dir="rtl"] .rtl-form label.absolute { left: auto; right: 0; }
+    html[dir="rtl"] .rtl-form label { text-align: right; }
+    html[dir="rtl"] .rtl-form input,
+    html[dir="rtl"] .rtl-form textarea { text-align: right; }
+    /* Directional glyphs (the Contact form's paper plane, "next" chevrons) point the wrong way once
+       the page reads right-to-left. */
+    html[dir="rtl"] .rtl-flip { transform: scaleX(-1); }
+    html[dir="rtl"] .group:hover .rtl-flip { transform: scaleX(-1) translateX(0.25rem); }
     html[dir="rtl"] #mobile-drawer { right: auto; left: 0; border-left: none; border-right: 1px solid rgba(114,120,125,0.1); }
     html[dir="rtl"] #mobile-drawer.translate-x-full { transform: translateX(-100%); }
     html[dir="rtl"] .group-hover\:translate-x-1,
@@ -175,7 +252,7 @@
 </style>
 @await RenderSectionAsync("Head", required: false)
 </head>
-<body class="bg-marble-white text-on-surface font-body-md overflow-x-hidden">
+<body class="bg-marble-white text-on-surface font-body-md overflow-x-hidden@(ViewData["IsCmsPreview"] as bool? == true ? " cms-preview" : "")">
 @if (ViewData["IsCmsPreview"] as bool? == true)
 {
     @await Html.PartialAsync("~/Areas/Cms/Views/Shared/_CmsPreviewBar.cshtml")
@@ -222,10 +299,16 @@
         }
     }
 
-    function toggleLanguage() {
-        const next = document.documentElement.getAttribute('lang') === 'ar' ? 'en' : 'ar';
-        document.cookie = 'lang=' + next + ';path=/;max-age=31536000';
+    // The nav offers both languages as explicit choices rather than one toggle, so switching to the
+    // language you are already reading is a no-op instead of a pointless round trip to the server.
+    function setLanguage(code) {
+        if (document.documentElement.getAttribute('lang') === code) return;
+        document.cookie = 'lang=' + code + ';path=/;max-age=31536000';
         location.reload();
+    }
+
+    function toggleLanguage() {
+        setLanguage(document.documentElement.getAttribute('lang') === 'ar' ? 'en' : 'ar');
     }
 
     window.addEventListener('scroll', () => {
@@ -264,28 +347,30 @@
     overlay.id = 'photo-lightbox';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:100;background:rgba(26,26,26,0.95);display:none;align-items:center;justify-content:center;';
+    // Only `display` stays inline (it is the open/closed switch); everything else is in the
+    // #photo-lightbox stylesheet so the mobile media query can reach it.
+    overlay.style.display = 'none';
 
     const stage = document.createElement('div');
-    stage.style.cssText = 'max-width:90vw;max-height:85vh;display:flex;align-items:center;justify-content:center;';
+    stage.className = 'lb-stage';
     overlay.appendChild(stage);
 
-    function lbButton(label, icon, css) {
+    // Positioning/sizing lives in the #photo-lightbox rules at the top of this file — inline styles
+    // here would win over the mobile media query and put the chevrons back on top of the photo.
+    function lbButton(label, icon, className) {
         const btn = document.createElement('button');
         btn.setAttribute('aria-label', label);
-        btn.style.cssText = 'position:absolute;width:56px;height:56px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.08);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s;' + css;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:28px;">' + icon + '</span>';
-        btn.onmouseenter = () => btn.style.background = 'rgba(255,255,255,0.22)';
-        btn.onmouseleave = () => btn.style.background = 'rgba(255,255,255,0.08)';
+        btn.className = 'lb-btn ' + className;
+        btn.innerHTML = '<span class="material-symbols-outlined">' + icon + '</span>';
         overlay.appendChild(btn);
         return btn;
     }
-    const closeBtn = lbButton('Close full screen view', 'close', 'top:24px;right:24px;');
-    const prevBtn = lbButton('Previous photo', 'arrow_back', 'left:16px;top:50%;transform:translateY(-50%);');
-    const nextBtn = lbButton('Next photo', 'arrow_forward', 'right:16px;top:50%;transform:translateY(-50%);');
+    const closeBtn = lbButton('Close full screen view', 'close', 'lb-close');
+    const prevBtn = lbButton('Previous photo', 'arrow_back', 'lb-prev');
+    const nextBtn = lbButton('Next photo', 'arrow_forward', 'lb-next');
 
     const counter = document.createElement('p');
-    counter.style.cssText = 'position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:#fff;opacity:.7;letter-spacing:.2em;font-size:13px;margin:0;';
+    counter.className = 'lb-counter';
     overlay.appendChild(counter);
 
     function imageUrlOf(item) {
@@ -310,7 +395,6 @@
             const img = document.createElement('img');
             img.src = url;
             img.alt = (item.querySelector('img') && item.querySelector('img').alt) || item.getAttribute('data-alt') || '';
-            img.style.cssText = 'max-width:90vw;max-height:85vh;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
             stage.appendChild(img);
         } else {
             const clone = item.cloneNode(true);

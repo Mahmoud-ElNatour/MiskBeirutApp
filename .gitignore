@@ -33,3 +33,6 @@ Thumbs.db
 !**/wwwroot/img/cms/.gitkeep
 **/wwwroot/pdf/cms/*
 !**/wwwroot/pdf/cms/.gitkeep
+
+## Local build artifacts staged for deployment (dotnet publish output, migration scripts)
+artifacts/

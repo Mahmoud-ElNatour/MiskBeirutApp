@@ -18,7 +18,7 @@
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl" data-cms-field="hero_subtitle" data-cms-type="Text">@Model.Text("hero_subtitle", "A place for every moment — from long dinners to quiet mornings")</p>
 </div>
 <!-- Decorative Element -->
-<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
+<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-40 pointer-events-none hidden lg:block">
 <img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
 </div>
 </section>
@@ -64,7 +64,7 @@
                 {
                     <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
                 }
-                <span class="@(tileIsPlaceholder ? "" : "sr-only")" data-cms-field="@tileCaptionField" data-cms-type="Text">@tileCaption</span>
+                <span class="sr-only @(tileIsPlaceholder ? "cms-placeholder-caption" : "")" data-cms-field="@tileCaptionField" data-cms-type="Text">@tileCaption</span>
             </div>
         }
         <button type="button" class="cms-add-gallery-slot cms-preview-edit-only w-[100px] h-[280px] md:h-[320px] flex-shrink-0 snap-start border-2 border-dashed border-outline/40 items-center justify-center gap-2 text-on-surface-variant hover:border-brick-red hover:text-brick-red transition-colors" data-gallery="panel_@i">

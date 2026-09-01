@@ -1,10 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
-  <rect width="400" height="400" fill="#EAE6DF"/>
-  <rect x="0.5" y="0.5" width="399" height="399" fill="none" stroke="#C7BFAF" stroke-width="1"/>
-  <g transform="translate(200,168)" fill="none" stroke="#8F383A" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity="0.55">
-    <rect x="-56" y="-40" width="112" height="80" rx="6"/>
-    <circle cx="-30" cy="-16" r="9"/>
-    <path d="M -56 24 L -14 -8 L 14 16 L 34 -2 L 56 24"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Misk Beirut">
+  <!--
+    Shown wherever a CMS image slot has no photo yet. Deliberately reads as a piece of Misk Beirut
+    branding rather than an error state: a visitor who lands on a page mid-content-entry sees the
+    house mark, not a grey "NO IMAGE SET" notice. The Cms preview still flags the empty slot for
+    editors (see .cms-placeholder-badge in _PublicLayout.cshtml).
+  -->
+  <defs>
+    <linearGradient id="misk-placeholder-ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F5F5F6"/>
+      <stop offset="100%" stop-color="#E7E4DE"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="400" fill="url(#misk-placeholder-ground)"/>
+
+  <!-- Thin double keyline, echoing the framing used across the site's image cards -->
+  <rect x="16.5" y="16.5" width="367" height="367" fill="none" stroke="#8F383A" stroke-opacity="0.28" stroke-width="1"/>
+  <rect x="24.5" y="24.5" width="351" height="351" fill="none" stroke="#355970" stroke-opacity="0.14" stroke-width="1"/>
+
+  <!-- Wordmark -->
+  <text x="200" y="186" font-family="EB Garamond, Georgia, serif" font-size="54" font-weight="500" fill="#355970" text-anchor="middle">MISK</text>
+  <text x="200" y="228" font-family="Hanken Grotesk, Arial, sans-serif" font-size="19" font-weight="600" letter-spacing="9" fill="#8F383A" text-anchor="middle">BEIRUT</text>
+
+  <!-- Rule with a centred diamond, the site's section divider motif -->
+  <g stroke="#8F383A" stroke-opacity="0.45" stroke-width="1">
+    <line x1="118" y1="254" x2="182" y2="254"/>
+    <line x1="218" y1="254" x2="282" y2="254"/>
   </g>
-  <text x="200" y="256" font-family="Hanken Grotesk, Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="2" fill="#6B6153" text-anchor="middle">NO IMAGE SET</text>
+  <rect x="196" y="250" width="8" height="8" transform="rotate(45 200 254)" fill="#8F383A" fill-opacity="0.55"/>
+
+  <text x="200" y="292" font-family="Hanken Grotesk, Arial, sans-serif" font-size="12" font-weight="500" letter-spacing="4" fill="#355970" fill-opacity="0.55" text-anchor="middle">SINCE 1982</text>
 </svg>

@@ -12,6 +12,9 @@ public abstract class PublicContentController : Controller
     private const string GlobalPageName = "Global";
     private const string LangCookieName = "lang";
 
+    /// <summary>The language every other one falls back to when an attribute has no translation yet.</summary>
+    protected const string DefaultLangCode = "en";
+
     private readonly PageContentManager _pages;
     private readonly ILanguageRepository _languages;
 
@@ -21,18 +24,26 @@ public abstract class PublicContentController : Controller
         _languages = languages;
     }
 
+    /// <summary>The language this request is being rendered in ("en" or "ar").</summary>
+    protected string CurrentLangCode => Request.Cookies[LangCookieName] == "ar" ? "ar" : DefaultLangCode;
+
     protected async Task<PageContent> LoadPageAsync(string pageName, CancellationToken cancellationToken = default)
     {
-        var langCode = Request.Cookies[LangCookieName] == "ar" ? "ar" : "en";
+        var langCode = CurrentLangCode;
 
         var language = await _languages.GetByCodeAsync(langCode, cancellationToken)
-            ?? await _languages.GetByCodeAsync("en", cancellationToken);
+            ?? await _languages.GetByCodeAsync(DefaultLangCode, cancellationToken);
         var langId = language?.Id ?? 1;
+
+        var defaultLanguage = langCode == DefaultLangCode
+            ? language
+            : await _languages.GetByCodeAsync(DefaultLangCode, cancellationToken);
+        var defaultLangId = defaultLanguage?.Id ?? 1;
 
         var page = await _pages.GetPageByNameAsync(pageName, cancellationToken);
         var global = await _pages.GetPageByNameAsync(GlobalPageName, cancellationToken);
 
-        var content = new PageContent(page, global, langId, langCode);
+        var content = new PageContent(page, global, langId, langCode, defaultLangId);
 
         ViewData["Lang"] = langCode;
         ViewData["Dir"] = content.IsRtl ? "rtl" : "ltr";

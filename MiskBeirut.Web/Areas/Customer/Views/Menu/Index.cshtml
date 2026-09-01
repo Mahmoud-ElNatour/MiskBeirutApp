@@ -2,18 +2,118 @@
 @{
     ViewData["Active"] = "menu";
     Layout = "_PublicLayout";
+
     var menuPdfUrl = Model.Global("menu_pdf_url", "");
-    var pdfSrc = string.IsNullOrEmpty(menuPdfUrl) ? "" : menuPdfUrl + "#toolbar=0&navpanes=0&scrollbar=0";
+    var hasMenu = !string.IsNullOrWhiteSpace(menuPdfUrl);
+    // #view=FitH opens the first page width-fitted instead of at whatever zoom the viewer used last;
+    // the toolbar/navpanes flags strip the reader chrome so the embed reads as part of the page
+    // rather than a browser window bolted into it.
+    var pdfSrc = hasMenu ? menuPdfUrl + "#view=FitH&toolbar=0&navpanes=0&scrollbar=0" : "";
+    var highlightIcons = new[] { "local_fire_department", "eco", "restaurant" };
+    var highlightDefaults = new (string TitleEn, string TitleAr, string BodyEn, string BodyAr)[]
+    {
+        ("From the Wood Oven", "من الفرن الحجري",
+         "Manousheh, fatayer and flatbreads pulled fresh from the stone oven throughout the day.",
+         "مناقيش وفطاير وخبز طازج يخرج من الفرن الحجري على مدار اليوم."),
+        ("Mezze & Grills", "المازة والمشاوي",
+         "Cold and hot mezze, charcoal grills and seasonal plates built around Lebanese staples.",
+         "مازة باردة وساخنة، مشاوٍ على الفحم وأطباق موسمية من قلب المطبخ اللبناني."),
+        ("Sweets & Coffee", "الحلويات والقهوة",
+         "Traditional Levantine desserts alongside Arabic coffee and fresh juices.",
+         "حلويات شامية تقليدية إلى جانب القهوة العربية والعصائر الطازجة.")
+    };
 }
-<main class="h-screen box-border pt-24 px-4 pb-4 md:px-6 md:pb-6">
-@if (string.IsNullOrEmpty(menuPdfUrl))
+<main class="pt-24">
+<!-- Hero Header -->
+<section class="relative bg-primary-container/10 pt-[80px] pb-stack-lg px-6 md:px-margin-desktop">
+<div class="max-w-[1280px] mx-auto">
+<h1 class="font-headline-lg text-headline-lg md:text-display-lg text-onyx-text mb-6" data-cms-field="hero_title" data-cms-type="Text">@Model.Text("hero_title", "Our Menu", "قائمة الطعام")</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl" data-cms-field="hero_subtitle" data-cms-type="Text">
+    @Model.Text("hero_subtitle", "Four decades of Lebanese cooking, written down. Browse the full menu below, or open it in a new tab to read at your own pace.", "أربعة عقود من المطبخ اللبناني في قائمة واحدة. تصفّح القائمة كاملة أدناه، أو افتحها في نافذة جديدة لقراءتها على راحتك.")
+</p>
+</div>
+<!-- Decorative Element -->
+<div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-40 pointer-events-none hidden lg:block">
+<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "/img/cms-placeholder.svg")"/>
+</div>
+</section>
+
+<!-- Menu Highlights -->
+<section class="py-stack-lg border-b border-on-surface/10 px-6 md:px-margin-desktop">
+<div class="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-3 gap-gutter">
+@for (var i = 1; i <= highlightDefaults.Length; i++)
 {
-    <div class="h-full flex items-center justify-center border border-outline/10 bg-surface">
-        <p class="font-body-lg text-body-lg text-on-surface-variant">@Model.Text("menu_unavailable", "Our menu will be available here shortly.")</p>
+    var highlight = highlightDefaults[i - 1];
+    <div class="flex flex-col items-center text-center p-6">
+        <span class="material-symbols-outlined text-brick-red text-4xl mb-4">@highlightIcons[i - 1]</span>
+        <h3 class="font-label-lg text-label-lg uppercase mb-2" data-cms-field="highlight_@(i)_title" data-cms-type="Text">@Model.Text($"highlight_{i}_title", highlight.TitleEn, highlight.TitleAr)</h3>
+        <p class="font-body-md text-body-md text-on-surface-variant max-w-xs" data-cms-field="highlight_@(i)_body" data-cms-type="Text">@Model.Text($"highlight_{i}_body", highlight.BodyEn, highlight.BodyAr)</p>
+    </div>
+}
+</div>
+</section>
+
+<!-- Menu Viewer -->
+<section class="py-section-gap px-6 md:px-margin-desktop bg-marble-white">
+<div class="max-w-[1280px] mx-auto">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-stack-md">
+        <div>
+            <h2 class="font-headline-md text-headline-md" data-cms-field="viewer_title" data-cms-type="Text">@Model.Text("viewer_title", "The Full Menu", "القائمة الكاملة")</h2>
+            <div class="w-16 h-0.5 bg-brick-red mt-[16px]"></div>
+        </div>
+        @if (hasMenu)
+        {
+            <div class="flex flex-wrap gap-[16px]">
+                <a href="@menuPdfUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-slate-blue text-white px-8 py-3.5 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-opacity">
+                    <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+                    <span data-cms-field="open_label" data-cms-type="Text">@Model.Text("open_label", "Open in New Tab", "فتح في نافذة جديدة")</span>
+                </a>
+                <a href="@menuPdfUrl" download class="inline-flex items-center gap-2 border border-slate-blue text-slate-blue px-8 py-3.5 font-label-lg text-label-lg uppercase tracking-widest hover:bg-slate-blue hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">download</span>
+                    <span data-cms-field="download_label" data-cms-type="Text">@Model.Text("download_label", "Download PDF", "تحميل PDF")</span>
+                </a>
+            </div>
+        }
+    </div>
+
+@if (!hasMenu)
+{
+    <div class="h-[420px] flex flex-col items-center justify-center gap-4 border border-outline/10 bg-surface text-center px-6">
+        <span class="material-symbols-outlined text-brick-red text-5xl">restaurant_menu</span>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-md" data-cms-field="menu_unavailable" data-cms-type="Text">@Model.Text("menu_unavailable", "Our menu will be available here shortly.", "ستتوفر قائمتنا هنا قريباً.")</p>
     </div>
 }
 else
 {
-    <iframe src="@pdfSrc" title="@Model.Text("menu_title", "Our Menu")" class="w-full h-full border-0"></iframe>
+    <div class="bg-white border border-outline/10 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-2 md:p-4">
+        @* <object> renders its children when the browser has no inline PDF viewer, which is the
+           normal case on iOS/Android — so mobile visitors get a real "open the menu" affordance
+           instead of the blank grey rectangle a bare <iframe> leaves behind. *@
+        <object data="@pdfSrc" type="application/pdf" class="w-full h-[60vh] md:h-[80vh] min-h-[420px]" aria-label="@Model.Text("viewer_title", "The Full Menu", "القائمة الكاملة")">
+            <div class="min-h-[320px] flex flex-col items-center justify-center gap-4 text-center px-6 py-12">
+                <span class="material-symbols-outlined text-brick-red text-5xl">picture_as_pdf</span>
+                <p class="font-body-md text-body-md text-on-surface-variant max-w-sm">
+                    @Model.Text("viewer_fallback", "Your browser can't display the menu inline.", "لا يستطيع متصفحك عرض القائمة داخل الصفحة.")
+                </p>
+                <a href="@menuPdfUrl" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-brick-red text-white px-8 py-3.5 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-opacity">
+                    <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+                    @Model.Text("open_label", "Open in New Tab", "فتح في نافذة جديدة")
+                </a>
+            </div>
+        </object>
+    </div>
 }
+</div>
+</section>
+
+<!-- Reserve CTA -->
+<section class="bg-primary text-white py-[60px] px-6 md:px-margin-desktop">
+<div class="max-w-[1280px] mx-auto flex flex-col md:flex-row items-center justify-between gap-[32px]">
+    <div>
+        <h3 class="font-headline-lg text-headline-lg mb-[12px]" data-cms-field="cta_title" data-cms-type="Text">@Model.Text("cta_title", "Found Something You Like?", "أعجبك شيء في القائمة؟")</h3>
+        <p class="font-body-lg text-body-lg text-primary-fixed max-w-2xl" data-cms-field="cta_body" data-cms-type="Text">@Model.Text("cta_body", "Reserve a table and we'll have it waiting for you.", "احجز طاولتك وسنجهّزها في انتظارك.")</p>
+    </div>
+    <a asp-controller="Contact" asp-action="Index" class="bg-brick-red text-white px-10 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:bg-opacity-90 transition-all whitespace-nowrap shadow-md" data-cms-field="cta_label" data-cms-type="Text">@Model.Text("cta_label", "Reserve a Table", "احجز طاولة")</a>
+</div>
+</section>
 </main>

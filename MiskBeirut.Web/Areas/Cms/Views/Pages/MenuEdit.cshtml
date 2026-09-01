@@ -9,10 +9,17 @@
         <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Menu</h2>
         <p class="font-body-md text-body-md text-on-surface-variant">The PDF shown to visitors at <strong>/Menu</strong>. Content in <strong>@Model.LangCode.ToUpper()</strong>.</p>
     </div>
-    <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
-        <span class="material-symbols-outlined text-sm">list</span>
-        All Pages
-    </a>
+    <div class="flex items-center gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.PageId" asp-route-lang="@Model.LangCode" asp-route-view="page"
+           class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">edit_note</span>
+            Edit Page Copy
+        </a>
+        <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">list</span>
+            All Pages
+        </a>
+    </div>
 </div>
 
 <!-- Language tabs -->

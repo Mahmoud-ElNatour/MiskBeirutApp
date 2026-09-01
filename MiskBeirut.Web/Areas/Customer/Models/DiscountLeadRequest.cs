@@ -10,12 +10,12 @@ public class DiscountLeadRequest
     public string Name { get; set; } = "";
 
     [Required]
-    [EmailAddress]
+    [RegularExpression(ValidationPatterns.Email)]
     [StringLength(FieldLengths.Email)]
     public string Email { get; set; } = "";
 
     [Required]
-    [Phone]
+    [RegularExpression(ValidationPatterns.PhoneNumber)]
     [StringLength(FieldLengths.PhoneNumber)]
     public string PhoneNumber { get; set; } = "";
 }

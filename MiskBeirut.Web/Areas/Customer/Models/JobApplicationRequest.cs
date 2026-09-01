@@ -11,19 +11,19 @@ public class JobApplicationRequest
     public string Name { get; set; } = "";
 
     [Required]
-    [Phone]
+    [RegularExpression(ValidationPatterns.PhoneNumber)]
     [StringLength(FieldLengths.PhoneNumber)]
     public string PhoneNumber { get; set; } = "";
 
     [Required]
-    [EmailAddress]
+    [RegularExpression(ValidationPatterns.Email)]
     [StringLength(FieldLengths.Email)]
     public string Email { get; set; } = "";
 
     [StringLength(FieldLengths.Address)]
     public string? Address { get; set; }
 
-    [Required]
+    [Range(1, int.MaxValue)]
     public int VacancyId { get; set; }
 
     [Required]

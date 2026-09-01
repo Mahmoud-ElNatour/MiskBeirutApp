@@ -10,11 +10,11 @@ public class ContactInquiryRequest
     public string FullName { get; set; } = "";
 
     [Required]
-    [Phone]
+    [RegularExpression(ValidationPatterns.PhoneNumber)]
     [StringLength(FieldLengths.PhoneNumber)]
     public string PhoneNumber { get; set; } = "";
 
-    [EmailAddress]
+    [RegularExpression(ValidationPatterns.Email)]
     [StringLength(FieldLengths.Email)]
     public string? Email { get; set; }
 
@@ -22,6 +22,6 @@ public class ContactInquiryRequest
     [StringLength(FieldLengths.Message)]
     public string Message { get; set; } = "";
 
-    [Required]
+    [Range(1, int.MaxValue)]
     public int ReasonId { get; set; }
 }

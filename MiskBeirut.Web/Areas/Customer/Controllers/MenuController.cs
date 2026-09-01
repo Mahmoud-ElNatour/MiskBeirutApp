@@ -12,17 +12,15 @@ public class MenuController : PublicContentController
     }
 
     /// <summary>
-    /// The Menu nav link no longer renders a page — it redirects straight to the PDF menu file,
-    /// whose URL lives in customer.page_attributes (Global/menu_pdf_url) so it can be updated
-    /// without a code change. Falls back to the old "menu unavailable" page if that's ever unset.
+    /// Renders the Menu as a page of the site — nav, framing copy and footer around an embedded
+    /// viewer — rather than sending the visitor straight to the raw PDF, which dropped them out of
+    /// the site entirely (and, on mobile, into whatever the OS does with a PDF URL). The file itself
+    /// still lives in customer.page_attributes (Global/menu_pdf_url) so it can be swapped from the
+    /// Cms without a code change; the view falls back to a "coming soon" panel when it's unset.
     /// </summary>
     public async Task<IActionResult> Index()
     {
         var content = await LoadPageAsync("Menu");
-        var pdfUrl = content.Global("menu_pdf_url", "");
-        if (string.IsNullOrWhiteSpace(pdfUrl))
-            return View(content);
-
-        return Redirect(pdfUrl);
+        return View(content);
     }
 }

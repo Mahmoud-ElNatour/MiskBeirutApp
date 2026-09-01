@@ -9,6 +9,16 @@ public class Vacancy
     public string Department { get; set; } = null!;
     public string Location { get; set; } = null!;
     public string EmploymentType { get; set; } = null!;
+
+    /// <summary>
+    /// Arabic copy shown when the visitor is browsing in Arabic. Each falls back to its English
+    /// counterpart when unset, so a vacancy added without a translation still renders.
+    /// </summary>
+    public string? TitleAr { get; set; }
+    public string? DepartmentAr { get; set; }
+    public string? LocationAr { get; set; }
+    public string? EmploymentTypeAr { get; set; }
+
     public string Icon { get; set; } = null!;
     public bool IsActive { get; set; } = true;
     public int DisplayOrder { get; set; }

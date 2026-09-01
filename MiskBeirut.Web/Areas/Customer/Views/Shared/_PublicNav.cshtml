@@ -21,6 +21,27 @@
     var navContact = content.Global("nav_contact", "Reservations");
     var instagramUrl = content.Global("social_instagram_url", "#");
     var facebookUrl = content.Global("social_facebook_url", "#");
+
+    // A single "EN/AR" button said nothing about which language you were already reading, so the
+    // only way to find out was to press it and see what changed. Two segments with the current one
+    // filled in answer that at a glance, and make the other one an explicit destination rather than
+    // a toggle whose result you have to guess.
+    var currentLang = ViewData["Lang"] as string ?? "en";
+    const string langBase = "px-3 py-1.5 font-label-lg text-label-lg uppercase tracking-widest transition-colors";
+    string LangClass(string code) => currentLang == code
+        ? langBase + " bg-primary text-white"
+        : langBase + " text-primary hover:bg-primary/10";
+}
+@functions {
+    // Rendered twice (top bar + mobile drawer) — kept here so the two can't drift apart.
+    void LanguageSwitcher(string currentLang, Func<string, string> classFor, string extraClass = "")
+    {
+        <div class="flex items-stretch border border-primary/20 overflow-hidden @extraClass" role="group" aria-label="Language">
+            <button type="button" class="@classFor("en")" lang="en" aria-current="@(currentLang == "en" ? "true" : "false")" onclick="setLanguage('en')">EN</button>
+            <span class="w-px bg-primary/20" aria-hidden="true"></span>
+            <button type="button" class="@classFor("ar")" lang="ar" aria-current="@(currentLang == "ar" ? "true" : "false")" onclick="setLanguage('ar')">&#x639;&#x631;&#x628;&#x64A;</button>
+        </div>
+    }
 }
 <nav class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline/10 shadow-sm transition-all duration-300">
     <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px] h-24 flex justify-between items-center overflow-hidden">
@@ -36,7 +57,7 @@
             <a class="@LinkClass("contact")" asp-controller="Contact" asp-action="Index" data-cms-field="nav_contact" data-cms-type="Text" data-cms-scope="global">@navContact</a>
         </div>
         <div class="flex items-center gap-4">
-            <button class="font-label-lg text-label-lg uppercase tracking-widest text-primary hover:opacity-80 transition-opacity" onclick="toggleLanguage()">EN/AR</button>
+            @{ LanguageSwitcher(currentLang, LangClass); }
             <button class="md:hidden flex items-center justify-center p-2 text-primary hover:opacity-80 transition-opacity" onclick="toggleMobileMenu()" aria-label="Toggle Menu">
                 <span class="material-symbols-outlined text-2xl">menu</span>
             </button>
@@ -60,7 +81,7 @@
         <a class="@MobileLinkClass("contact")" asp-controller="Contact" asp-action="Index" onclick="toggleMobileMenu()" data-cms-field="nav_contact" data-cms-type="Text" data-cms-scope="global">@navContact</a>
     </div>
     <div class="mt-auto pt-6 flex flex-col gap-4">
-        <button class="font-label-lg text-label-lg uppercase tracking-widest text-primary hover:opacity-80 transition-opacity py-2 border border-primary/20 w-full text-center" onclick="toggleLanguage()">EN/AR</button>
+        @{ LanguageSwitcher(currentLang, code => LangClass(code) + " flex-1 text-center", "w-full"); }
         <div class="flex gap-4 justify-center text-sm opacity-60 mt-4">
             <a aria-label="Instagram" class="hover:text-brick-red transition-colors" href="@instagramUrl" target="_blank" rel="noopener noreferrer" data-cms-field="social_instagram_url" data-cms-type="Link" data-cms-scope="global"><div class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg></div></a>
             <a aria-label="Facebook" class="hover:text-brick-red transition-colors" href="@facebookUrl" target="_blank" rel="noopener noreferrer" data-cms-field="social_facebook_url" data-cms-type="Link" data-cms-scope="global"><div class="w-6 h-6 flex items-center justify-center"><svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg></div></a>

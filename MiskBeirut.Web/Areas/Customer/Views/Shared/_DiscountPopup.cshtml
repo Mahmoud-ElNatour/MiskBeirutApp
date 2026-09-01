@@ -2,14 +2,22 @@
 @using MiskBeirut.Web.Support
 @{
     var content = (PageContent)ViewData["Content"]!;
-    var eyebrow = content.Global("discount_popup_eyebrow", "A Gift For You");
-    var title = content.Global("discount_popup_title", "10% Off Your Visit");
-    var subtitle = content.Global("discount_popup_subtitle", "Experience the essence of Beirut. Subscribe to receive your luxury dining credit.");
-    var submitLabel = content.Global("discount_popup_submit_label", "Claim Now");
-    var successMessage = content.Global("discount_popup_success_message", "Thank you! Your discount code is on its way to your inbox.");
-    var alreadyClaimedMessage = content.Global("discount_popup_already_claimed_message", "You've already claimed your discount - check your inbox for your code!");
+    var eyebrow = content.Global("discount_popup_eyebrow", "A Gift For You", "هدية لك");
+    var title = content.Global("discount_popup_title", "10% Off Your Visit", "خصم 10% على زيارتك");
+    var subtitle = content.Global("discount_popup_subtitle", "Experience the essence of Beirut. Subscribe to receive your luxury dining credit.", "اختبر جوهر بيروت. اشترك لتحصل على رصيدك الفاخر لتناول الطعام.");
+    var submitLabel = content.Global("discount_popup_submit_label", "Claim Now", "احصل على العرض");
+    var successMessage = content.Global("discount_popup_success_message", "Thank you! Your discount code is on its way to your inbox.", "شكراً لك! رمز الخصم في طريقه إلى بريدك الإلكتروني.");
+    var alreadyClaimedMessage = content.Global("discount_popup_already_claimed_message", "You've already claimed your discount - check your inbox for your code!", "لقد حصلت على خصمك بالفعل — تفقّد بريدك الإلكتروني للحصول على الرمز!");
+    var namePlaceholder = content.Global("discount_popup_name_placeholder", "Name", "الاسم");
+    var phonePlaceholder = content.Global("discount_popup_phone_placeholder", "Phone", "رقم الهاتف");
+    var emailPlaceholder = content.Global("discount_popup_email_placeholder", "Email Address", "البريد الإلكتروني");
+    var closeLabel = content.Global("discount_popup_close_label", "Close", "إغلاق");
+
     const string redeemedCookieName = "misk_discount_redeemed";
     var alreadyRedeemedThisSession = Context.Request.Cookies.ContainsKey(redeemedCookieName);
+
+    const string popupInputClass = "w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50";
+    const string popupErrorClass = "field-error hidden text-xs text-error mt-1";
 }
 @if (!alreadyRedeemedThisSession)
 {
@@ -25,10 +33,20 @@
         border-color: #8F383A;
         box-shadow: 0 0 0 3px rgba(143, 56, 58, 0.12);
     }
+    #lead-capture-popup input.has-error { border-color: #ba1a1a; }
+    /* The popup is pinned bottom-right in LTR; in RTL it belongs on the side the eye starts from. */
+    html[dir="rtl"] #lead-capture-popup { right: auto; left: 1rem; }
+    html[dir="rtl"] #lead-capture-popup > button { right: auto; left: 0.75rem; }
+    @@media (min-width: 768px) {
+        html[dir="rtl"] #lead-capture-popup { left: 1.5rem; }
+        html[dir="rtl"] #lead-capture-popup > button { left: 1rem; }
+    }
 </style>
 
-<div class="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] w-[90vw] md:w-[420px] max-h-[85vh] overflow-y-auto bg-marble-white/95 backdrop-blur-md p-5 md:p-8 shadow-2xl animate-popup text-on-surface border border-outline/10" dir="ltr" id="lead-capture-popup">
-    <button type="button" class="absolute top-3 right-3 md:top-4 md:right-4 w-8 h-8 rounded-full flex items-center justify-center border border-outline/20 hover:bg-black/5 transition-colors" onclick="document.getElementById('lead-capture-popup').style.display='none'" aria-label="Close">
+@* The popup follows the page's own direction now: it was hardcoded dir="ltr", which left the
+   Arabic heading and body text laid out left-to-right inside an otherwise right-to-left page. *@
+<div class="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] w-[90vw] md:w-[420px] max-h-[85vh] overflow-y-auto bg-marble-white/95 backdrop-blur-md p-5 md:p-8 shadow-2xl animate-popup text-on-surface border border-outline/10" id="lead-capture-popup">
+    <button type="button" class="absolute top-3 right-3 md:top-4 md:right-4 w-8 h-8 rounded-full flex items-center justify-center border border-outline/20 hover:bg-black/5 transition-colors" onclick="document.getElementById('lead-capture-popup').style.display='none'" aria-label="@closeLabel">
         <span class="material-symbols-outlined text-sm">close</span>
     </button>
     <div class="space-y-2.5 md:space-y-4">
@@ -37,12 +55,27 @@
         <p class="font-body-md text-sm md:text-base text-on-surface-variant leading-relaxed">
             @subtitle
         </p>
-        <form id="discount-popup-form" asp-controller="Leads" asp-action="Subscribe" class="space-y-2 md:space-y-3 pt-1 md:pt-2">
+        <form id="discount-popup-form" asp-controller="Leads" asp-action="Subscribe" class="space-y-2 md:space-y-3 pt-1 md:pt-2" novalidate
+              data-phone-pattern="@ValidationPatterns.PhoneNumber"
+              data-email-pattern="@ValidationPatterns.Email"
+              data-msg-name="@content.Global("discount_popup_error_name", "Please enter your name.", "يرجى إدخال اسمك.")"
+              data-msg-phone="@content.Global("discount_popup_error_phone", "Please enter a valid phone number — digits only.", "يرجى إدخال رقم هاتف صحيح — أرقام فقط.")"
+              data-msg-email="@content.Global("discount_popup_error_email", "Please enter a valid email address, e.g. name@example.com.", "يرجى إدخال بريد إلكتروني صحيح، مثال: name@example.com.")"
+              data-msg-generic="@content.Global("discount_popup_error_generic", "Something went wrong. Please check your details and try again.", "حدث خطأ ما. يرجى التحقق من بياناتك والمحاولة مرة أخرى.")">
             @Html.AntiForgeryToken()
-            <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="Name" placeholder="Name" required type="text" maxlength="@FieldLengths.Name">
+            <div>
+                <input class="@popupInputClass" name="Name" placeholder="@namePlaceholder" aria-label="@namePlaceholder" required type="text" maxlength="@FieldLengths.Name">
+                <p class="@popupErrorClass" data-error-for="Name"></p>
+            </div>
             <div class="grid grid-cols-2 gap-3">
-                <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="PhoneNumber" placeholder="Phone" required type="tel" maxlength="@FieldLengths.PhoneNumber">
-                <input class="w-full bg-surface border border-outline/20 px-4 py-2 text-sm focus:outline-none transition-colors placeholder:text-on-surface-variant/50" name="Email" placeholder="Email Address" required type="email" maxlength="@FieldLengths.Email">
+                <div>
+                    <input class="@popupInputClass" name="PhoneNumber" placeholder="@phonePlaceholder" aria-label="@phonePlaceholder" required type="tel" inputmode="tel" pattern="@ValidationPatterns.PhoneNumber" maxlength="@FieldLengths.PhoneNumber">
+                    <p class="@popupErrorClass" data-error-for="PhoneNumber"></p>
+                </div>
+                <div>
+                    <input class="@popupInputClass" name="Email" placeholder="@emailPlaceholder" aria-label="@emailPlaceholder" required type="email" inputmode="email" pattern="@ValidationPatterns.Email" maxlength="@FieldLengths.Email">
+                    <p class="@popupErrorClass" data-error-for="Email"></p>
+                </div>
             </div>
             <p id="discount-popup-error" class="hidden text-xs text-error"></p>
             <button class="w-full bg-brick-red text-white py-3 font-label-lg text-label-lg tracking-widest hover:opacity-90 transition-colors mt-2" type="submit">@submitLabel</button>
@@ -59,30 +92,100 @@
         const form = document.getElementById('discount-popup-form');
         if (!form) return;
 
+        const d = form.dataset;
+        const phonePattern = new RegExp(d.phonePattern);
+        const emailPattern = new RegExp(d.emailPattern);
+        const errorEl = document.getElementById('discount-popup-error');
+
+        function fieldErrorEl(field) {
+            return form.querySelector('[data-error-for="' + field + '"]');
+        }
+
+        function showFieldError(field, message) {
+            const el = fieldErrorEl(field);
+            if (!el) return;
+            el.textContent = message;
+            el.classList.remove('hidden');
+            const control = form.elements[field];
+            if (control) control.classList.add('has-error');
+        }
+
+        function clearFieldErrors() {
+            form.querySelectorAll('.field-error').forEach(function (el) {
+                el.textContent = '';
+                el.classList.add('hidden');
+            });
+            form.querySelectorAll('input').forEach(function (el) { el.classList.remove('has-error'); });
+        }
+
+        // Matches DiscountLeadRequest. Without this the popup could only say "Something went wrong"
+        // for what was really one badly formatted box — the server's 400 carried no detail at all.
+        function validate() {
+            const problems = {};
+            const name = form.elements['Name'].value.trim();
+            const phone = form.elements['PhoneNumber'].value.trim();
+            const email = form.elements['Email'].value.trim();
+
+            if (!name) problems.Name = d.msgName;
+            if (!phone || !phonePattern.test(phone)) problems.PhoneNumber = d.msgPhone;
+            if (!email || !emailPattern.test(email)) problems.Email = d.msgEmail;
+            return problems;
+        }
+
+        function showSuccess(messageKey) {
+            document.cookie = 'misk_discount_redeemed=1;path=/;max-age=1200';
+            const successEl = document.getElementById('discount-popup-success');
+            form.classList.add('hidden');
+            successEl.querySelector('p').textContent = successEl.dataset[messageKey];
+            successEl.classList.remove('hidden');
+        }
+
+        ['Name', 'PhoneNumber', 'Email'].forEach(function (field) {
+            const control = form.elements[field];
+            if (!control) return;
+            control.addEventListener('blur', function () {
+                const el = fieldErrorEl(field);
+                if (!el || el.classList.contains('hidden')) return;
+                if (!validate()[field]) {
+                    el.classList.add('hidden');
+                    control.classList.remove('has-error');
+                }
+            });
+        });
+
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-            const errorEl = document.getElementById('discount-popup-error');
             errorEl.classList.add('hidden');
+            clearFieldErrors();
+
+            const problems = validate();
+            const problemFields = Object.keys(problems);
+            if (problemFields.length > 0) {
+                problemFields.forEach(function (field) { showFieldError(field, problems[field]); });
+                const firstControl = form.elements[problemFields[0]];
+                if (firstControl && firstControl.focus) firstControl.focus();
+                return;
+            }
 
             fetch(form.action, { method: 'POST', body: new FormData(form) })
-                .then(function (response) {
+                .then(async function (response) {
                     if (response.status === 409) {
-                        document.cookie = 'misk_discount_redeemed=1;path=/;max-age=1200';
-                        const successEl = document.getElementById('discount-popup-success');
-                        form.classList.add('hidden');
-                        successEl.querySelector('p').textContent = successEl.dataset.alreadyClaimedMessage;
-                        successEl.classList.remove('hidden');
+                        showSuccess('alreadyClaimedMessage');
                         return;
                     }
-                    if (!response.ok) throw new Error();
-                    document.cookie = 'misk_discount_redeemed=1;path=/;max-age=1200';
-                    const successEl = document.getElementById('discount-popup-success');
-                    form.classList.add('hidden');
-                    successEl.querySelector('p').textContent = successEl.dataset.successMessage;
-                    successEl.classList.remove('hidden');
+                    if (response.ok) {
+                        showSuccess('successMessage');
+                        return;
+                    }
+                    const data = await response.json().catch(function () { return null; });
+                    if (data && data.errors) {
+                        Object.keys(data.errors).forEach(function (field) { showFieldError(field, data.errors[field]); });
+                    }
+                    errorEl.textContent = (data && data.message) || d.msgGeneric;
+                    errorEl.classList.remove('hidden');
                 })
                 .catch(function () {
-                    errorEl.textContent = 'Something went wrong. Please check your details and try again.';
+                    errorEl.textContent = d.msgGeneric;
                     errorEl.classList.remove('hidden');
                 });
         });

@@ -414,6 +414,10 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
             entity.Property(v => v.Department).HasMaxLength(100).IsRequired();
             entity.Property(v => v.Location).HasMaxLength(100).IsRequired();
             entity.Property(v => v.EmploymentType).HasMaxLength(50).IsRequired();
+            entity.Property(v => v.TitleAr).HasMaxLength(200);
+            entity.Property(v => v.DepartmentAr).HasMaxLength(100);
+            entity.Property(v => v.LocationAr).HasMaxLength(100);
+            entity.Property(v => v.EmploymentTypeAr).HasMaxLength(50);
             entity.Property(v => v.Icon).HasMaxLength(50).IsRequired();
             entity.Property(v => v.IsActive).HasDefaultValue(true);
             entity.Property(v => v.DisplayOrder).HasDefaultValue(0);
@@ -441,6 +445,7 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
         {
             entity.ToTable("inquiry_reasons", "customer");
             entity.Property(r => r.Name).HasMaxLength(100).IsRequired();
+            entity.Property(r => r.NameAr).HasMaxLength(100);
             entity.Property(r => r.IsActive).HasDefaultValue(true);
             entity.Property(r => r.DisplayOrder).HasDefaultValue(0);
         });

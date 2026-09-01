@@ -14,11 +14,20 @@ public class InquiryReasonManager
         _reasons = reasons;
     }
 
-    public async Task<IReadOnlyList<InquiryReasonDto>> GetActiveAsync(CancellationToken cancellationToken = default)
+    /// <param name="langCode">
+    /// Site language the visitor is browsing in. "ar" returns each reason's Arabic label, falling
+    /// back to the English one where no translation has been entered.
+    /// </param>
+    public async Task<IReadOnlyList<InquiryReasonDto>> GetActiveAsync(string langCode = "en", CancellationToken cancellationToken = default)
     {
         var reasons = await _reasons.GetActiveAsync(cancellationToken);
-        return reasons.Select(ToDto).ToList();
+        var isArabic = string.Equals(langCode, "ar", StringComparison.OrdinalIgnoreCase);
+        return reasons.Select(r => ToDto(r, isArabic)).ToList();
     }
 
-    private static InquiryReasonDto ToDto(InquiryReason reason) => new() { Id = reason.Id, Name = reason.Name };
+    private static InquiryReasonDto ToDto(InquiryReason reason, bool isArabic) => new()
+    {
+        Id = reason.Id,
+        Name = isArabic && !string.IsNullOrWhiteSpace(reason.NameAr) ? reason.NameAr! : reason.Name
+    };
 }

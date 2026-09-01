@@ -91,7 +91,7 @@
         {
             <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
         }
-        <span class="@(itemImageIsPlaceholder ? "" : "sr-only")" data-cms-field="@itemLabelField" data-cms-type="Text">@itemLabel</span>
+        <span class="sr-only @(itemImageIsPlaceholder ? "cms-placeholder-caption" : "")" data-cms-field="@itemLabelField" data-cms-type="Text">@itemLabel</span>
     </div>
 }
 </div>
@@ -252,7 +252,7 @@
         {
             <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
         }
-        <span class="@(photoImageIsPlaceholder ? "" : "sr-only")" data-cms-field="@photoCaptionField" data-cms-type="Text">@photoCaption</span>
+        <span class="sr-only @(photoImageIsPlaceholder ? "cms-placeholder-caption" : "")" data-cms-field="@photoCaptionField" data-cms-type="Text">@photoCaption</span>
     </div>
 }
 </div>

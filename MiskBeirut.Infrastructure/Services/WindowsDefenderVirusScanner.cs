@@ -55,20 +55,47 @@ public class WindowsDefenderVirusScanner : IVirusScanner
             _logger.LogInformation("Defender scan of {File} exited {Code}. Output: {Output} {Error}",
                 filePath, process.ExitCode, stdOut, stdErr);
 
-            // Documented/observed MpCmdRun exit codes: 0 = clean, 2 = threat(s) found.
-            // Anything else (missing signatures, engine error, etc.) is treated as "couldn't verify" and rejected.
-            return process.ExitCode switch
-            {
-                0 => VirusScanOutcome.Clean,
-                2 => VirusScanOutcome.Infected,
-                _ => VirusScanOutcome.ScanUnavailable
-            };
+            // MpCmdRun exits 0 when the scan ran and found nothing, and 2 when it found threats —
+            // but it ALSO exits 2 when the scan could not run at all (Defender disabled or displaced
+            // by third-party AV, the service refusing the app pool identity, signatures missing).
+            // Trusting the code alone therefore reports a perfectly good CV as infected on any host
+            // where Defender can't run, which is exactly what was happening on the live site. A real
+            // detection always names what it found, so exit 2 only counts as Infected when the
+            // scanner's own output says a threat was found; otherwise it's "couldn't verify", which
+            // lets FallbackVirusScanner move on to ClamAV instead of rejecting the applicant.
+            if (process.ExitCode == 0)
+                return VirusScanOutcome.Clean;
+
+            if (process.ExitCode == 2 && ReportsThreatFound(stdOut))
+                return VirusScanOutcome.Infected;
+
+            _logger.LogWarning("Defender could not verify {File} (exit {Code}). Treating as unscanned rather than infected.", filePath, process.ExitCode);
+            return VirusScanOutcome.ScanUnavailable;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error running virus scan for {File}.", filePath);
             return VirusScanOutcome.ScanUnavailable;
         }
+    }
+
+    /// <summary>
+    /// True when MpCmdRun's scan output actually names a detection. "found no threats" contains the
+    /// word "threat", so the negative phrasings are ruled out before the positive ones are checked.
+    /// </summary>
+    private static bool ReportsThreatFound(string output)
+    {
+        if (string.IsNullOrWhiteSpace(output))
+            return false;
+
+        if (output.Contains("found no threats", StringComparison.OrdinalIgnoreCase) ||
+            output.Contains("no threats detected", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return output.Contains("threat(s) found", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("threats found", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("found threat", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("list of detected threats", StringComparison.OrdinalIgnoreCase);
     }
 
     public static string FindDefaultMpCmdRunPath()
