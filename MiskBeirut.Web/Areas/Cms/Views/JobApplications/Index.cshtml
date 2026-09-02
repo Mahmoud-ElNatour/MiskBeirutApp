@@ -1,7 +1,13 @@
 @using MiskBeirut.Application.Dtos.Careers
+@using MiskBeirut.Web.Support
 @model IReadOnlyList<JobApplicationDto>
 @{
     ViewData["Title"] = "Job Applications";
+
+    // Previews only — the whole record is behind each row's View action, so a long name or address
+    // can't stretch the table past the width of the screen.
+    const int NamePreviewLength = 22;
+    const int AddressPreviewLength = 40;
 }
 
 <div class="mb-stack-lg flex justify-between items-end">
@@ -28,11 +34,11 @@
                 @foreach (var app in Model)
                 {
                     <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors align-top">
-                        <td class="py-4 px-stack-md text-on-surface font-medium">
-                            @app.Name
+                        <td class="py-4 px-stack-md text-on-surface font-medium" data-sort-value="@app.Name">
+                            <span title="@app.Name">@TextHelpers.Truncate(app.Name, NamePreviewLength)</span>
                             @if (!string.IsNullOrWhiteSpace(app.Address))
                             {
-                                <div class="text-on-surface-variant font-normal text-xs mt-1">@app.Address</div>
+                                <div class="text-on-surface-variant font-normal text-xs mt-1" title="@app.Address">@TextHelpers.Truncate(app.Address, AddressPreviewLength)</div>
                             }
                         </td>
                         <td class="py-4 px-stack-md text-on-surface-variant">@(app.VacancyTitle ?? "—")</td>
@@ -59,6 +65,10 @@
                         </td>
                         <td class="py-4 px-stack-md">
                             <div class="flex items-center justify-end gap-3 flex-wrap">
+                                <button type="button" class="details-view-btn text-slate-blue hover:text-primary hover:underline text-xs font-bold uppercase tracking-wider"
+                                        data-details-target="application-details-@app.Id" data-details-title="Application from @app.Name">
+                                    View
+                                </button>
                                 <a asp-action="ViewCv" asp-route-id="@app.Id" target="_blank" class="text-slate-blue hover:text-primary inline-flex items-center gap-1" title="View CV">
                                     <span class="material-symbols-outlined text-sm">description</span>
                                 </a>
@@ -95,6 +105,57 @@
         </table>
     </div>
 </div>
+
+@* Full record for each row's View action — outside the table, since a <div> inside <tbody> is
+   invalid HTML and gets hoisted out by the browser, breaking the lookup by id. *@
+<div class="hidden">
+    @foreach (var app in Model)
+    {
+        <div id="application-details-@app.Id">
+            <dl class="space-y-stack-md">
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Applicant</dt>
+                    <dd class="font-body-md text-body-md text-on-surface break-words">@app.Name</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Position</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@(app.VacancyTitle ?? "—")</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Phone</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@app.PhoneNumber</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Email</dt>
+                    <dd class="font-body-md text-body-md text-on-surface break-words">@app.Email</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Address</dt>
+                    <dd class="font-body-md text-body-md text-on-surface whitespace-pre-line break-words">@(string.IsNullOrWhiteSpace(app.Address) ? "—" : app.Address)</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Applied</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@app.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Status</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@(app.DecisionTaken ? "Decision taken" : "Not yet decided")</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">CV</dt>
+                    <dd class="font-body-md text-body-md">
+                        <a asp-action="ViewCv" asp-route-id="@app.Id" target="_blank" rel="noopener" class="text-slate-blue hover:underline inline-flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">description</span>
+                            Open CV in a new tab
+                        </a>
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    }
+</div>
+
+<partial name="_DetailsModal" />
 
 <!-- Email Applicant modal — one shared modal, populated per-row by JS (see button.job-app-email-btn above) -->
 <div id="emailApplicantModal" class="hidden fixed inset-0 z-[10050] items-center justify-center bg-black/50 p-4">

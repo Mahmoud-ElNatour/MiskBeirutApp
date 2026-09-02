@@ -57,16 +57,59 @@
 @foreach (var v in vacancies)
 {
     <div class="vacancy-item group">
-        <div class="bg-white p-8 md:p-12 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition-shadow">
-            <div>
-                <h3 class="font-headline-md text-headline-md mb-2">@v.Title</h3>
-                <div class="flex flex-wrap gap-4 text-on-surface-variant font-label-sm uppercase tracking-wider">
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">@v.Icon</span> @v.Department</span>
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">location_on</span> @v.Location</span>
-                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> @v.EmploymentType</span>
+        <div class="bg-white p-8 md:p-12 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h3 class="font-headline-md text-headline-md mb-2">@v.Title</h3>
+                    <div class="flex flex-wrap gap-4 text-on-surface-variant font-label-sm uppercase tracking-wider">
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">@v.Icon</span> @v.Department</span>
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">location_on</span> @v.Location</span>
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> @v.EmploymentType</span>
+                        @if (v.ApplicationDeadline.HasValue)
+                        {
+                            <span class="flex items-center gap-1 text-brick-red">
+                                <span class="material-symbols-outlined text-sm">event</span>
+                                <span data-cms-field="deadline_label" data-cms-type="Text">@Model.Text("deadline_label", "Apply by", "التقديم قبل")</span>
+                                @v.ApplicationDeadline.Value.ToString("d MMM yyyy")
+                            </span>
+                        }
+                    </div>
                 </div>
+                <button class="bg-slate-blue text-white px-8 py-3 font-label-lg text-label-lg uppercase tracking-widest hover:bg-brick-red transition-colors w-full md:w-auto" data-cms-field="apply_now_label" data-cms-type="Text" onclick="toggleApplication('@v.Slug')">@Model.Text("apply_now_label", "Apply Now")</button>
             </div>
-            <button class="bg-slate-blue text-white px-8 py-3 font-label-lg text-label-lg uppercase tracking-widest hover:bg-brick-red transition-colors w-full md:w-auto" data-cms-field="apply_now_label" data-cms-type="Text" onclick="toggleApplication('@v.Slug')">@Model.Text("apply_now_label", "Apply Now")</button>
+            @* Description/requirements come from the Cms and are optional, so the whole block only
+               exists when there's something in it. Native <details> so it works without JS and
+               doesn't fight the Apply form's own max-height animation below. *@
+            @if (v.HasDetails)
+            {
+                <details class="vacancy-details mt-6 border-t border-slate-blue/10 pt-4">
+                    <summary class="cursor-pointer list-none font-label-lg text-label-lg uppercase tracking-widest text-slate-blue hover:text-brick-red transition-colors flex items-center gap-1">
+                        <span class="material-symbols-outlined text-base vacancy-details-chevron transition-transform">expand_more</span>
+                        <span data-cms-field="view_details_label" data-cms-type="Text">@Model.Text("view_details_label", "View details", "عرض التفاصيل")</span>
+                    </summary>
+                    <div class="pt-4 space-y-6 max-w-3xl">
+                        @if (!string.IsNullOrWhiteSpace(v.Description))
+                        {
+                            <div>
+                                <h4 class="font-label-lg text-label-lg uppercase tracking-wider text-on-surface-variant mb-2" data-cms-field="about_role_label" data-cms-type="Text">@Model.Text("about_role_label", "About the role", "عن الوظيفة")</h4>
+                                <p class="font-body-lg text-body-lg whitespace-pre-line">@v.Description</p>
+                            </div>
+                        }
+                        @if (v.RequirementLines.Count > 0)
+                        {
+                            <div>
+                                <h4 class="font-label-lg text-label-lg uppercase tracking-wider text-on-surface-variant mb-2" data-cms-field="requirements_label" data-cms-type="Text">@Model.Text("requirements_label", "What you'll need", "المتطلبات")</h4>
+                                <ul class="font-body-lg text-body-lg list-disc ps-6 space-y-1">
+                                    @foreach (var requirement in v.RequirementLines)
+                                    {
+                                        <li>@requirement</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    </div>
+                </details>
+            }
         </div>
         <div class="max-height-0 overflow-hidden opacity-0 transition-form bg-white px-8 md:px-12 border-t border-slate-blue/10" id="form-@v.Slug">
             @* rtl-form right-aligns the labels and inputs for Arabic — see _PublicLayout.cshtml. *@

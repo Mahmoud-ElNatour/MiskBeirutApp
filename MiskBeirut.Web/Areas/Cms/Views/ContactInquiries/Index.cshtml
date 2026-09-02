@@ -1,7 +1,13 @@
 @using MiskBeirut.Application.Dtos.Contact
+@using MiskBeirut.Web.Support
 @model IReadOnlyList<ContactInquiryDto>
 @{
     ViewData["Title"] = "Contact Inquiries";
+
+    // Table cells show a preview; the full value is one click away in the details modal. Without
+    // this a single long message dragged the whole table wider than the screen.
+    const int NamePreviewLength = 22;
+    const int MessagePreviewLength = 60;
 }
 
 <div class="mb-stack-lg">
@@ -30,11 +36,11 @@
                     var waMeLink = $"https://wa.me/{Uri.EscapeDataString(System.Text.RegularExpressions.Regex.Replace(inquiry.PhoneNumber, "[^\\d]", ""))}";
                     var hasEmail = !string.IsNullOrWhiteSpace(inquiry.Email);
                     <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors align-top">
-                        <td class="py-4 px-stack-md text-on-surface font-medium whitespace-nowrap">@inquiry.FullName</td>
+                        <td class="py-4 px-stack-md text-on-surface font-medium whitespace-nowrap" data-sort-value="@inquiry.FullName" title="@inquiry.FullName">@TextHelpers.Truncate(inquiry.FullName, NamePreviewLength)</td>
                         <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@inquiry.PhoneNumber</td>
                         <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@(hasEmail ? inquiry.Email : "—")</td>
                         <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@inquiry.ReasonName</td>
-                        <td class="py-4 px-stack-md text-on-surface-variant max-w-xs">@inquiry.Message</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant max-w-xs" title="Open the row's View action to read the whole message">@TextHelpers.Truncate(inquiry.Message, MessagePreviewLength)</td>
                         <td class="py-4 px-stack-md text-on-surface-variant whitespace-nowrap">@inquiry.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                         <td class="py-4 px-stack-md whitespace-nowrap" data-sort-value="@(inquiry.IsDone ? 1 : 0)">
                             @if (inquiry.IsDone)
@@ -54,6 +60,10 @@
                         </td>
                         <td class="py-4 px-stack-md">
                             <div class="flex items-center justify-end gap-3 flex-wrap">
+                                <button type="button" class="details-view-btn text-slate-blue hover:text-primary hover:underline text-xs font-bold uppercase tracking-wider"
+                                        data-details-target="inquiry-details-@inquiry.Id" data-details-title="Inquiry from @inquiry.FullName">
+                                    View
+                                </button>
                                 @if (hasEmail)
                                 {
                                     <button type="button" class="inquiry-email-btn text-slate-blue hover:text-primary inline-flex items-center gap-1"
@@ -86,6 +96,58 @@
         </table>
     </div>
 </div>
+
+@* Full record for each row's View action. Outside the table on purpose: a <div> inside <tbody> is
+   invalid HTML and browsers move it out, which would break the lookup by id. *@
+<div class="hidden">
+    @foreach (var inquiry in Model)
+    {
+        <div id="inquiry-details-@inquiry.Id">
+            <dl class="space-y-stack-md">
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Name</dt>
+                    <dd class="font-body-md text-body-md text-on-surface break-words">@inquiry.FullName</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Phone</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@inquiry.PhoneNumber</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Email</dt>
+                    <dd class="font-body-md text-body-md text-on-surface break-words">@(string.IsNullOrWhiteSpace(inquiry.Email) ? "—" : inquiry.Email)</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Reason</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@(inquiry.ReasonName ?? "—")</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Received</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@inquiry.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+                </div>
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Status</dt>
+                    <dd class="font-body-md text-body-md text-on-surface">@(inquiry.IsDone ? "Done" : "Not yet handled")</dd>
+                </div>
+                @if (inquiry.LastWhatsAppSentAt.HasValue)
+                {
+                    <div>
+                        <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Last WhatsApp follow-up</dt>
+                        <dd class="font-body-md text-body-md text-on-surface">
+                            @inquiry.LastWhatsAppSentAt.Value.ToString("yyyy-MM-dd HH:mm")
+                            @(inquiry.LastWhatsAppSuccess == true ? "(sent)" : "(failed)")
+                        </dd>
+                    </div>
+                }
+                <div>
+                    <dt class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Message</dt>
+                    <dd class="font-body-md text-body-md text-on-surface whitespace-pre-line break-words">@inquiry.Message</dd>
+                </div>
+            </dl>
+        </div>
+    }
+</div>
+
+<partial name="_DetailsModal" />
 
 <!-- Email Sender modal — one shared modal, populated per-row by JS (see button.inquiry-email-btn above) -->
 <div id="emailInquiryModal" class="hidden fixed inset-0 z-[10050] items-center justify-center bg-black/50 p-4">

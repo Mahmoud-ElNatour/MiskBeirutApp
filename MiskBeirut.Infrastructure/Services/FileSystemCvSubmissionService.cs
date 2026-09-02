@@ -3,19 +3,17 @@ using MiskBeirut.Application.Services;
 namespace MiskBeirut.Infrastructure.Services;
 
 /// <summary>
-/// Writes an uploaded CV to a temp file, scans it via <see cref="IVirusScanner"/>, and only moves
-/// it into permanent private storage if clean. Fails closed: a scan that couldn't run is treated
-/// the same as an infected file — see <see cref="WindowsDefenderVirusScanner"/>.
+/// Writes an uploaded CV to a temp file and then moves it into permanent private storage. The temp
+/// hop keeps a half-received upload out of the storage folder — a connection that drops mid-copy
+/// leaves a stray temp file that gets deleted, never a truncated CV under an applicant's name.
 /// </summary>
-public class WindowsDefenderCvSubmissionService : ICvSubmissionService
+public class FileSystemCvSubmissionService : ICvSubmissionService
 {
-    private readonly IVirusScanner _scanner;
     private readonly string _tempDirectory;
     private readonly string _storageDirectory;
 
-    public WindowsDefenderCvSubmissionService(IVirusScanner scanner, string tempDirectory, string storageDirectory)
+    public FileSystemCvSubmissionService(string tempDirectory, string storageDirectory)
     {
-        _scanner = scanner;
         _tempDirectory = tempDirectory;
         _storageDirectory = storageDirectory;
 
@@ -23,7 +21,7 @@ public class WindowsDefenderCvSubmissionService : ICvSubmissionService
         Directory.CreateDirectory(_storageDirectory);
     }
 
-    public async Task<CvSubmissionResult> SubmitAsync(Stream content, string originalFileName, string desiredBaseName, CancellationToken cancellationToken = default)
+    public async Task<string> SubmitAsync(Stream content, string originalFileName, string desiredBaseName, CancellationToken cancellationToken = default)
     {
         var extension = Path.GetExtension(originalFileName);
         var tempPath = Path.Combine(_tempDirectory, $"{Guid.NewGuid():N}{extension}");
@@ -35,17 +33,7 @@ public class WindowsDefenderCvSubmissionService : ICvSubmissionService
 
         try
         {
-            var scanOutcome = await _scanner.ScanAsync(tempPath, cancellationToken);
-            if (scanOutcome != VirusScanOutcome.Clean)
-            {
-                var outcome = scanOutcome == VirusScanOutcome.Infected
-                    ? CvSubmissionOutcome.Infected
-                    : CvSubmissionOutcome.ScanUnavailable;
-                return new CvSubmissionResult { Outcome = outcome };
-            }
-
-            var storedFileName = MoveToStorage(tempPath, Sanitize(desiredBaseName), extension);
-            return new CvSubmissionResult { Outcome = CvSubmissionOutcome.Accepted, StoredFileName = storedFileName };
+            return MoveToStorage(tempPath, Sanitize(desiredBaseName), extension);
         }
         finally
         {
@@ -55,7 +43,7 @@ public class WindowsDefenderCvSubmissionService : ICvSubmissionService
     }
 
     /// <summary>
-    /// Moves the scanned temp file into storage as "{baseName}{extension}", falling back to
+    /// Moves the temp file into storage as "{baseName}{extension}", falling back to
     /// "{baseName}-2{extension}", "-3", ... if that name is already taken (same applicant name,
     /// or a repeat application) — never overwrites an existing CV.
     /// </summary>

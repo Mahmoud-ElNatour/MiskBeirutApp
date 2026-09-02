@@ -2,6 +2,7 @@
     var dir = ViewData["Dir"] as string == "rtl" ? "rtl" : null;
     var lang = ViewData["Lang"] as string ?? "en";
     var metaDescription = ViewData["MetaDescription"] as string;
+    var metaKeywords = ViewData["MetaKeywords"] as string;
 }
 <!DOCTYPE html>
 <html class="scroll-smooth" lang="@lang" dir="@dir">
@@ -12,6 +13,10 @@
 @if (!string.IsNullOrWhiteSpace(metaDescription))
 {
     <meta name="description" content="@metaDescription" />
+}
+@if (!string.IsNullOrWhiteSpace(metaKeywords))
+{
+    <meta name="keywords" content="@metaKeywords" />
 }
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@@0,400..800;1,400..800&family=Hanken+Grotesk:ital,wght@@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -162,6 +167,10 @@
     .transition-form {
         transition: max-height 0.5s ease-in-out, opacity 0.4s ease-in-out;
     }
+    /* Careers vacancy details (<details>/<summary>): hide the browser's own disclosure triangle so
+       the chevron in the summary is the only marker, and turn it when the section opens. */
+    .vacancy-details summary::-webkit-details-marker { display: none; }
+    .vacancy-details[open] .vacancy-details-chevron { transform: rotate(180deg); }
     /* Full-screen photo viewer (built in script at the bottom of this file). Styled here rather
        than with inline styles so the mobile layout below can actually override it: at phone width
        the two 56px chevrons sat on top of the photo itself, half-covering it and landing right where

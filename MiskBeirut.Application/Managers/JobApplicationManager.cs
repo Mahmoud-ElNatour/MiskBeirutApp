@@ -40,30 +40,17 @@ public class JobApplicationManager
     }
 
     /// <summary>
-    /// Scans and stores the CV, then records the application. Throws <see cref="InvalidOperationException"/>
-    /// with a user-facing message if the vacancy doesn't exist or the CV fails the virus scan — nothing is
-    /// written to the database in that case. A failure to send the HR notification email does not fail the
-    /// submission; the application is the source of truth, the email is a best-effort notification.
+    /// Stores the CV, then records the application. Throws <see cref="InvalidOperationException"/>
+    /// with a user-facing message if the vacancy doesn't exist — nothing is written to the database in
+    /// that case. A failure to send the HR notification email does not fail the submission; the
+    /// application is the source of truth, the email is a best-effort notification.
     /// </summary>
     public async Task<JobApplicationDto> SubmitAsync(CreateJobApplicationRequest request, Stream cvContent, string cvFileName, CancellationToken cancellationToken = default)
     {
         var vacancy = await _vacancies.GetByIdAsync(request.VacancyId, cancellationToken)
             ?? throw new InvalidOperationException("This position is no longer open.");
 
-        var scan = await _cvSubmission.SubmitAsync(cvContent, cvFileName, request.Name, cancellationToken);
-        if (scan.Outcome == CvSubmissionOutcome.Infected)
-        {
-            _logger.LogWarning("CV upload rejected for {Name}: the virus scanner reported the file as infected.", request.Name);
-            throw new CvRejectedException(scan.Outcome, "Your CV file failed a virus scan and could not be accepted. Please check the file and try again.");
-        }
-        if (scan.Outcome == CvSubmissionOutcome.ScanUnavailable)
-        {
-            // Not the applicant's fault and not their file's — no scan engine could run on this host.
-            // Logged at Error because it needs an operator, not a retry: see WindowsDefenderVirusScanner
-            // / ClamAvVirusScanner for what "unavailable" covers.
-            _logger.LogError("CV upload rejected for {Name}: no virus scanner was available to check the file.", request.Name);
-            throw new CvRejectedException(scan.Outcome, "We couldn't scan your file right now. Please try again shortly.");
-        }
+        var storedCvFileName = await _cvSubmission.SubmitAsync(cvContent, cvFileName, request.Name, cancellationToken);
 
         var application = await _applications.AddAsync(new JobApplication
         {
@@ -71,7 +58,7 @@ public class JobApplicationManager
             PhoneNumber = request.PhoneNumber,
             Email = request.Email,
             Address = request.Address,
-            CvUrl = scan.StoredFileName!,
+            CvUrl = storedCvFileName,
             VacancyId = request.VacancyId,
             CreatedAt = DateTime.UtcNow
         }, cancellationToken);

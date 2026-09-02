@@ -14,12 +14,14 @@ public class CareersController : PublicContentController
 
     private readonly VacancyManager _vacancies;
     private readonly JobApplicationManager _applications;
+    private readonly ILogger<CareersController> _logger;
 
-    public CareersController(PageContentManager pages, ILanguageRepository languages, VacancyManager vacancies, JobApplicationManager applications)
+    public CareersController(PageContentManager pages, ILanguageRepository languages, VacancyManager vacancies, JobApplicationManager applications, ILogger<CareersController> logger)
         : base(pages, languages)
     {
         _vacancies = vacancies;
         _applications = applications;
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index()
@@ -81,12 +83,15 @@ public class CareersController : PublicContentController
                 VacancyId = request.VacancyId
             }, stream, request.Cv.FileName, cancellationToken);
         }
-        catch (CvRejectedException ex)
+        catch (IOException ex)
         {
-            var message = ex.Outcome == CvSubmissionOutcome.Infected
-                ? t.Pick(ex.Message, "تعذّر قبول ملف سيرتك الذاتية بعد فحصه من الفيروسات. يرجى التحقق من الملف والمحاولة مرة أخرى.")
-                : t.Pick("We couldn't check your file right now, so it wasn't submitted. Please try again in a few minutes — if it keeps happening, email your CV to careers@miskbeirut.com.",
-                         "تعذّر فحص ملفك في الوقت الحالي، لذا لم يتم إرسال الطلب. يرجى المحاولة بعد بضع دقائق — وإن تكرر الأمر، أرسل سيرتك الذاتية إلى careers@miskbeirut.com.");
+            // The form data was fine; storing the CV itself failed (disk full, permissions on the
+            // App_Data uploads folder). Telling the applicant to fix their file would be a lie, so
+            // give them the retry-then-email path and log the real reason for an operator.
+            _logger.LogError(ex, "Failed to store the CV for job application from {Name}.", request.Name);
+
+            var message = t.Pick("We couldn't save your file right now, so the application wasn't submitted. Please try again in a few minutes — if it keeps happening, email your CV to careers@miskbeirut.com.",
+                                 "تعذّر حفظ ملفك في الوقت الحالي، لذا لم يتم إرسال الطلب. يرجى المحاولة بعد بضع دقائق — وإن تكرر الأمر، أرسل سيرتك الذاتية إلى careers@miskbeirut.com.");
 
             return BadRequest(new
             {

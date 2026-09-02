@@ -4,9 +4,6 @@ public class PageEditViewModel
 {
     public int PageId { get; set; }
     public string PageName { get; set; } = "";
-    public string? MetaTitle { get; set; }
-    public string? MetaDesc { get; set; }
-    public string? MetaKeyword { get; set; }
 
     public int LangId { get; set; }
     public string LangCode { get; set; } = "en";

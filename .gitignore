@@ -19,12 +19,10 @@ obj/
 Thumbs.db
 .DS_Store
 
-## Uploaded applicant CVs / scan temp files — personal data, never committed
+## Uploaded applicant CVs / in-flight upload temp files — personal data, never committed
 **/App_Data/careers/
+**/App_Data/upload-temp/
 **/App_Data/scan-temp/
-
-## Runtime marker written by ClamAvBootstrapService to throttle failed install retries
-**/App_Data/clamav-install-failed.marker
 
 ## Cms-uploaded content (page images, menu PDF) — runtime uploads, not source.
 ## The folders themselves stay tracked (via .gitkeep) since the app writes into them at their

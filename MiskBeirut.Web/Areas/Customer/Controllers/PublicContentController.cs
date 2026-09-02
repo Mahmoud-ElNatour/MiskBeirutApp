@@ -47,8 +47,9 @@ public abstract class PublicContentController : Controller
 
         ViewData["Lang"] = langCode;
         ViewData["Dir"] = content.IsRtl ? "rtl" : "ltr";
-        ViewData["Title"] = page?.MetaTitle ?? $"{pageName} | Misk Beirut";
-        ViewData["MetaDescription"] = page?.MetaDesc;
+        ViewData["Title"] = SeoAttributes.ResolveTitle(content, page?.MetaTitle, pageName);
+        ViewData["MetaDescription"] = SeoAttributes.ResolveDescription(content, page?.MetaDesc);
+        ViewData["MetaKeywords"] = SeoAttributes.ResolveKeywords(content, page?.MetaKeyword);
         ViewData["Content"] = content;
 
         return content;

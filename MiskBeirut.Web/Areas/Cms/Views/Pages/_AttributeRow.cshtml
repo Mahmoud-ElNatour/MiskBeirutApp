@@ -2,24 +2,49 @@
 @{
     // Index < 0 marks the JS clone template: emit a literal "__INDEX__" token that
     // addAttributeBtn's click handler string-replaces with the real next array index.
-    var idx = Model.Index >= 0 ? Model.Index.ToString() : "__INDEX__";
+    var isTemplate = Model.Index < 0;
+    var idx = isTemplate ? "__INDEX__" : Model.Index.ToString();
     var row = Model.Row;
     var isImage = row.AttributeType == "Image";
+    var isPdf = row.AttributeType == "Pdf";
+
+    // An existing row's name and type are structure, not content: the name is what the public view
+    // looks the value up by (@Model.Text("hero_title", ...)), and the type decides which editor the
+    // value gets. A typo in either silently empties that spot on the live site, so they're shown
+    // read-only and travel back to Save in hidden inputs. Only a brand-new row — the template, and
+    // the rows cloned from it — lets an editor choose them.
+    var isExisting = !isTemplate;
 }
 <div class="attribute-row grid grid-cols-1 md:grid-cols-12 gap-3 items-start p-stack-md bg-surface-bright rounded-DEFAULT border border-surface-container-high">
     <div class="md:col-span-3">
         <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Name</label>
-        <input name="Attributes[@idx].AttributeName" value="@row.AttributeName" placeholder="e.g. hero_title"
-               class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-data-tabular text-data-tabular focus:outline-none focus:border-slate-blue" />
+        @if (isExisting)
+        {
+            <input type="hidden" name="Attributes[@idx].AttributeName" value="@row.AttributeName" />
+            <p class="px-0 py-2 font-data-tabular text-data-tabular text-on-surface break-all" title="Field key — used by the page itself, so it can't be renamed here.">@row.AttributeName</p>
+        }
+        else
+        {
+            <input name="Attributes[@idx].AttributeName" value="@row.AttributeName" placeholder="e.g. hero_title"
+                   class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-data-tabular text-data-tabular focus:outline-none focus:border-slate-blue" />
+        }
     </div>
     <div class="md:col-span-2">
         <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Type</label>
-        <select name="Attributes[@idx].AttributeType" class="attr-type w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue">
-            @foreach (var type in Model.Types)
-            {
-                <option value="@type" selected="@(type == row.AttributeType ? "selected" : null)">@type</option>
-            }
-        </select>
+        @if (isExisting)
+        {
+            <input type="hidden" name="Attributes[@idx].AttributeType" value="@row.AttributeType" class="attr-type" />
+            <p class="px-0 py-2 font-body-md text-body-md text-on-surface-variant">@row.AttributeType</p>
+        }
+        else
+        {
+            <select name="Attributes[@idx].AttributeType" class="attr-type w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue">
+                @foreach (var type in Model.Types)
+                {
+                    <option value="@type" selected="@(type == row.AttributeType ? "selected" : null)">@type</option>
+                }
+            </select>
+        }
     </div>
     <div class="md:col-span-7">
         <label class="block font-label-sm text-label-sm text-on-surface-variant uppercase mb-stack-xs">Value</label>
@@ -32,6 +57,21 @@
                 <input type="file" accept="image/*" class="attr-image-file hidden" />
             </label>
             <span class="attr-upload-status font-label-sm text-label-sm text-on-surface-variant"></span>
+        </div>
+        @* PDF fields (currently the menu): the value is a /pdf/cms/... url nobody should have to
+           type, so the file picker is the way to set it and the link is how you check what's live. *@
+        <div class="attr-pdf-fields mt-2 flex items-center gap-3 flex-wrap @(isPdf ? "" : "hidden")">
+            <a href="@row.Value" target="_blank" rel="noopener"
+               class="attr-pdf-link inline-flex items-center gap-1 font-label-sm text-label-sm text-slate-blue hover:underline @(isPdf && !string.IsNullOrEmpty(row.Value) ? "" : "hidden")">
+                <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                View current PDF
+            </a>
+            <label class="cms-edit-only inline-flex items-center gap-2 px-3 py-1.5 rounded-DEFAULT bg-surface-container-lowest border border-border-subtle font-label-sm text-label-sm cursor-pointer hover:border-slate-blue transition-colors" style="display:none">
+                <span class="material-symbols-outlined text-sm">upload_file</span>
+                Upload PDF
+                <input type="file" accept="application/pdf" class="attr-pdf-file hidden" />
+            </label>
+            <span class="attr-pdf-status font-label-sm text-label-sm text-on-surface-variant"></span>
         </div>
     </div>
 </div>

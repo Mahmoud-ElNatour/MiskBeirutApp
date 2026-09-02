@@ -112,6 +112,9 @@
                 return match ? match[2] : '';
             }
             if (type === 'Link') return el.getAttribute('href') || '';
+            // A map embed is an <iframe src>, not an <a href> — reading it as a Link returned empty
+            // and patching one wrote an href the iframe ignored, so the map never changed.
+            if (type === 'MapEmbed') return el.getAttribute('src') || '';
             if (type === 'Placeholder') return el.getAttribute('placeholder') || '';
             return (el.textContent || '').trim();
         }
@@ -121,6 +124,7 @@
         // an edit) and the preview bar (reverting to a snapshot on Cancel).
         window.cmsPatchField = function (el, type, value) {
             if (type === 'BackgroundImage') el.style.backgroundImage = value ? "url('" + value + "')" : '';
+            else if (type === 'MapEmbed') el.setAttribute('src', value);
             else if (type === 'Image' || el.tagName === 'IMG') el.setAttribute('src', value);
             else if (type === 'Placeholder') el.setAttribute('placeholder', value);
             else if (type === 'Link') el.setAttribute('href', value || '#');

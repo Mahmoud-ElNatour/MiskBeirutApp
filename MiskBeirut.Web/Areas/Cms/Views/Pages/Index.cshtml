@@ -40,9 +40,14 @@
                         <td class="py-4 px-stack-md text-on-surface-variant">@(entry.MetaTitle ?? "—")</td>
                         <td class="py-4 px-stack-md text-on-surface-variant max-w-md truncate">@(entry.MetaDesc ?? "—")</td>
                         <td class="py-4 px-stack-md text-right">
-                            <a asp-action="Edit" asp-route-id="@entry.Id" class="text-slate-blue hover:text-primary inline-flex" title="Edit">
-                                <span class="material-symbols-outlined text-sm">edit</span>
-                            </a>
+                            <div class="flex items-center justify-end gap-3">
+                                <a asp-action="Seo" asp-route-id="@entry.Id" class="text-slate-blue hover:text-primary inline-flex" title="Meta title and description">
+                                    <span class="material-symbols-outlined text-sm">travel_explore</span>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@entry.Id" class="text-slate-blue hover:text-primary inline-flex" title="Edit">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 }

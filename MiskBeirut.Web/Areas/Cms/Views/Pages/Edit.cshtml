@@ -1,7 +1,7 @@
 @model PageEditViewModel
 @{
     ViewData["Title"] = Model.PageName;
-    var attributeTypes = new[] { "Text", "RichText", "Image", "Link", "Video", "Number", "Date", "Boolean" };
+    var attributeTypes = new[] { "Text", "RichText", "Image", "Link", "Pdf", "Video", "Number", "Date", "Boolean" };
 }
 
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-md">
@@ -24,6 +24,10 @@
             <span class="material-symbols-outlined text-sm">save</span>
             Save
         </button>
+        <a asp-action="Seo" asp-route-id="@Model.PageId" asp-route-lang="@Model.LangCode" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">travel_explore</span>
+            SEO
+        </a>
         <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
             <span class="material-symbols-outlined text-sm">list</span>
             All Pages
@@ -63,27 +67,6 @@
     <input type="hidden" asp-for="PageId" />
     <input type="hidden" asp-for="LangId" />
     <input type="hidden" asp-for="LangCode" />
-
-    <!-- SEO Meta -->
-    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
-        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
-            <h3 class="font-headline-sm text-headline-sm text-on-surface">Page Meta (SEO)</h3>
-        </div>
-        <div class="p-stack-lg space-y-stack-md">
-            <div>
-                <label class="block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs">Meta Title</label>
-                <input asp-for="MetaTitle" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue" />
-            </div>
-            <div>
-                <label class="block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs">Meta Description</label>
-                <textarea asp-for="MetaDesc" rows="2" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue"></textarea>
-            </div>
-            <div>
-                <label class="block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs">Meta Keywords</label>
-                <input asp-for="MetaKeyword" class="w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue" />
-            </div>
-        </div>
-    </div>
 
     <!-- Attributes -->
     <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
@@ -154,15 +137,21 @@
     let nextAttributeIndex = @Model.Attributes.Count;
 
     function wireRow(row) {
+        // .attr-type is a <select> on a new row and a hidden <input> on an existing one (an existing
+        // row's type is fixed — see _AttributeRow.cshtml). Both expose .value, and the change event
+        // simply never fires for the hidden input.
         const typeSelect = row.querySelector('.attr-type');
         const imageFields = row.querySelector('.attr-image-fields');
+        const pdfFields = row.querySelector('.attr-pdf-fields');
         const fileInput = row.querySelector('.attr-image-file');
+        const pdfInput = row.querySelector('.attr-pdf-file');
+        const pdfLink = row.querySelector('.attr-pdf-link');
         const valueInput = row.querySelector('.attr-value');
         const preview = row.querySelector('.attr-image-preview');
 
-        function toggleImageFields() {
-            const isImage = typeSelect.value === 'Image';
-            imageFields.classList.toggle('hidden', !isImage);
+        function toggleTypeFields() {
+            imageFields.classList.toggle('hidden', typeSelect.value !== 'Image');
+            pdfFields.classList.toggle('hidden', typeSelect.value !== 'Pdf');
             updatePreview();
         }
 
@@ -173,35 +162,48 @@
             } else {
                 preview.classList.add('hidden');
             }
+
+            if (typeSelect.value === 'Pdf' && valueInput.value) {
+                pdfLink.href = valueInput.value;
+                pdfLink.classList.remove('hidden');
+            } else {
+                pdfLink.classList.add('hidden');
+            }
         }
 
-        typeSelect.addEventListener('change', toggleImageFields);
+        typeSelect.addEventListener('change', toggleTypeFields);
         valueInput.addEventListener('input', updatePreview);
 
-        if (fileInput) {
-            fileInput.addEventListener('change', async function () {
-                if (!fileInput.files.length) return;
+        // Uploads write the returned url into the value box; nothing is stored until the page's
+        // Save posts the form, same as any other edit here.
+        function wireUpload(input, url, statusSelector) {
+            if (!input) return;
+            input.addEventListener('change', async function () {
+                if (!input.files.length) return;
                 const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
+                formData.append('file', input.files[0]);
                 const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
                 if (tokenInput) formData.append('__RequestVerificationToken', tokenInput.value);
 
-                const uploadStatus = row.querySelector('.attr-upload-status');
+                const uploadStatus = row.querySelector(statusSelector);
                 uploadStatus.textContent = 'Uploading...';
                 try {
-                    const response = await fetch('@Url.Action("UploadImage", "Pages")', { method: 'POST', body: formData });
+                    const response = await fetch(url, { method: 'POST', body: formData });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error || 'Upload failed');
                     valueInput.value = result.url;
                     updatePreview();
-                    uploadStatus.textContent = 'Uploaded.';
+                    uploadStatus.textContent = 'Uploaded — click Save to publish it.';
                 } catch (err) {
                     uploadStatus.textContent = err.message || 'Upload failed.';
                 }
             });
         }
 
-        toggleImageFields();
+        wireUpload(fileInput, '@Url.Action("UploadImage", "Pages")', '.attr-upload-status');
+        wireUpload(pdfInput, '@Url.Action("UploadMenuPdf", "Pages")', '.attr-pdf-status');
+
+        toggleTypeFields();
     }
 
     document.querySelectorAll('#attributeRows > .attribute-row').forEach(wireRow);

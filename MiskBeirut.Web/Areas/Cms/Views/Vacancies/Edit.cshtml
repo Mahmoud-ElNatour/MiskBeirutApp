@@ -1,0 +1,201 @@
+@using MiskBeirut.Web.Areas.Cms.Models.Vacancies
+@model VacancyEditViewModel
+@{
+    var isNew = ViewData["IsNew"] as bool? ?? Model.Id == 0;
+    ViewData["Title"] = isNew ? "Add Vacancy" : Model.Title;
+    var applicationCount = ViewData["ApplicationCount"] as int? ?? 0;
+
+    const string labelClass = "block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs";
+    const string inputClass = "w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue";
+    const string errorClass = "mt-1 font-label-sm text-label-sm text-status-urgent";
+}
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-md">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">@(isNew ? "Add Vacancy" : Model.Title)</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+            @if (isNew)
+            {
+                <text>Fill in the English fields — Arabic is optional and falls back to English wherever it's left blank.</text>
+            }
+            else
+            {
+                <text>Listed on the Careers page as <span class="font-data-tabular">@Model.Slug</span>@(applicationCount > 0 ? $" · {applicationCount} application{(applicationCount == 1 ? "" : "s")} received" : "").</text>
+            }
+        </p>
+    </div>
+    <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+        <span class="material-symbols-outlined text-sm">list</span>
+        All Vacancies
+    </a>
+</div>
+
+<form asp-action="Save" method="post" class="space-y-stack-lg">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="Slug" />
+
+    <!-- English -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Position (English)</h3>
+        </div>
+        <div class="p-stack-lg space-y-stack-md">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+                <div>
+                    <label asp-for="Title" class="@labelClass"></label>
+                    <input asp-for="Title" class="@inputClass" placeholder="e.g. Head Chef" required maxlength="200" />
+                    <span asp-validation-for="Title" class="@errorClass"></span>
+                </div>
+                <div>
+                    <label asp-for="Department" class="@labelClass"></label>
+                    <input asp-for="Department" class="@inputClass" placeholder="e.g. Kitchen" required maxlength="100" />
+                    <span asp-validation-for="Department" class="@errorClass"></span>
+                </div>
+                <div>
+                    <label asp-for="Location" class="@labelClass"></label>
+                    <input asp-for="Location" class="@inputClass" placeholder="e.g. Gemmayzeh, Beirut" required maxlength="100" />
+                    <span asp-validation-for="Location" class="@errorClass"></span>
+                </div>
+                <div>
+                    <label asp-for="EmploymentType" class="@labelClass"></label>
+                    <input asp-for="EmploymentType" class="@inputClass" list="employmentTypeOptions" placeholder="e.g. Full-time" required maxlength="50" />
+                    <datalist id="employmentTypeOptions">
+                        <option value="Full-time"></option>
+                        <option value="Part-time"></option>
+                        <option value="Contract"></option>
+                        <option value="Seasonal"></option>
+                        <option value="Internship"></option>
+                    </datalist>
+                    <span asp-validation-for="EmploymentType" class="@errorClass"></span>
+                </div>
+            </div>
+            <div>
+                <label asp-for="Description" class="@labelClass"></label>
+                <textarea asp-for="Description" rows="5" class="@inputClass" placeholder="What the role involves. Shown when a visitor expands the vacancy."></textarea>
+                <span asp-validation-for="Description" class="@errorClass"></span>
+            </div>
+            <div>
+                <label asp-for="Requirements" class="@labelClass"></label>
+                <textarea asp-for="Requirements" rows="5" class="@inputClass" placeholder="One requirement per line — each line becomes a bullet on the site."></textarea>
+                <p class="mt-1 font-label-sm text-label-sm text-on-surface-variant">One per line. Don't type the bullet character — the site adds it.</p>
+                <span asp-validation-for="Requirements" class="@errorClass"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arabic -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Position (Arabic)</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant mt-stack-xs">Optional. Any field left blank shows its English value on the Arabic site.</p>
+        </div>
+        <div class="p-stack-lg space-y-stack-md">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+                <div>
+                    <label asp-for="TitleAr" class="@labelClass"></label>
+                    <input asp-for="TitleAr" class="@inputClass" dir="rtl" />
+                    <span asp-validation-for="TitleAr" class="@errorClass"></span>
+                </div>
+                <div>
+                    <label asp-for="DepartmentAr" class="@labelClass"></label>
+                    <input asp-for="DepartmentAr" class="@inputClass" dir="rtl" />
+                    <span asp-validation-for="DepartmentAr" class="@errorClass"></span>
+                </div>
+                <div>
+                    <label asp-for="LocationAr" class="@labelClass"></label>
+                    <input asp-for="LocationAr" class="@inputClass" dir="rtl" />
+                    <span asp-validation-for="LocationAr" class="@errorClass"></span>
+                </div>
+                <div>
+                    <label asp-for="EmploymentTypeAr" class="@labelClass"></label>
+                    <input asp-for="EmploymentTypeAr" class="@inputClass" dir="rtl" />
+                    <span asp-validation-for="EmploymentTypeAr" class="@errorClass"></span>
+                </div>
+            </div>
+            <div>
+                <label asp-for="DescriptionAr" class="@labelClass"></label>
+                <textarea asp-for="DescriptionAr" rows="5" class="@inputClass" dir="rtl"></textarea>
+                <span asp-validation-for="DescriptionAr" class="@errorClass"></span>
+            </div>
+            <div>
+                <label asp-for="RequirementsAr" class="@labelClass"></label>
+                <textarea asp-for="RequirementsAr" rows="5" class="@inputClass" dir="rtl"></textarea>
+                <span asp-validation-for="RequirementsAr" class="@errorClass"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listing -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Listing</h3>
+        </div>
+        <div class="p-stack-lg grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+            <div>
+                <label asp-for="ApplicationDeadline" class="@labelClass"></label>
+                <input asp-for="ApplicationDeadline" type="date" class="@inputClass" value="@(Model.ApplicationDeadline?.ToString("yyyy-MM-dd"))" />
+                <p class="mt-1 font-label-sm text-label-sm text-on-surface-variant">Leave blank to keep it open indefinitely. The deadline day itself still accepts applications.</p>
+                <span asp-validation-for="ApplicationDeadline" class="@errorClass"></span>
+            </div>
+            <div>
+                <label asp-for="Icon" class="@labelClass"></label>
+                <div class="flex items-center gap-3">
+                    <span id="iconPreview" class="material-symbols-outlined text-on-surface-variant">@(string.IsNullOrWhiteSpace(Model.Icon) ? "work" : Model.Icon)</span>
+                    <input asp-for="Icon" class="@inputClass" list="iconOptions" placeholder="work" />
+                </div>
+                <datalist id="iconOptions">
+                    <option value="work"></option>
+                    <option value="restaurant"></option>
+                    <option value="local_bar"></option>
+                    <option value="room_service"></option>
+                    <option value="support_agent"></option>
+                    <option value="cleaning_services"></option>
+                    <option value="storefront"></option>
+                </datalist>
+                <p class="mt-1 font-label-sm text-label-sm text-on-surface-variant">
+                    A <a href="https://fonts.google.com/icons" target="_blank" rel="noopener" class="text-slate-blue hover:underline">Material Symbols</a> name. Defaults to "work".
+                </p>
+                <span asp-validation-for="Icon" class="@errorClass"></span>
+            </div>
+            <div>
+                <label asp-for="DisplayOrder" class="@labelClass"></label>
+                <input asp-for="DisplayOrder" type="number" min="0" max="999" class="@inputClass" />
+                <p class="mt-1 font-label-sm text-label-sm text-on-surface-variant">Lower numbers list first.</p>
+                <span asp-validation-for="DisplayOrder" class="@errorClass"></span>
+            </div>
+            <div>
+                <label asp-for="IsActive" class="@labelClass"></label>
+                <label class="flex items-center gap-3 py-2 cursor-pointer">
+                    <input asp-for="IsActive" type="checkbox" class="rounded border-border-subtle text-slate-blue focus:ring-slate-blue" />
+                    <span class="font-body-md text-body-md text-on-surface">Show this vacancy on the Careers page</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex items-center justify-end gap-3">
+        <a asp-action="Index" class="px-4 py-2 rounded-DEFAULT border border-border-subtle font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">Cancel</a>
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-status-success hover:opacity-90 text-white rounded-DEFAULT font-label-md text-label-md transition-opacity">
+            <span class="material-symbols-outlined text-sm">save</span>
+            @(isNew ? "Add Vacancy" : "Save Changes")
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    @* No unobtrusive-validation scripts here: the Cms layout doesn't load jQuery, so the required
+       fields below carry the HTML5 `required` attribute for immediate feedback, and everything else
+       is validated on the server and re-rendered through asp-validation-for. *@
+    <script>
+        // Live icon preview: the field takes a ligature name, which is unreadable as text.
+        (function () {
+            var input = document.getElementById('Icon');
+            var preview = document.getElementById('iconPreview');
+            if (!input || !preview) return;
+            input.addEventListener('input', function () {
+                preview.textContent = input.value.trim() || 'work';
+            });
+        })();
+    </script>
+}

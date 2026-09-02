@@ -1,0 +1,63 @@
+@*
+    Shared read-only "view the whole record" modal for the Cms list screens.
+
+    Tables here show truncated previews so a long message can't stretch a row past the width of the
+    screen; this is where the untruncated record is read. Include once per page via
+    <partial name="_DetailsModal" />, give each row a
+    <button class="details-view-btn" data-details-target="some-id"> and put the full markup in a
+    hidden element with that id AFTER the table (a <div> inside <tbody> is invalid HTML and browsers
+    hoist it out of the table). The modal clones that element's innerHTML, so the details markup is
+    ordinary Razor and gets Razor's HTML encoding — nothing is assembled from strings in JS.
+*@
+<div id="cmsDetailsModal" class="hidden fixed inset-0 z-[10050] items-center justify-center bg-black/50 p-4">
+    <div class="bg-white rounded-DEFAULT shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden font-body-md">
+        <div class="p-4 border-b border-black/10 flex items-center justify-between shrink-0">
+            <h3 class="text-lg font-semibold text-[#1A1A1A]" id="cmsDetailsModalTitle">Details</h3>
+            <button type="button" id="cmsDetailsModalClose" class="text-black/50 hover:text-[#355970]" aria-label="Close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto" id="cmsDetailsModalBody"></div>
+        <div class="p-4 border-t border-black/10 bg-black/[0.02] flex justify-end shrink-0">
+            <button type="button" id="cmsDetailsModalDone" class="px-4 py-2 rounded-DEFAULT bg-[#355970] hover:bg-[#1c4258] text-white text-sm font-semibold transition-colors">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var modal = document.getElementById('cmsDetailsModal');
+        var titleEl = document.getElementById('cmsDetailsModalTitle');
+        var bodyEl = document.getElementById('cmsDetailsModalBody');
+
+        function open(btn) {
+            var source = document.getElementById(btn.dataset.detailsTarget);
+            if (!source) return;
+            titleEl.textContent = btn.dataset.detailsTitle || 'Details';
+            bodyEl.innerHTML = source.innerHTML;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function close() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            bodyEl.innerHTML = '';
+        }
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.details-view-btn');
+            if (btn) {
+                e.preventDefault();
+                open(btn);
+            }
+        });
+
+        document.getElementById('cmsDetailsModalClose').addEventListener('click', close);
+        document.getElementById('cmsDetailsModalDone').addEventListener('click', close);
+        modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+        });
+    })();
+</script>

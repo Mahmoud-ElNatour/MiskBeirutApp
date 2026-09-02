@@ -23,6 +23,7 @@
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wider text-black/50 mb-1" id="cmsFieldModalLabel">Value</label>
                 <textarea id="cmsFieldModalTextInput" rows="4" class="w-full rounded-DEFAULT border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-[#355970]"></textarea>
+                <p id="cmsFieldModalHelp" class="hidden mt-1 text-xs text-black/50"></p>
             </div>
             <div id="cmsFieldModalImageArea" class="hidden space-y-2">
                 <img id="cmsFieldModalImagePreview" class="hidden max-h-40 rounded-DEFAULT border border-black/10 object-cover" />
@@ -54,6 +55,7 @@
         var titleEl = document.getElementById('cmsFieldModalTitle');
         var labelEl = document.getElementById('cmsFieldModalLabel');
         var textInput = document.getElementById('cmsFieldModalTextInput');
+        var helpEl = document.getElementById('cmsFieldModalHelp');
         var imageArea = document.getElementById('cmsFieldModalImageArea');
         var imagePreview = document.getElementById('cmsFieldModalImagePreview');
         var imageFile = document.getElementById('cmsFieldModalImageFile');
@@ -109,9 +111,18 @@
         function openModal(button) {
             current = { field: button.dataset.field, type: button.dataset.type || 'Text', scope: button.dataset.scope || 'page', button: button };
             titleEl.textContent = button.dataset.label || current.field;
-            labelEl.textContent = isImageType(current.type) ? 'Image URL' : 'Value';
+            labelEl.textContent = isImageType(current.type) ? 'Image URL' : current.type === 'MapEmbed' ? 'Google Maps link' : 'Value';
             textInput.value = button.dataset.value || '';
             errorEl.classList.add('hidden');
+
+            // A map embed takes a Google Maps URL that gets converted server-side into the framed
+            // form; say so, because pasting a shortened link is the one thing that can't work.
+            if (current.type === 'MapEmbed') {
+                helpEl.textContent = 'Open the place on Google Maps and paste the full URL from the address bar. Shortened maps.app.goo.gl links have to be opened first.';
+                helpEl.classList.remove('hidden');
+            } else {
+                helpEl.classList.add('hidden');
+            }
             uploadStatus.textContent = '';
             if (isImageType(current.type)) {
                 imageArea.classList.remove('hidden');
@@ -170,8 +181,11 @@
                 return;
             }
             var value = textInput.value;
-            // "Placeholder"/"BackgroundImage" are DOM-patch hints, not real PageAttributeTypes.
-            var storageType = current.type === 'Placeholder' ? 'Text' : current.type === 'BackgroundImage' ? 'Image' : current.type;
+            // "Placeholder"/"BackgroundImage"/"MapEmbed" are DOM-patch hints, not real PageAttributeTypes.
+            var storageType = current.type === 'Placeholder' ? 'Text'
+                : current.type === 'BackgroundImage' ? 'Image'
+                : current.type === 'MapEmbed' ? 'Link'
+                : current.type;
 
             // Match by field name, but patch each element using ITS OWN data-cms-type — the same
             // field can render in more than one place with different DOM shapes (e.g. an href AND

@@ -95,94 +95,58 @@ builder.Services.AddScoped<IInquiryReasonRepository, InquiryReasonRepository>();
 builder.Services.AddScoped<IContactInquiryRepository, ContactInquiryRepository>();
 builder.Services.AddScoped<IContactInquiryWhatsAppMessageRepository, ContactInquiryWhatsAppMessageRepository>();
 
-// Virus scanning — shared by CV submissions (Careers) and Cms image/menu-PDF uploads. Windows
-// Defender is tried first; if MpCmdRun.exe isn't installed on this host, ClamAV (clamscan.exe) is
-// tried as a fallback, so uploads aren't blanket-rejected just because one specific engine is
-// missing. A scan only reports ScanUnavailable (which every caller fails closed on) if BOTH are
-// unavailable. Stateless (just wraps external exe paths), so it's registered once as a singleton.
-builder.Services.AddSingleton<IVirusScanner>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-
-    var mpCmdRunPath = config["VirusScanning:MpCmdRunPath"];
-    if (string.IsNullOrWhiteSpace(mpCmdRunPath))
-        mpCmdRunPath = WindowsDefenderVirusScanner.FindDefaultMpCmdRunPath();
-    var defenderScanner = new WindowsDefenderVirusScanner(mpCmdRunPath, sp.GetRequiredService<ILogger<WindowsDefenderVirusScanner>>());
-
-    var clamAvPath = config["VirusScanning:ClamAvPath"];
-    if (string.IsNullOrWhiteSpace(clamAvPath))
-        clamAvPath = ClamAvVirusScanner.FindDefaultClamAvPath();
-    var clamAvScanner = new ClamAvVirusScanner(clamAvPath, sp.GetRequiredService<ILogger<ClamAvVirusScanner>>());
-
-    return new FallbackVirusScanner([defenderScanner, clamAvScanner], sp.GetRequiredService<ILogger<FallbackVirusScanner>>());
-});
-
-// First-run ClamAV install: if it's not already present when the app starts, download the current
-// release's Windows MSI and install it silently, so the fallback above actually has something to
-// fall back to. Set VirusScanning:AutoInstallClamAv=false to disable (see ClamAvBootstrapService
-// for why this needs the app pool identity to have installer permissions, and what happens if it
-// doesn't). Fire-and-forget in the background — never blocks the app from starting.
-builder.Services.AddHttpClient(nameof(ClamAvBootstrapService), c =>
-{
-    c.Timeout = TimeSpan.FromMinutes(15);
-    // GitHub's REST API rejects any request without a User-Agent with 403 Forbidden — it's a hard
-    // documented requirement, not a nicety. Omitting it is why the release lookup failed outright.
-    c.DefaultRequestHeaders.UserAgent.ParseAdd("MiskBeirut-ClamAvBootstrap/1.0");
-    c.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
-    c.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
-});
-builder.Services.AddHostedService(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var env = sp.GetRequiredService<IWebHostEnvironment>();
-    var enabled = !string.Equals(config["VirusScanning:AutoInstallClamAv"], "false", StringComparison.OrdinalIgnoreCase);
-
-    // Resolved the same way as the scanner registration above, so a custom ClamAvPath counts as
-    // "already installed" instead of triggering a redundant second install over the top.
-    var clamAvPath = config["VirusScanning:ClamAvPath"];
-    if (string.IsNullOrWhiteSpace(clamAvPath))
-        clamAvPath = ClamAvVirusScanner.FindDefaultClamAvPath();
-
-    return new ClamAvBootstrapService(
-        enabled,
-        clamAvPath,
-        Path.Combine(env.ContentRootPath, "App_Data"),
-        sp.GetRequiredService<IHttpClientFactory>(),
-        sp.GetRequiredService<IHostApplicationLifetime>(),
-        sp.GetRequiredService<ILogger<ClamAvBootstrapService>>());
-});
-
-// CV private storage (Careers page applications) — scanning itself is IVirusScanner above.
-// Deliberately NOT under wwwroot: CVs carry applicants' personal info (name, phone, address),
-// unlike public marketing images. Paths default to App_Data under the content root
-// (not the bin/ output dir) unless overridden in config.
+// CV private storage (Careers page applications). Deliberately NOT under wwwroot: CVs carry
+// applicants' personal info (name, phone, address), unlike public marketing images. Uploads are
+// verified by FileTypeValidator (extension + declared content type + actual byte signature) before
+// they reach this service. Paths default to App_Data under the content root (not the bin/ output
+// dir) unless overridden in config.
 builder.Services.AddScoped<ICvSubmissionService>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
     var env = sp.GetRequiredService<IWebHostEnvironment>();
-    var scanner = sp.GetRequiredService<IVirusScanner>();
 
-    var tempDir = config["FileStorage:CvScanTempPath"];
+    var tempDir = config["FileStorage:CvUploadTempPath"];
     if (string.IsNullOrWhiteSpace(tempDir))
-        tempDir = Path.Combine(env.ContentRootPath, "App_Data", "scan-temp");
+        tempDir = Path.Combine(env.ContentRootPath, "App_Data", "upload-temp");
 
     var storageDir = config["FileStorage:CvUploadsPath"];
     if (string.IsNullOrWhiteSpace(storageDir))
         storageDir = Path.Combine(env.ContentRootPath, "App_Data", "careers", "cv");
 
-    return new WindowsDefenderCvSubmissionService(scanner, tempDir, storageDir);
+    return new FileSystemCvSubmissionService(tempDir, storageDir);
 });
 
-// Mailgun (HR notification emails). Requires Mailgun:ApiKey / Mailgun:Domain / Mailgun:FromAddress in config.
+// Mailgun (HR notification emails, and the Cms "Email Sender" on inquiries/applications).
+// Every setting is checked for BLANK, not just null: appsettings.json ships the keys with empty
+// string values, so a `?? throw` passed a blank domain straight through and every send posted to
+// "https://api.mailgun.net/v3//messages" — a 404 that read like a broken endpoint rather than
+// missing configuration. An unconfigured install now gets a sender that says exactly what to set.
 builder.Services.AddHttpClient(nameof(MailgunEmailSender));
 builder.Services.AddScoped<IEmailSender>(sp =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-    var domain = config["Mailgun:Domain"] ?? throw new InvalidOperationException("Mailgun:Domain is not configured.");
-    var apiKey = config["Mailgun:ApiKey"] ?? throw new InvalidOperationException("Mailgun:ApiKey is not configured.");
-    var fromAddress = config["Mailgun:FromAddress"] ?? $"no-reply@{domain}";
-    return new MailgunEmailSender(httpClientFactory.CreateClient(nameof(MailgunEmailSender)), domain, apiKey, fromAddress);
+
+    var domain = config["Mailgun:Domain"];
+    var apiKey = config["Mailgun:ApiKey"];
+    if (string.IsNullOrWhiteSpace(domain) || string.IsNullOrWhiteSpace(apiKey))
+    {
+        sp.GetRequiredService<ILogger<Program>>().LogError(
+            "Mailgun is not configured (Mailgun:Domain and Mailgun:ApiKey must both be set in appsettings.json). Email sending is disabled until they are.");
+        return new NotConfiguredEmailSender();
+    }
+
+    var fromAddress = config["Mailgun:FromAddress"];
+    if (string.IsNullOrWhiteSpace(fromAddress))
+        fromAddress = $"no-reply@{domain}";
+
+    // EU-region Mailgun domains live on api.eu.mailgun.net; posting them to the US host is the
+    // other way this returns 404. Left at the US default unless configured.
+    var apiBaseUrl = config["Mailgun:ApiBaseUrl"];
+    if (string.IsNullOrWhiteSpace(apiBaseUrl))
+        apiBaseUrl = "https://api.mailgun.net";
+
+    return new MailgunEmailSender(httpClientFactory.CreateClient(nameof(MailgunEmailSender)), domain, apiKey, fromAddress, apiBaseUrl);
 });
 
 // Meta WhatsApp Business Platform (Cloud API) — CMS "Send WhatsApp" button on Contact Inquiries.

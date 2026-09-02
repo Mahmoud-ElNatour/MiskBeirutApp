@@ -311,7 +311,7 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
             entity.ToTable("page_attributes", "customer", t =>
             {
                 t.HasCheckConstraint("CK_page_attributes_type",
-                    "[AttributeType] IN ('Text', 'RichText', 'Image', 'Link', 'Video', 'Number', 'Date', 'Boolean')");
+                    "[AttributeType] IN ('Text', 'RichText', 'Image', 'Link', 'Pdf', 'Video', 'Number', 'Date', 'Boolean')");
             });
             entity.HasIndex(a => new { a.PageId, a.AttributeName, a.LangId })
                 .IsUnique()
@@ -418,6 +418,13 @@ public class MiskBeirutDbContext : IdentityDbContext<User, IdentityRole<int>, in
             entity.Property(v => v.DepartmentAr).HasMaxLength(100);
             entity.Property(v => v.LocationAr).HasMaxLength(100);
             entity.Property(v => v.EmploymentTypeAr).HasMaxLength(50);
+            entity.Property(v => v.Description).HasMaxLength(4000);
+            entity.Property(v => v.DescriptionAr).HasMaxLength(4000);
+            entity.Property(v => v.Requirements).HasMaxLength(4000);
+            entity.Property(v => v.RequirementsAr).HasMaxLength(4000);
+            // Date only: the deadline is inclusive of its own day, and a time component would make
+            // "closes on the 30th" mean 00:00 on the 30th. See VacancyManager for the comparison.
+            entity.Property(v => v.ApplicationDeadline).HasColumnType("date");
             entity.Property(v => v.Icon).HasMaxLength(50).IsRequired();
             entity.Property(v => v.IsActive).HasDefaultValue(true);
             entity.Property(v => v.DisplayOrder).HasDefaultValue(0);

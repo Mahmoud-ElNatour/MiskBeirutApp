@@ -1,23 +1,9 @@
 namespace MiskBeirut.Application.Services;
 
-public enum CvSubmissionOutcome
-{
-    Accepted,
-    Infected,
-    ScanUnavailable
-}
-
-public sealed record CvSubmissionResult
-{
-    public required CvSubmissionOutcome Outcome { get; init; }
-
-    /// <summary>Set only when <see cref="Outcome"/> is <see cref="CvSubmissionOutcome.Accepted"/>. Not a public URL — a private storage reference.</summary>
-    public string? StoredFileName { get; init; }
-}
-
 /// <summary>
-/// Writes an uploaded CV to a temporary location, scans it for viruses, and — only if clean —
-/// moves it into permanent private storage (never web-accessible directly).
+/// Writes an uploaded CV into permanent private storage (never web-accessible directly). The file's
+/// extension, declared content type, and actual byte signature are verified by the Web layer's
+/// FileTypeValidator before it ever reaches here.
 /// </summary>
 public interface ICvSubmissionService
 {
@@ -25,7 +11,8 @@ public interface ICvSubmissionService
     /// Preferred file name (e.g. the applicant's name), sanitized for the filesystem and
     /// de-duplicated (mahmoud.pdf, mahmoud-2.pdf, ...) if it collides with an existing file.
     /// </param>
-    Task<CvSubmissionResult> SubmitAsync(Stream content, string originalFileName, string desiredBaseName, CancellationToken cancellationToken = default);
+    /// <returns>The stored file name. Not a public URL — a private storage reference.</returns>
+    Task<string> SubmitAsync(Stream content, string originalFileName, string desiredBaseName, CancellationToken cancellationToken = default);
 
     /// <summary>Removes a previously stored CV from disk. No-op if the file is already gone.</summary>
     Task DeleteAsync(string storedFileName, CancellationToken cancellationToken = default);

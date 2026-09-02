@@ -70,6 +70,29 @@ public sealed class PageContent
 
     public string Link(string name, string fallback = "#") => Text(name, fallback);
 
+    /// <summary>
+    /// The src for an embedded Google map. Values entered through the Cms are already normalized on
+    /// save (see MapEmbedUrl), but rows predate that, so whatever is stored is converted again here
+    /// — a link that only ever worked as a page link would otherwise leave a blank rectangle.
+    /// </summary>
+    /// <param name="addressLinkName">
+    /// The "open in Google Maps" link on the same page. When no embed URL of its own has been set,
+    /// the map follows that link, so an editor who updates the address in one place gets a map that
+    /// agrees with it instead of one still pointing at the old location.
+    /// </param>
+    public string MapEmbed(string name, string addressLinkName, string fallback)
+    {
+        if (TryGet(_page, _pageFallback, name, out var configured) &&
+            MapEmbedUrl.Normalize(configured) is { Length: > 0 } normalized)
+            return normalized;
+
+        if (TryGet(_page, _pageFallback, addressLinkName, out var addressLink) &&
+            MapEmbedUrl.Normalize(addressLink) is { Length: > 0 } derived)
+            return derived;
+
+        return fallback;
+    }
+
     public bool Has(string name) => TryGet(_page, _pageFallback, name, out _);
 
     public string Global(string name, string fallback = "") => TryGet(_global, _globalFallback, name, out var v) ? v : fallback;

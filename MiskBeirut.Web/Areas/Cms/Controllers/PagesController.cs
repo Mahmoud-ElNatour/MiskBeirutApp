@@ -52,21 +52,19 @@ public class PagesController : CmsControllerBase
     private readonly ILanguageRepository _languages;
     private readonly VacancyManager _vacancies;
     private readonly IWebHostEnvironment _env;
-    private readonly IVirusScanner _virusScanner;
     private readonly ILogger<PagesController> _logger;
 
-    public PagesController(PageContentManager pages, ILanguageRepository languages, VacancyManager vacancies, IWebHostEnvironment env, IVirusScanner virusScanner, ILogger<PagesController> logger)
+    public PagesController(PageContentManager pages, ILanguageRepository languages, VacancyManager vacancies, IWebHostEnvironment env, ILogger<PagesController> logger)
     {
         _pages = pages;
         _languages = languages;
         _vacancies = vacancies;
         _env = env;
-        _virusScanner = virusScanner;
         _logger = logger;
     }
 
-    /// <summary>Scratch space for a file mid-scan — same folder Careers CV submissions use (see Program.cs); GUID-named temp files never collide, so sharing it is fine.</summary>
-    private string ScanTempDirectory => Path.Combine(_env.ContentRootPath, "App_Data", "scan-temp");
+    /// <summary>Scratch space for a file mid-upload — same folder Careers CV submissions use (see Program.cs); GUID-named temp files never collide, so sharing it is fine.</summary>
+    private string UploadTempDirectory => Path.Combine(_env.ContentRootPath, "App_Data", "upload-temp");
 
     public async Task<IActionResult> Index(string? q)
     {
@@ -139,8 +137,9 @@ public class PagesController : CmsControllerBase
             // shared _PublicNav/_PublicFooter/_DiscountPopup partials render exactly as they do live.
             ViewData["Lang"] = language.Code;
             ViewData["Dir"] = content.IsRtl ? "rtl" : "ltr";
-            ViewData["Title"] = page.MetaTitle ?? $"{page.PageName} | Misk Beirut";
-            ViewData["MetaDescription"] = page.MetaDesc;
+            ViewData["Title"] = SeoAttributes.ResolveTitle(content, page.MetaTitle, page.PageName);
+            ViewData["MetaDescription"] = SeoAttributes.ResolveDescription(content, page.MetaDesc);
+            ViewData["MetaKeywords"] = SeoAttributes.ResolveKeywords(content, page.MetaKeyword);
             ViewData["Content"] = content;
 
             // Cms preview chrome (see _PublicLayout.cshtml + _CmsPreviewOverlay.cshtml).
@@ -175,14 +174,13 @@ public class PagesController : CmsControllerBase
         {
             PageId = page.Id,
             PageName = page.PageName,
-            MetaTitle = page.MetaTitle,
-            MetaDesc = page.MetaDesc,
-            MetaKeyword = page.MetaKeyword,
             LangId = language.Id,
             LangCode = language.Code,
             Languages = languageOptions,
+            // SEO metadata is edited on its own screen (see Seo below), so its rows are kept out of
+            // the generic content editor rather than being editable in two places at once.
             Attributes = page.Attributes
-                .Where(a => a.LangId == language.Id)
+                .Where(a => a.LangId == language.Id && !SeoAttributes.IsSeoAttribute(a.AttributeName))
                 .OrderBy(a => a.AttributeName)
                 .Select(a => new PageAttributeRowViewModel
                 {
@@ -194,6 +192,82 @@ public class PagesController : CmsControllerBase
 
         return View("Edit", vm);
     }
+
+    /// <summary>
+    /// A page's SEO metadata, per language. Reachable for EVERY page — including the seven that
+    /// open as a visual preview of the real public view, which has no room for form fields and is
+    /// why these were previously unreachable for exactly the pages that matter.
+    /// </summary>
+    public async Task<IActionResult> Seo(int id, string? lang)
+    {
+        var page = await _pages.GetPageAsync(id);
+        if (page is null)
+            return NotFound();
+
+        ViewData["CurrentPageId"] = id;
+
+        var languages = await _languages.GetAllAsync();
+        if (languages.Count == 0)
+            return Problem("No languages are configured (customer.languages is empty).");
+
+        var langCode = string.IsNullOrWhiteSpace(lang) ? DefaultLangCode : lang;
+        var language = languages.FirstOrDefault(l => l.Code == langCode) ?? languages.First();
+
+        string? Attribute(string name) => page.Attributes
+            .FirstOrDefault(a => a.LangId == language.Id && a.AttributeName == name)?.Value;
+
+        var isDefaultLanguage = string.Equals(language.Code, DefaultLangCode, StringComparison.OrdinalIgnoreCase);
+
+        return View(new PageSeoViewModel
+        {
+            PageId = page.Id,
+            PageName = page.PageName,
+            LangId = language.Id,
+            LangCode = language.Code,
+            IsDefaultLanguage = isDefaultLanguage,
+            Languages = languages.OrderBy(l => l.Code)
+                .Select(l => new LanguageOptionViewModel { Id = l.Id, Code = l.Code, Name = l.Name }).ToList(),
+            // Falling back to the page's own columns means an install that only ever had the
+            // language-neutral values shows them here instead of three empty boxes, and the first
+            // save promotes them to proper per-language rows.
+            MetaTitle = Attribute(SeoAttributes.Title) ?? (isDefaultLanguage ? page.MetaTitle : null),
+            MetaDescription = Attribute(SeoAttributes.Description) ?? (isDefaultLanguage ? page.MetaDesc : null),
+            MetaKeywords = Attribute(SeoAttributes.Keywords) ?? (isDefaultLanguage ? page.MetaKeyword : null)
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveSeo(PageSeoViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Nothing was saved — check the field lengths below.";
+            return RedirectToAction(nameof(Seo), new { id = model.PageId, lang = model.LangCode });
+        }
+
+        await SetSeoAttributeAsync(model.PageId, model.LangId, SeoAttributes.Title, model.MetaTitle);
+        await SetSeoAttributeAsync(model.PageId, model.LangId, SeoAttributes.Description, model.MetaDescription);
+        await SetSeoAttributeAsync(model.PageId, model.LangId, SeoAttributes.Keywords, model.MetaKeywords);
+
+        // The pages table's own columns stay in step with the default language: they're what the Cms
+        // page list and dashboard show, and what any page whose language has no rows falls back to.
+        if (string.Equals(model.LangCode, DefaultLangCode, StringComparison.OrdinalIgnoreCase))
+            await _pages.UpdatePageMetaAsync(model.PageId, model.MetaTitle, model.MetaDescription, model.MetaKeywords);
+
+        TempData["Success"] = $"SEO metadata saved for {model.LangCode.ToUpperInvariant()}.";
+        return RedirectToAction(nameof(Seo), new { id = model.PageId, lang = model.LangCode });
+    }
+
+    private Task SetSeoAttributeAsync(int pageId, int langId, string attributeName, string? value) =>
+        _pages.SetAttributeAsync(new SetPageAttributeRequest
+        {
+            PageId = pageId,
+            AttributeName = attributeName,
+            AttributeType = PageAttributeType.Text,
+            LangId = langId,
+            Value = string.IsNullOrWhiteSpace(value) ? null : value.Trim()
+        });
 
     /// <summary>
     /// Maps each nav-reachable public path — exactly as asp-controller/asp-action on _PublicNav and
@@ -229,17 +303,15 @@ public class PagesController : CmsControllerBase
     }
 
     /// <summary>
-    /// Saves the page's meta fields and upserts every attribute row present in the form —
-    /// existing rows (by AttributeName) get updated in place, new ones get inserted. Rows with a
-    /// blank AttributeName (unfilled "add new" rows) are ignored. There is no delete yet — remove
-    /// an attribute's value to blank it out, or ask an Admin to remove the row directly.
+    /// Upserts every attribute row present in the form — existing rows (by AttributeName) get
+    /// updated in place, new ones get inserted. Rows with a blank AttributeName (unfilled "add new"
+    /// rows) are ignored. There is no delete yet — remove an attribute's value to blank it out, or
+    /// ask an Admin to remove the row directly. SEO metadata is saved separately, by SaveSeo.
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Save(PageEditViewModel model)
     {
-        await _pages.UpdatePageMetaAsync(model.PageId, model.MetaTitle, model.MetaDesc, model.MetaKeyword);
-
         var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var row in model.Attributes)
         {
@@ -255,17 +327,33 @@ public class PagesController : CmsControllerBase
             if (!Enum.TryParse<PageAttributeType>(row.AttributeType, out var type))
                 type = PageAttributeType.Text;
 
+            var attributeName = row.AttributeName.Trim();
+            var value = row.Value;
+
+            if (MapEmbedUrl.IsMapEmbedAttribute(attributeName))
+            {
+                var normalized = MapEmbedUrl.Normalize(value);
+                if (normalized is null)
+                {
+                    TempData["Error"] = $"'{attributeName}' was not saved. {MapEmbedUrl.RejectionMessage}";
+                    continue;
+                }
+
+                value = normalized;
+            }
+
             await _pages.SetAttributeAsync(new SetPageAttributeRequest
             {
                 PageId = model.PageId,
-                AttributeName = row.AttributeName.Trim(),
+                AttributeName = attributeName,
                 AttributeType = type,
                 LangId = model.LangId,
-                Value = row.Value
+                Value = value
             });
         }
 
-        TempData["Success"] = "Page saved.";
+        if (TempData["Error"] is null)
+            TempData["Success"] = "Page saved.";
         return RedirectToAction(nameof(Edit), new { id = model.PageId, lang = model.LangCode });
     }
 
@@ -280,10 +368,23 @@ public class PagesController : CmsControllerBase
         if (!Enum.TryParse<PageAttributeType>(attributeType, out var type))
             type = PageAttributeType.Text;
 
+        var name = attributeName.Trim();
+
+        // A map embed only renders from certain Google URL shapes — convert what was pasted, and
+        // refuse it with an explanation rather than saving a link that leaves a blank rectangle.
+        if (MapEmbedUrl.IsMapEmbedAttribute(name))
+        {
+            var normalized = MapEmbedUrl.Normalize(value);
+            if (normalized is null)
+                return BadRequest(new { error = MapEmbedUrl.RejectionMessage });
+
+            value = normalized;
+        }
+
         await _pages.SetAttributeAsync(new SetPageAttributeRequest
         {
             PageId = pageId,
-            AttributeName = attributeName.Trim(),
+            AttributeName = name,
             AttributeType = type,
             LangId = langId,
             Value = value
@@ -316,9 +417,9 @@ public class PagesController : CmsControllerBase
         var uniqueFileName = $"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}_{Path.GetFileNameWithoutExtension(file.FileName)}{extension}";
         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-        var scanResult = await ScanAndSaveAsync(file, filePath, "image", cancellationToken);
-        if (scanResult.Error is not null)
-            return scanResult.IsServerFault ? StatusCode(500, new { error = scanResult.Error }) : BadRequest(new { error = scanResult.Error });
+        var saveError = await SaveUploadAsync(file, filePath, "image", cancellationToken);
+        if (saveError is not null)
+            return StatusCode(500, new { error = saveError });
 
         return Json(new { url = $"/img/cms/{uniqueFileName}" });
     }
@@ -347,27 +448,23 @@ public class PagesController : CmsControllerBase
         var uniqueFileName = $"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}_{Path.GetFileNameWithoutExtension(file.FileName)}{extension}";
         var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-        var scanResult = await ScanAndSaveAsync(file, filePath, "PDF", cancellationToken);
-        if (scanResult.Error is not null)
-            return scanResult.IsServerFault ? StatusCode(500, new { error = scanResult.Error }) : BadRequest(new { error = scanResult.Error });
+        var saveError = await SaveUploadAsync(file, filePath, "PDF", cancellationToken);
+        if (saveError is not null)
+            return StatusCode(500, new { error = saveError });
 
         return Json(new { url = $"/pdf/cms/{uniqueFileName}" });
     }
 
-    private readonly record struct ScanAndSaveResult(string? Error, bool IsServerFault);
-
     /// <summary>
-    /// Writes an already type-validated upload to a temp file, scans it for malware, and only then
-    /// moves it to <paramref name="destinationPath"/> — a public wwwroot location. The file never
-    /// touches a web-servable path before it's been scanned clean. A scan hit or an unavailable
-    /// scanner is the caller's fault to fix (bad file / try again); a failure moving the already-clean
-    /// file into place is this server's fault — <see cref="ScanAndSaveResult.IsServerFault"/>
-    /// distinguishes the two so the controller can return 400 vs 500 accordingly.
+    /// Writes an already type-validated upload to a temp file and then moves it to
+    /// <paramref name="destinationPath"/> — a public wwwroot location. The temp hop means a
+    /// connection that drops mid-upload leaves a stray temp file rather than a truncated image
+    /// already being served to visitors. Returns null on success, or a user-facing error message.
     /// </summary>
-    private async Task<ScanAndSaveResult> ScanAndSaveAsync(IFormFile file, string destinationPath, string kindLabel, CancellationToken cancellationToken)
+    private async Task<string?> SaveUploadAsync(IFormFile file, string destinationPath, string kindLabel, CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(ScanTempDirectory);
-        var tempPath = Path.Combine(ScanTempDirectory, $"{Guid.NewGuid():N}{Path.GetExtension(file.FileName)}");
+        Directory.CreateDirectory(UploadTempDirectory);
+        var tempPath = Path.Combine(UploadTempDirectory, $"{Guid.NewGuid():N}{Path.GetExtension(file.FileName)}");
 
         try
         {
@@ -376,26 +473,13 @@ public class PagesController : CmsControllerBase
                 await file.CopyToAsync(tempStream, cancellationToken);
             }
 
-            var outcome = await _virusScanner.ScanAsync(tempPath, cancellationToken);
-            if (outcome != VirusScanOutcome.Clean)
-            {
-                _logger.LogWarning("Cms {Kind} upload {FileName} rejected by virus scan: {Outcome}.", kindLabel, file.FileName, outcome);
-                var message = outcome == VirusScanOutcome.Infected
-                    ? $"This {kindLabel} was flagged by a virus scan and could not be accepted."
-                    : $"We couldn't scan this {kindLabel} right now. Please try again shortly.";
-                return new ScanAndSaveResult(message, IsServerFault: false);
-            }
-
-            try
-            {
-                System.IO.File.Move(tempPath, destinationPath, overwrite: false);
-                return new ScanAndSaveResult(null, IsServerFault: false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to save scanned Cms {Kind} upload {FileName} to {Destination}.", kindLabel, file.FileName, destinationPath);
-                return new ScanAndSaveResult($"Failed to save the uploaded {kindLabel}.", IsServerFault: true);
-            }
+            System.IO.File.Move(tempPath, destinationPath, overwrite: false);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save Cms {Kind} upload {FileName} to {Destination}.", kindLabel, file.FileName, destinationPath);
+            return $"Failed to save the uploaded {kindLabel}.";
         }
         finally
         {

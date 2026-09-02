@@ -36,6 +36,13 @@
         <button type="button" id="cmsCancelBtn" class="hidden px-3 py-1 rounded-full border border-white/40 text-xs font-bold tracking-wider uppercase opacity-80 hover:opacity-100 transition-opacity">Cancel</button>
         <button type="button" id="cmsSaveBtn" class="hidden px-3 py-1 rounded-full bg-[#2D6A4F] text-white text-xs font-bold tracking-wider uppercase hover:opacity-90 transition-opacity">Save</button>
         <span class="opacity-30">|</span>
+        @* The pages that open as a visual preview have no form fields, so this is the only way in to
+           their meta title/description — the reason those fields read as "missing from the Cms". *@
+        <a href="@Url.Action("Seo", "Pages", new { area = "Cms", id = pageId, lang = ViewData["LangCode"] })"
+           class="flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity" title="Meta title and description for this page">
+            <span class="material-symbols-outlined" style="font-size:15px;">travel_explore</span> SEO
+        </a>
+        <span class="opacity-30">|</span>
         @foreach (var l in languages)
         {
             var active = l.Id == langId;

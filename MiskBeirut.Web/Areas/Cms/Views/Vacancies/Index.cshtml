@@ -1,0 +1,130 @@
+@using MiskBeirut.Application.Dtos.Careers
+@model IReadOnlyList<VacancyAdminDto>
+@{
+    ViewData["Title"] = "Vacancies";
+}
+
+<div class="mb-stack-lg flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">Vacancies</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">The open positions listed on the public Careers page. Inactive ones, and any past their deadline, stay here but don't appear on the site.</p>
+    </div>
+    <a asp-action="Create" class="inline-flex items-center gap-2 px-stack-md py-stack-sm bg-slate-blue hover:bg-primary text-white rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-colors">
+        <span class="material-symbols-outlined text-sm">add</span>
+        Add Vacancy
+    </a>
+</div>
+
+<div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left font-data-tabular text-data-tabular" data-sortable data-paginate="10">
+            <thead>
+                <tr class="border-b border-surface-container-high bg-surface-bright font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+                    <th class="py-3 px-stack-md" data-sort="number">Order</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Title</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Department</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Location</th>
+                    <th class="py-3 px-stack-md" data-sort="text">Type</th>
+                    <th class="py-3 px-stack-md" data-sort="date">Deadline</th>
+                    <th class="py-3 px-stack-md" data-sort="number">Applications</th>
+                    <th class="py-3 px-stack-md" data-sort="number">Status</th>
+                    <th class="py-3 px-stack-md text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var vacancy in Model)
+                {
+                    <tr class="border-b border-surface-container-high hover:bg-surface-bright transition-colors align-top">
+                        <td class="py-4 px-stack-md text-on-surface-variant">@vacancy.DisplayOrder</td>
+                        <td class="py-4 px-stack-md text-on-surface font-medium">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm text-on-surface-variant">@vacancy.Icon</span>
+                                <a asp-action="Edit" asp-route-id="@vacancy.Id" class="hover:text-slate-blue hover:underline">@vacancy.Title</a>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(vacancy.TitleAr))
+                            {
+                                <div class="text-on-surface-variant font-normal text-xs mt-1" dir="rtl">@vacancy.TitleAr</div>
+                            }
+                        </td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@vacancy.Department</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@vacancy.Location</td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@vacancy.EmploymentType</td>
+                        <td class="py-4 px-stack-md whitespace-nowrap @(vacancy.IsExpired ? "text-status-urgent" : "text-on-surface-variant")"
+                            data-sort-value="@(vacancy.ApplicationDeadline?.ToString("yyyy-MM-dd") ?? "")">
+                            @(vacancy.ApplicationDeadline?.ToString("yyyy-MM-dd") ?? "—")
+                        </td>
+                        <td class="py-4 px-stack-md text-on-surface-variant">@vacancy.ApplicationCount</td>
+                        <td class="py-4 px-stack-md whitespace-nowrap" data-sort-value="@(vacancy.IsActive && !vacancy.IsExpired ? 2 : vacancy.IsActive ? 1 : 0)">
+                            @if (!vacancy.IsActive)
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-surface-container-high text-on-surface-variant">
+                                    <span class="material-symbols-outlined text-sm">visibility_off</span>
+                                    Inactive
+                                </span>
+                            }
+                            else if (vacancy.IsExpired)
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#FFF3E0] text-status-pending" title="Active, but the application deadline has passed — it no longer shows on the Careers page.">
+                                    <span class="material-symbols-outlined text-sm">event_busy</span>
+                                    Closed
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#E8F5E9] text-status-success">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                                    Live
+                                </span>
+                            }
+                        </td>
+                        <td class="py-4 px-stack-md">
+                            <div class="flex items-center justify-end gap-3 flex-wrap">
+                                <a asp-action="Edit" asp-route-id="@vacancy.Id" class="text-slate-blue hover:text-primary inline-flex items-center" title="Edit">
+                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                </a>
+                                <form asp-action="SetActive" method="post" class="inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@vacancy.Id" />
+                                    <input type="hidden" name="isActive" value="@(!vacancy.IsActive ? "true" : "false")" />
+                                    <button type="submit" class="text-slate-blue hover:text-primary hover:underline text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                        @(vacancy.IsActive ? "Deactivate" : "Activate")
+                                    </button>
+                                </form>
+                                @if (vacancy.ApplicationCount == 0)
+                                {
+                                    <form asp-action="Delete" method="post" class="inline" data-confirm="Delete &quot;@vacancy.Title&quot;? This can't be undone.">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@vacancy.Id" />
+                                        <button type="submit" class="text-status-urgent hover:opacity-80 inline-flex items-center" title="Delete">
+                                            <span class="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="py-10 px-stack-md text-center text-on-surface-variant">
+                            No vacancies yet. <a asp-action="Create" class="text-slate-blue hover:underline">Add the first one</a>.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Delete is the one destructive action here, so it asks first. Native confirm() is fine in the
+    // Cms (unlike the public site, it's a deliberate admin action on a page we control).
+    document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            if (!window.confirm(form.dataset.confirm)) e.preventDefault();
+        });
+    });
+</script>
+}

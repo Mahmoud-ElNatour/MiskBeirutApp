@@ -1,0 +1,135 @@
+@model PageSeoViewModel
+@{
+    ViewData["Title"] = $"{Model.PageName} — SEO";
+
+    const string labelClass = "block font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs";
+    const string inputClass = "w-full rounded-DEFAULT border border-border-subtle px-3 py-2 font-body-md text-body-md focus:outline-none focus:border-slate-blue";
+    const string errorClass = "mt-1 font-label-sm text-label-sm text-status-urgent";
+    var isArabic = Model.LangCode.Equals("ar", StringComparison.OrdinalIgnoreCase);
+    var dir = isArabic ? "rtl" : null;
+}
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-stack-md">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface mb-stack-xs">@Model.PageName — SEO</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant">What search engines and link previews show for this page in <strong>@Model.LangCode.ToUpper()</strong>.</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.PageId" asp-route-lang="@Model.LangCode"
+           class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">edit_document</span>
+            Edit Content
+        </a>
+        <a asp-action="Index" class="inline-flex justify-center items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-border-subtle rounded-DEFAULT font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">
+            <span class="material-symbols-outlined text-sm">list</span>
+            All Pages
+        </a>
+    </div>
+</div>
+
+<!-- Language tabs: each language keeps its own title and description. -->
+<div class="flex gap-2 mb-stack-lg border-b border-surface-container-high">
+    @foreach (var lang in Model.Languages)
+    {
+        var isActive = lang.Id == Model.LangId;
+        <a asp-action="Seo" asp-route-id="@Model.PageId" asp-route-lang="@lang.Code"
+           class="px-4 py-2 font-label-lg text-label-lg uppercase border-b-2 -mb-px transition-colors @(isActive ? "border-brick-red text-primary" : "border-transparent text-on-surface-variant hover:text-primary")">
+            @lang.Name (@lang.Code)
+        </a>
+    }
+</div>
+
+<form asp-action="SaveSeo" method="post" class="space-y-stack-lg max-w-3xl">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="PageId" />
+    <input type="hidden" asp-for="PageName" />
+    <input type="hidden" asp-for="LangId" />
+    <input type="hidden" asp-for="LangCode" />
+
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Page Meta (@Model.LangCode.ToUpper())</h3>
+        </div>
+        <div class="p-stack-lg space-y-stack-lg">
+            <div>
+                <label asp-for="MetaTitle" class="@labelClass">Meta Title</label>
+                <input asp-for="MetaTitle" class="@inputClass" dir="@dir" maxlength="300" data-counter-for="metaTitleCount" placeholder="@Model.PageName | Misk Beirut" />
+                <p class="mt-1 font-label-sm text-label-sm text-on-surface-variant">
+                    The browser tab and the headline in search results. Around 60 characters shows in full — <span id="metaTitleCount">0</span> so far.
+                </p>
+                <span asp-validation-for="MetaTitle" class="@errorClass"></span>
+            </div>
+            <div>
+                <label asp-for="MetaDescription" class="@labelClass">Meta Description</label>
+                <textarea asp-for="MetaDescription" rows="3" class="@inputClass" dir="@dir" maxlength="500" data-counter-for="metaDescCount" placeholder="One or two sentences describing this page."></textarea>
+                <p class="mt-1 font-label-sm text-label-sm text-on-surface-variant">
+                    The grey text under the headline in search results. Around 155 characters shows in full — <span id="metaDescCount">0</span> so far.
+                </p>
+                <span asp-validation-for="MetaDescription" class="@errorClass"></span>
+            </div>
+            <div>
+                <label asp-for="MetaKeywords" class="@labelClass">Meta Keywords</label>
+                <input asp-for="MetaKeywords" class="@inputClass" dir="@dir" maxlength="500" placeholder="beirut restaurant, lebanese dining" />
+                <p class="mt-1 font-label-sm text-label-sm text-on-surface-variant">
+                    Comma-separated. Google and Bing have ignored this tag for years — it's here because the field exists, not because it will move you up the results.
+                </p>
+                <span asp-validation-for="MetaKeywords" class="@errorClass"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search-result preview: what the two fields above actually add up to. -->
+    <div class="bg-surface-container-lowest border border-surface-container-high rounded-DEFAULT overflow-hidden">
+        <div class="p-stack-md border-b border-surface-container-high bg-surface-bright">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface">Preview</h3>
+        </div>
+        <div class="p-stack-lg" dir="@dir">
+            <p class="font-body-md text-body-md text-on-surface-variant mb-1">miskbeirut.com</p>
+            <p id="seoPreviewTitle" class="text-[#1a0dab] text-lg leading-snug"></p>
+            <p id="seoPreviewDescription" class="font-body-md text-body-md text-on-surface-variant mt-1"></p>
+        </div>
+    </div>
+
+    @if (!Model.IsDefaultLanguage)
+    {
+        <p class="font-body-md text-body-md text-on-surface-variant">
+            Left blank, this language falls back to the English values.
+        </p>
+    }
+
+    <div class="flex items-center justify-end gap-3">
+        <a asp-action="Index" class="px-4 py-2 rounded-DEFAULT border border-border-subtle font-label-md text-label-md text-on-surface-variant hover:border-slate-blue transition-colors">Cancel</a>
+        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-status-success hover:opacity-90 text-white rounded-DEFAULT font-label-md text-label-md transition-opacity">
+            <span class="material-symbols-outlined text-sm">save</span>
+            Save SEO
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    (function () {
+        var titleInput = document.getElementById('MetaTitle');
+        var descInput = document.getElementById('MetaDescription');
+        var previewTitle = document.getElementById('seoPreviewTitle');
+        var previewDesc = document.getElementById('seoPreviewDescription');
+        var defaultTitle = @Html.Raw(System.Text.Json.JsonSerializer.Serialize($"{Model.PageName} | Misk Beirut"));
+
+        function counter(input) {
+            var target = document.getElementById(input.dataset.counterFor);
+            if (target) target.textContent = input.value.length;
+        }
+
+        function render() {
+            previewTitle.textContent = titleInput.value.trim() || defaultTitle;
+            previewDesc.textContent = descInput.value.trim() || 'No description set — search engines will pick their own snippet from the page.';
+            counter(titleInput);
+            counter(descInput);
+        }
+
+        titleInput.addEventListener('input', render);
+        descInput.addEventListener('input', render);
+        render();
+    })();
+</script>
+}

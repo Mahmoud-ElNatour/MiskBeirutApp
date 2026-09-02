@@ -160,6 +160,13 @@
             </li>
             @await Component.InvokeAsync("PagesNav", new { currentPageId = ViewData["CurrentPageId"] as int? })
             <li>
+                <a asp-area="Cms" asp-controller="Vacancies" asp-action="Index"
+                   class="flex items-center px-container-padding py-stack-sm transition-all @(ViewContext.RouteData.Values["controller"]?.ToString() == "Vacancies" ? "text-on-primary font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
+                    <span class="material-symbols-outlined mr-4">badge</span>
+                    Vacancies
+                </a>
+            </li>
+            <li>
                 <a asp-area="Cms" asp-controller="JobApplications" asp-action="Index"
                    class="flex items-center px-container-padding py-stack-sm transition-all @(ViewContext.RouteData.Values["controller"]?.ToString() == "JobApplications" ? "text-on-primary font-bold border-l-4 border-brick-red bg-primary-container" : "text-on-primary opacity-70 hover:opacity-100 hover:bg-primary-container")">
                     <span class="material-symbols-outlined mr-4">work</span>

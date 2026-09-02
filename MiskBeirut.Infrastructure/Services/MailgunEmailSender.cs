@@ -10,18 +10,25 @@ public class MailgunEmailSender : IEmailSender
     private readonly string _domain;
     private readonly string _apiKey;
     private readonly string _fromAddress;
+    private readonly string _apiBaseUrl;
 
-    public MailgunEmailSender(HttpClient http, string domain, string apiKey, string fromAddress)
+    /// <param name="apiBaseUrl">
+    /// Mailgun API host — "https://api.mailgun.net" for US domains, "https://api.eu.mailgun.net" for
+    /// EU ones. A US-hosted request for an EU domain answers 404, so this is configurable rather than
+    /// hardcoded. Program.cs guarantees every argument here is non-blank.
+    /// </param>
+    public MailgunEmailSender(HttpClient http, string domain, string apiKey, string fromAddress, string apiBaseUrl = "https://api.mailgun.net")
     {
         _http = http;
         _domain = domain;
         _apiKey = apiKey;
         _fromAddress = fromAddress;
+        _apiBaseUrl = apiBaseUrl.TrimEnd('/');
     }
 
     public async Task SendAsync(string to, string subject, string htmlBody, string? cc = null, string? from = null, CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.mailgun.net/v3/{_domain}/messages");
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/v3/{_domain}/messages");
         var authBytes = Encoding.UTF8.GetBytes($"api:{_apiKey}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
 
@@ -47,8 +54,16 @@ public class MailgunEmailSender : IEmailSender
             // on a sandbox domain's authorized list — which is why a lead that claimed the discount
             // could silently never receive their email.
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            // 404 is never about the message — it means the URL named no Mailgun domain, so say which
+            // domain was tried and on which host rather than leaving "Not Found" to be read as a bug
+            // in the sending code.
+            var hint = response.StatusCode == System.Net.HttpStatusCode.NotFound
+                ? $" Mailgun has no domain '{_domain}' on {_apiBaseUrl} — check Mailgun:Domain, and set Mailgun:ApiBaseUrl to https://api.eu.mailgun.net if the domain is in the EU region."
+                : "";
+
             throw new HttpRequestException(
-                $"Mailgun rejected the message to {to} with {(int)response.StatusCode} {response.ReasonPhrase}: {body}",
+                $"Mailgun rejected the message to {to} with {(int)response.StatusCode} {response.ReasonPhrase}: {body}{hint}",
                 inner: null,
                 statusCode: response.StatusCode);
         }
