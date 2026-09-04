@@ -152,14 +152,16 @@ INSERT INTO @global_attrs (AttributeName, AttributeType, LangId, Value) VALUES
 (N'serves_cuisine', 'Text', @en, N'Lebanese'),
 (N'serves_cuisine', 'Text', @ar, N'لبناني'),
 
--- Deliberately blank, and the structured data omits the field entirely while they are.
---
--- openingHours, priceRange and the map coordinates all get shown to people directly in Google's
--- results, so a plausible guess here is worse than nothing: it would publish opening times the
--- restaurant does not keep. These need the client's actual values. Format for opening_hours is
--- schema.org's own, one span per line, e.g. "Mo-Th 08:00-23:00" then "Fr-Su 08:00-01:00".
-(N'opening_hours', 'Text', @en, N''),
-(N'opening_hours', 'Text', @ar, N''),
+-- Opening hours in schema.org's own notation: days Mo-Su, 24-hour times, and 00:00 as the closing
+-- time meaning midnight. Confirmed against what the Home page's "Visit Us" block already displays
+-- (12:00 PM - 12:00 AM), so the two cannot disagree. Google shows these directly in results, which
+-- is why they were left blank until confirmed rather than guessed at.
+(N'opening_hours', 'Text', @en, N'Mo-Su 12:00-00:00'),
+(N'opening_hours', 'Text', @ar, N'Mo-Su 12:00-00:00'),
+
+-- Still blank, and the structured data omits each field entirely while it is. Price range and the
+-- map coordinates are also shown to people directly in Google's results, so they need real values
+-- rather than plausible ones.
 (N'price_range', 'Text', @en, N''),
 (N'price_range', 'Text', @ar, N''),
 (N'geo_latitude', 'Text', @en, N''),

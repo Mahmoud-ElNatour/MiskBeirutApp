@@ -96,12 +96,12 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Global, N'address_country', 'Text', @ar, N'LB'),
 (@Global, N'serves_cuisine', 'Text', @en, N'Lebanese'),
 (@Global, N'serves_cuisine', 'Text', @ar, N'لبناني'),
--- Left blank on purpose: the structured data omits each field entirely while it is empty. Opening
--- hours, price range and coordinates are shown to people directly in Google's results, so a
--- plausible guess is worse than nothing. opening_hours takes schema.org's notation, one span per
--- line, e.g. "Mo-Th 08:00-23:00".
-(@Global, N'opening_hours', 'Text', @en, N''),
-(@Global, N'opening_hours', 'Text', @ar, N''),
+-- schema.org's own notation: days Mo-Su, 24-hour times, 00:00 closing meaning midnight. Matches
+-- what the Home page's "Visit Us" block displays, so the page and the structured data agree.
+(@Global, N'opening_hours', 'Text', @en, N'Mo-Su 12:00-00:00'),
+(@Global, N'opening_hours', 'Text', @ar, N'Mo-Su 12:00-00:00'),
+-- Left blank on purpose: the structured data omits each field entirely while it is empty. Price
+-- range and coordinates are shown to people directly in Google's results, so they need real values.
 (@Global, N'price_range', 'Text', @en, N''),
 (@Global, N'price_range', 'Text', @ar, N''),
 (@Global, N'geo_latitude', 'Text', @en, N''),
