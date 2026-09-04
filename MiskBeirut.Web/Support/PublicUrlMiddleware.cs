@@ -79,7 +79,13 @@ public sealed class PublicUrlMiddleware
         if (rest.Length > 0)
             target += "/" + string.Join('/', rest).ToLowerInvariant();
 
-        if (target == path)
+        // The host has to be checked separately from the path: www.miskbeirut.com/en/about already
+        // has a correct path, so comparing only the path served it as-is and left the site answering
+        // to two hostnames -- the duplicate this class exists to prevent.
+        var hostIsCanonical = _canonicalHost is null
+            || string.Equals(request.Host.Host, _canonicalHost, StringComparison.OrdinalIgnoreCase);
+
+        if (target == path && hostIsCanonical)
         {
             await _next(context);
             return;
