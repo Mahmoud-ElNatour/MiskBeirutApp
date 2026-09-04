@@ -185,6 +185,48 @@ builder.Services.AddScoped<IWhatsAppSender>(sp =>
     return new MetaWhatsAppSender(httpClientFactory.CreateClient(nameof(MetaWhatsAppSender)), phoneNumberId, accessToken, apiVersion);
 });
 
+// Instagram gallery on the Home page. Registered as a singleton because it caches the account's
+// recent posts in memory: the page must not make an outbound call to Meta on every visit, and the
+// cache is only useful if it outlives the request that filled it.
+//
+// Unconfigured installs get a feed that returns nothing, which the Home page reads as "fall back to
+// the photographs an editor uploaded". That is the correct behaviour both before the Meta app
+// exists and afterwards if the token lapses, so there is no separate failure path to write.
+builder.Services.AddHttpClient(nameof(InstagramGraphFeed));
+builder.Services.AddSingleton<IInstagramFeed>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var userId = config["Instagram:UserId"];
+    var accessToken = config["Instagram:AccessToken"];
+    if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(accessToken))
+    {
+        sp.GetRequiredService<ILogger<Program>>().LogInformation(
+            "Instagram is not configured (Instagram:UserId and Instagram:AccessToken). The Home gallery will show the images uploaded through the Cms.");
+        return new NotConfiguredInstagramFeed();
+    }
+
+    // graph.instagram.com for a token from Instagram Login, graph.facebook.com for one obtained
+    // through a linked Facebook Page. Both answer the same /{ig-user-id}/media request, so which
+    // host to use is configuration rather than a code change.
+    var apiBaseUrl = config["Instagram:ApiBaseUrl"] is { Length: > 0 } baseUrl ? baseUrl : "https://graph.instagram.com";
+    var apiVersion = config["Instagram:ApiVersion"] is { Length: > 0 } version ? version : "v21.0";
+
+    // Fetched once per cache window and sliced per request, so this is the ceiling on how many
+    // tiles the gallery can ever show, not how many it shows today.
+    var fetchCount = int.TryParse(config["Instagram:FetchCount"], out var count) && count > 0 ? Math.Min(count, 25) : 12;
+    var cacheMinutes = int.TryParse(config["Instagram:CacheMinutes"], out var minutes) && minutes > 0 ? minutes : 60;
+
+    return new InstagramGraphFeed(
+        sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(InstagramGraphFeed)),
+        userId,
+        accessToken,
+        apiBaseUrl,
+        apiVersion,
+        fetchCount,
+        TimeSpan.FromMinutes(cacheMinutes),
+        sp.GetRequiredService<ILogger<InstagramGraphFeed>>());
+});
+
 // Application managers
 builder.Services.AddScoped<CustomerManager>();
 builder.Services.AddScoped<EmployeeManager>();

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MiskBeirut.Application.Managers;
+using MiskBeirut.Application.Services;
 using MiskBeirut.Core.Repositories;
 using MiskBeirut.Web.Models;
 using MiskBeirut.Web.Support;
@@ -10,20 +11,32 @@ namespace MiskBeirut.Web.Areas.Customer.Controllers;
 
 public class HomeController : PublicContentController
 {
+    /// <summary>How many tiles the Instagram gallery row shows — the same number of slots the Cms has always had.</summary>
+    private const int GalleryTileCount = 8;
+
     private readonly ILogger<HomeController> _logger;
     private readonly GoogleReviewManager _reviews;
+    private readonly IInstagramFeed _instagram;
 
-    public HomeController(ILogger<HomeController> logger, PageContentManager pages, ILanguageRepository languages, SiteUrls urls, GoogleReviewManager reviews)
+    public HomeController(ILogger<HomeController> logger, PageContentManager pages, ILanguageRepository languages, SiteUrls urls, GoogleReviewManager reviews, IInstagramFeed instagram)
         : base(pages, languages, urls)
     {
         _logger = logger;
         _reviews = reviews;
+        _instagram = instagram;
     }
 
     public async Task<IActionResult> Index()
     {
         var content = await LoadPageAsync("Home");
         ViewData["GoogleReviews"] = await _reviews.GetFeaturedAsync(3);
+
+        // The gallery shows the account's latest posts when the feed is available, and the images an
+        // editor uploaded through the Cms when it isn't — unconfigured, rate-limited, expired token,
+        // Instagram down. GetRecentAsync never throws, so there is nothing to catch here: an empty
+        // list is the signal to fall back, and the view treats it that way.
+        ViewData["InstagramPosts"] = await _instagram.GetRecentAsync(GalleryTileCount, HttpContext.RequestAborted);
+
         return View(content);
     }
 

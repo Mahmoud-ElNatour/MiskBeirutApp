@@ -1,5 +1,6 @@
 @model MiskBeirut.Web.Support.PageContent
 @using MiskBeirut.Application.Dtos.Reviews
+@using MiskBeirut.Application.Dtos.Social
 @{
     ViewData["Active"] = "home";
     Layout = "_PublicLayout";
@@ -243,21 +244,49 @@
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto" data-cms-field="gallery_subtitle" data-cms-type="Text">@Model.Text("gallery_subtitle", "Discover moments from Misk Beirut on our social media channels.")</p>
 <div class="w-24 h-0.5 bg-brick-red mx-auto mt-[16px]"></div>
 </div>
+@{
+    // The account's latest posts, pulled through Meta's Graph API (see InstagramGraphFeed). Empty
+    // when Instagram isn't configured, the token has lapsed or the API is unreachable — in which
+    // case the row falls back to the photographs an editor uploaded through the Cms, so the section
+    // never renders blank.
+    //
+    // The Cms preview always shows the uploaded slots: an editor is there to manage those, and
+    // covering them with a live feed would leave nothing to click on and edit.
+    var instagramPosts = ViewData["InstagramPosts"] as IReadOnlyList<InstagramPostDto> ?? Array.Empty<InstagramPostDto>();
+    var galleryBrandName = Model.Global("brand_name", "Misk Beirut");
+    var showLiveFeed = instagramPosts.Count > 0 && ViewData["IsCmsPreview"] as bool? != true;
+}
 <div class="flex gap-[16px] overflow-x-auto pb-4 snap-x insta-carousel mb-[48px]">
-@for (var i = 1; i <= 8; i++)
+@if (showLiveFeed)
 {
-    var photoImage = Model.Image($"gallery_photo_{i}_image", "/img/cms-placeholder.svg");
-    var photoImageIsPlaceholder = !Model.Has($"gallery_photo_{i}_image");
-    var photoCaption = Model.Text($"gallery_photo_{i}_caption", $"Photo {i}");
-    var photoImageField = $"gallery_photo_{i}_image";
-    var photoCaptionField = $"gallery_photo_{i}_caption";
-    <div class="w-[220px] h-[220px] md:w-[280px] md:h-[280px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center relative" data-cms-field="@photoImageField" data-cms-type="BackgroundImage" style="background-image:url('@photoImage')">
-        @if (photoImageIsPlaceholder)
-        {
-            <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
-        }
-        <span class="sr-only @(photoImageIsPlaceholder ? "cms-placeholder-caption" : "")" data-cms-field="@photoCaptionField" data-cms-type="Text">@photoCaption</span>
-    </div>
+    foreach (var post in instagramPosts)
+    {
+        @* data-no-lightbox: these tiles lead to the post on instagram.com, so the full-screen photo
+           viewer must not also intercept the click (see _PublicLayout.cshtml). *@
+        <a href="@post.Permalink" target="_blank" rel="noopener noreferrer" data-no-lightbox
+           class="w-[220px] h-[220px] md:w-[280px] md:h-[280px] flex-shrink-0 snap-start block relative overflow-hidden border border-outline/20 group">
+            <img src="@post.ImageUrl" alt="@post.AltText(galleryBrandName)" loading="lazy"
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        </a>
+    }
+}
+else
+{
+    for (var i = 1; i <= 8; i++)
+    {
+        var photoImage = Model.Image($"gallery_photo_{i}_image", "/img/cms-placeholder.svg");
+        var photoImageIsPlaceholder = !Model.Has($"gallery_photo_{i}_image");
+        var photoCaption = Model.Text($"gallery_photo_{i}_caption", $"Photo {i}");
+        var photoImageField = $"gallery_photo_{i}_image";
+        var photoCaptionField = $"gallery_photo_{i}_caption";
+        <div class="w-[220px] h-[220px] md:w-[280px] md:h-[280px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center relative" data-cms-field="@photoImageField" data-cms-type="BackgroundImage" style="background-image:url('@photoImage')">
+            @if (photoImageIsPlaceholder)
+            {
+                <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
+            }
+            <span class="sr-only @(photoImageIsPlaceholder ? "cms-placeholder-caption" : "")" data-cms-field="@photoCaptionField" data-cms-type="Text">@photoCaption</span>
+        </div>
+    }
 }
 </div>
 <div class="text-center">

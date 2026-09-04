@@ -519,11 +519,14 @@
         if (e.key === 'ArrowRight') step(1);
     });
 
-    // Only real photo tiles open the lightbox — controls that happen to live inside a gallery row
-    // (e.g. the CMS's "Add Photo" button, see Areas/Customer/Views/Events/Index.cshtml) opt out via
-    // .cms-preview-edit-only so a click on them doesn't also pop the full-screen viewer.
+    // Only real photo tiles open the lightbox. Two kinds of child opt out: controls that happen to
+    // live inside a gallery row (the CMS's "Add Photo" button, see Events/Index.cshtml) via
+    // .cms-preview-edit-only, and tiles that are themselves links — the live Instagram posts, which
+    // lead to instagram.com and would otherwise both navigate and pop the viewer on one click.
     function galleryTiles(gallery) {
-        return Array.from(gallery.children).filter(function (el) { return !el.classList.contains('cms-preview-edit-only'); });
+        return Array.from(gallery.children).filter(function (el) {
+            return !el.classList.contains('cms-preview-edit-only') && !el.hasAttribute('data-no-lightbox');
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
