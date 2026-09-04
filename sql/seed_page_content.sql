@@ -104,8 +104,10 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 -- range and coordinates are shown to people directly in Google's results, so they need real values.
 (@Global, N'price_range', 'Text', @en, N''),
 (@Global, N'price_range', 'Text', @ar, N''),
-(@Global, N'geo_latitude', 'Text', @en, N''),
-(@Global, N'geo_longitude', 'Text', @en, N''),
+-- The venue's own pin from the client's Google Maps place link: the "!3d/!4d" coordinates, not the
+-- "@" ones, which are only wherever the map was centred when the link was copied.
+(@Global, N'geo_latitude', 'Text', @en, N'33.8776254'),
+(@Global, N'geo_longitude', 'Text', @en, N'35.4829746'),
 (@Global, N'copyright_name', 'Text', @en, N'Misk Beirut'),
 (@Global, N'copyright_name', 'Text', @ar, N'مسك بيروت'),
 (@Global, N'copyright_suffix', 'Text', @en, N'All rights reserved.'),
@@ -237,8 +239,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Home, N'visit_hours', 'Text', @ar, N'12:00 ظهراً - 12:00 منتصف الليل'),
 (@Home, N'visit_cta_label', 'Text', @en, N'Reserve a Table'),
 (@Home, N'visit_cta_label', 'Text', @ar, N'احجز طاولة'),
-(@Home, N'visit_map_embed_url', 'Link', @en, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3311.834712345678!2d35.5017!3d33.8938!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f17215880a787%3A0x49621703add375d!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2slb!4v1710000000000!5m2!1sen!2slb'),
-(@Home, N'visit_map_embed_url', 'Link', @ar, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3311.834712345678!2d35.5017!3d33.8938!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f17215880a787%3A0x49621703add375d!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2slb!4v1710000000000!5m2!1sen!2slb'),
+(@Home, N'visit_map_embed_url', 'Link', @en, N'https://maps.google.com/maps?q=33.8776254,35.4829746&z=17&output=embed'),
+(@Home, N'visit_map_embed_url', 'Link', @ar, N'https://maps.google.com/maps?q=33.8776254,35.4829746&z=17&output=embed'),
 (@Home, N'careers_banner_title', 'Text', @en, N'Join Our Team'),
 (@Home, N'careers_banner_title', 'Text', @ar, N'انضم إلى فريقنا'),
 (@Home, N'careers_banner_body', 'Text', @en, N'Build your career with us and become part of Misk Beirut''s legacy of excellence.'),
@@ -406,8 +408,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Contact, N'info_email_title', 'Text', @ar, N'البريد الإلكتروني'),
 (@Contact, N'info_address_title', 'Text', @en, N'Address'),
 (@Contact, N'info_address_title', 'Text', @ar, N'العنوان'),
-(@Contact, N'info_address_map_url', 'Link', @en, N'https://www.google.com/maps/search/Gemmayzeh,+Pasteur+Street,+Beirut'),
-(@Contact, N'info_address_map_url', 'Link', @ar, N'https://www.google.com/maps/search/Gemmayzeh,+Pasteur+Street,+Beirut'),
+(@Contact, N'info_address_map_url', 'Link', @en, N'https://www.google.com/maps/place/Misk+beirut/@33.8776298,35.4803997,17z/data=!3m1!4b1!4m6!3m5!1s0x151f17aed3a8390f:0xdd3597ce3c491a6b!8m2!3d33.8776254!4d35.4829746'),
+(@Contact, N'info_address_map_url', 'Link', @ar, N'https://www.google.com/maps/place/Misk+beirut/@33.8776298,35.4803997,17z/data=!3m1!4b1!4m6!3m5!1s0x151f17aed3a8390f:0xdd3597ce3c491a6b!8m2!3d33.8776254!4d35.4829746'),
 (@Contact, N'field_full_name', 'Text', @en, N'Full Name *'),
 (@Contact, N'field_full_name', 'Text', @ar, N'الاسم الكامل *'),
 (@Contact, N'field_phone', 'Text', @en, N'Phone Number *'),
@@ -432,8 +434,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Contact, N'submit_label', 'Text', @ar, N'إرسال الطلب'),
 (@Contact, N'success_message', 'Text', @en, N'Thank you for contacting us. We''ll be in touch with you soon.'),
 (@Contact, N'success_message', 'Text', @ar, N'شكراً لتواصلك معنا. سنعاود الاتصال بك قريباً.'),
-(@Contact, N'map_embed_url', 'Link', @en, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13248.847525287515!2d35.51091565!3d33.8966774!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f16f39369670f%3A0xc3b83c50937c050!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2sus!4v1715872145678!5m2!1sen!2sus'),
-(@Contact, N'map_embed_url', 'Link', @ar, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13248.847525287515!2d35.51091565!3d33.8966774!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f16f39369670f%3A0xc3b83c50937c050!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2sus!4v1715872145678!5m2!1sen!2sus');
+(@Contact, N'map_embed_url', 'Link', @en, N'https://maps.google.com/maps?q=33.8776254,35.4829746&z=17&output=embed'),
+(@Contact, N'map_embed_url', 'Link', @ar, N'https://maps.google.com/maps?q=33.8776254,35.4829746&z=17&output=embed');
 
 -- 8) Events ----------------------------------------------------------------------------------
 INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, LangId, Value) VALUES

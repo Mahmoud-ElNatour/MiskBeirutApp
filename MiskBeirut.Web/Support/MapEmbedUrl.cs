@@ -15,6 +15,13 @@ namespace MiskBeirut.Web.Support;
 /// </summary>
 public static partial class MapEmbedUrl
 {
+    /// <summary>
+    /// The place's own pin in a /maps/place/... url: the "!3d33.87!4d35.48" pair. Distinct from the
+    /// "@..." coordinates below, which are only where the map was centred when the link was copied.
+    /// </summary>
+    [GeneratedRegex(@"!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)", RegexOptions.CultureInvariant)]
+    private static partial Regex PlacePinPattern();
+
     /// <summary>Coordinates in a /maps/place/... or /maps/@... url: the "@33.89,35.51,17z" part.</summary>
     [GeneratedRegex(@"@(-?\d+\.\d+),(-?\d+\.\d+)(?:,(\d+(?:\.\d+)?)z)?", RegexOptions.CultureInvariant)]
     private static partial Regex CoordinatesPattern();
@@ -63,9 +70,22 @@ public static partial class MapEmbedUrl
             !uri.Host.EndsWith("google.com.lb", StringComparison.OrdinalIgnoreCase))
             return null;
 
-        // Coordinates are the most faithful conversion — they point at the exact spot the editor was
-        // looking at, rather than at whatever Google decides the place name means today.
-        var coordinates = CoordinatesPattern().Match(url);
+        // Coordinates are the most faithful conversion — they point at a fixed spot rather than at
+        // whatever Google decides the place name means today. But a /maps/place/ link carries two
+        // different pairs, and they are not interchangeable: "@lat,lng,17z" is where the map happened
+        // to be centred when the link was copied, while "!3d lat !4d lng" is the establishment's own
+        // pin. For Misk Beirut the two sit roughly 250 m apart, so taking the first put the marker in
+        // the wrong block. Prefer the pin, falling back to the viewport only when there isn't one —
+        // a bare /maps/@... link with no place attached.
+        var viewport = CoordinatesPattern().Match(url);
+        var pin = PlacePinPattern().Match(url);
+        if (pin.Success)
+        {
+            var pinZoom = viewport.Success && viewport.Groups[3].Success ? viewport.Groups[3].Value.Split('.')[0] : "17";
+            return $"https://maps.google.com/maps?q={pin.Groups[1].Value},{pin.Groups[2].Value}&z={pinZoom}&output=embed";
+        }
+
+        var coordinates = viewport;
         if (coordinates.Success)
         {
             var zoom = coordinates.Groups[3].Success ? coordinates.Groups[3].Value.Split('.')[0] : "16";

@@ -164,8 +164,22 @@ INSERT INTO @global_attrs (AttributeName, AttributeType, LangId, Value) VALUES
 -- rather than plausible ones.
 (N'price_range', 'Text', @en, N''),
 (N'price_range', 'Text', @ar, N''),
-(N'geo_latitude', 'Text', @en, N''),
-(N'geo_longitude', 'Text', @en, N'');
+-- The venue's own pin, taken from the Google Maps place link the client supplied. These are the
+-- "!3d/!4d" coordinates (the establishment), not the "@" ones (wherever the map was centred when
+-- the link was copied) -- the two sit about 250 m apart. See MiskBeirut.Web/Support/MapEmbedUrl.cs.
+(N'geo_latitude', 'Text', @en, N'33.8776254'),
+(N'geo_longitude', 'Text', @en, N'35.4829746');
+
+-- The Contact page map, and the "open in Google Maps" link beside it. The embed used to be a
+-- generic "Beirut, Lebanon" view dropped in during development, so the marker sat in the city
+-- centre rather than on the restaurant.
+UPDATE customer.page_attributes
+SET Value = N'https://maps.google.com/maps?q=33.8776254,35.4829746&z=17&output=embed'
+WHERE AttributeName = N'map_embed_url';
+
+UPDATE customer.page_attributes
+SET Value = N'https://www.google.com/maps/place/Misk+beirut/@33.8776298,35.4803997,17z/data=!3m1!4b1!4m6!3m5!1s0x151f17aed3a8390f:0xdd3597ce3c491a6b!8m2!3d33.8776254!4d35.4829746'
+WHERE AttributeName = N'info_address_map_url';
 
 MERGE customer.page_attributes AS target
 USING (SELECT @Global AS PageId, AttributeName, AttributeType, LangId, Value FROM @global_attrs) AS src
