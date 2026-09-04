@@ -60,32 +60,54 @@ public sealed class PublicUrlMiddleware
             return;
         }
 
-        if (!IsPublicHost(request.Host) || IsExcluded(request.Path))
+        if (!IsPublicHost(request.Host))
         {
             await _next(context);
             return;
         }
 
         var path = request.Path.Value ?? "/";
-        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var addsLanguage = false;
+        string target;
 
-        var hasLanguage = segments.Length > 0 && SiteLanguages.IsSupported(segments[0]);
-        var langCode = hasLanguage
-            ? segments[0].ToLowerInvariant()
-            : SiteLanguages.Normalize(request.Cookies[LangCookieName]);
+        if (IsExcluded(request.Path))
+        {
+            // /robots.txt and /sitemap.xml keep their path exactly, but still get the host and
+            // scheme corrected below -- a crawler that fetched them over http, or from www, would
+            // otherwise be handed a sitemap of https apex URLs by a page that isn't one itself.
+            target = path;
+        }
+        else
+        {
+            var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-        var rest = hasLanguage ? segments[1..] : segments;
-        var target = "/" + langCode;
-        if (rest.Length > 0)
-            target += "/" + string.Join('/', rest).ToLowerInvariant();
+            var hasLanguage = segments.Length > 0 && SiteLanguages.IsSupported(segments[0]);
+            var langCode = hasLanguage
+                ? segments[0].ToLowerInvariant()
+                : SiteLanguages.Normalize(request.Cookies[LangCookieName]);
+            addsLanguage = !hasLanguage;
 
-        // The host has to be checked separately from the path: www.miskbeirut.com/en/about already
+            var rest = hasLanguage ? segments[1..] : segments;
+            target = "/" + langCode;
+            if (rest.Length > 0)
+                target += "/" + string.Join('/', rest).ToLowerInvariant();
+        }
+
+        // Host and scheme are checked separately from the path. www.miskbeirut.com/en/about already
         // has a correct path, so comparing only the path served it as-is and left the site answering
-        // to two hostnames -- the duplicate this class exists to prevent.
+        // to two hostnames; and http://miskbeirut.com/en served the whole site unencrypted, because
+        // UseHttpsRedirection cannot act when TLS is terminated upstream and Kestrel only ever sees
+        // a plain HTTP request on a port it was not told about. Both are the same defect as a
+        // mis-spelled path -- one page reachable at more than one address -- so they are fixed here,
+        // where that rule already lives.
+        //
+        // Only when a canonical host is configured: with it blank (development) localhost has to
+        // keep serving itself over http.
         var hostIsCanonical = _canonicalHost is null
             || string.Equals(request.Host.Host, _canonicalHost, StringComparison.OrdinalIgnoreCase);
+        var schemeIsCanonical = _canonicalHost is null || request.IsHttps;
 
-        if (target == path && hostIsCanonical)
+        if (target == path && hostIsCanonical && schemeIsCanonical)
         {
             await _next(context);
             return;
@@ -96,7 +118,7 @@ public sealed class PublicUrlMiddleware
 
         // Adding a prefix is a per-visitor decision (the cookie), so it stays temporary; correcting
         // the host or the spelling of an already-prefixed URL is true for everyone and is permanent.
-        context.Response.Redirect($"{scheme}://{host}{target}{request.QueryString}", permanent: hasLanguage);
+        context.Response.Redirect($"{scheme}://{host}{target}{request.QueryString}", permanent: !addsLanguage);
     }
 
     /// <summary>

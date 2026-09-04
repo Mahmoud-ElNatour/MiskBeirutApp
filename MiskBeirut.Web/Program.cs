@@ -1,6 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MiskBeirut.Application.Managers;
@@ -225,6 +226,21 @@ var app = builder.Build();
 
 await AdminSeeder.SeedAsync(app.Services);
 await PrivilegeSeeder.SeedAsync(app.Services);
+
+// TLS is terminated in front of this app -- by Cloudflare today, by IIS on the deployment box --
+// and what reaches Kestrel is a plain HTTP request on a local port. Without these headers the app
+// believes every request arrived unencrypted, so UseHttpsRedirection has nothing to redirect and
+// PublicUrlMiddleware cannot tell a genuinely insecure request from a proxied secure one; the
+// result was that http://miskbeirut.com served the entire site over plain HTTP.
+//
+// The default trusted-proxy list (loopback only) is deliberately left alone. Both front doors are
+// local to the app -- cloudflared connects to localhost, and IIS hands off over loopback too -- so
+// loopback is exactly the set that may assert these headers. Widening it would let any client that
+// could reach Kestrel directly claim its own X-Forwarded-Proto and defeat the redirect below.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+});
 
 if (!app.Environment.IsDevelopment())
 {
