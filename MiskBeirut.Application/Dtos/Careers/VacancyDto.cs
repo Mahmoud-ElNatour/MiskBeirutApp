@@ -17,6 +17,9 @@ public sealed record VacancyDto
     public DateTime? ApplicationDeadline { get; init; }
     public string Icon { get; init; } = null!;
 
+    /// <summary>When the vacancy was posted. JobPosting structured data has to state a datePosted, and a listing without one is dropped from Google for Jobs.</summary>
+    public DateTime CreatedAt { get; init; }
+
     /// <summary>True when there is anything to show in the expandable details section.</summary>
     public bool HasDetails => !string.IsNullOrWhiteSpace(Description) || RequirementLines.Count > 0;
 

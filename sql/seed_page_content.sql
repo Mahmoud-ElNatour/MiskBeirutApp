@@ -11,13 +11,18 @@ BEGIN TRANSACTION;
 -- 1) Ensure all pages exist (Global already exists in a fresh MiskBeirutDb)
 MERGE customer.pages AS target
 USING (VALUES
+    -- These columns are the language-neutral fallback; the per-language values an editor actually
+    -- edits are the meta_title / meta_description / meta_keywords attribute rows further down. The
+    -- English row and the column are kept identical -- see MiskBeirut.Web/Support/SeoAttributes.cs.
+    -- Every title and description below is distinct from every other one: two pages sharing a title
+    -- is the most common reason one of them gets dropped from results as a near-duplicate.
     (N'Global',  NULL, NULL, NULL),
-    (N'Home',    N'Misk Beirut | High-Luxury Mediterranean Hospitality', N'Where heritage meets culinary excellence in Beirut.', N'misk beirut, lebanese restaurant, beirut dining'),
-    (N'About',   N'About Us | Misk Beirut', N'A timeless sanctuary of Levantine hospitality.', N'about misk beirut, our story, elias mansour'),
-    (N'Careers', N'Careers | Misk Beirut', N'Join a team dedicated to redefining Mediterranean hospitality.', N'careers, jobs, misk beirut'),
-    (N'Contact', N'Contact Us | Misk Beirut', N'Get in touch with Misk Beirut for reservations and inquiries.', N'contact, reservations, misk beirut'),
-    (N'Events',  N'Events | Misk Beirut', N'Experience unforgettable moments with us at Misk Beirut.', N'events, private events, misk beirut'),
-    (N'Spaces',  N'Our Spaces | Misk Beirut', N'A place for every moment - from long dinners to quiet mornings.', N'our spaces, venues, misk beirut')
+    (N'Home',    N'Misk Beirut | Lebanese Restaurant, Cafe & Event Spaces in Beirut', N'Lebanese cooking, shisha and event spaces in the heart of Beirut. Book a table, browse the menu, or plan a private celebration at Misk Beirut.', N'misk beirut, lebanese restaurant beirut, beirut dining, shisha lounge beirut'),
+    (N'About',   N'About Misk Beirut | Our Story and Lebanese Hospitality', N'How Misk Beirut began, the family behind it, and the Levantine hospitality that shapes every table we set.', N'about misk beirut, our story, lebanese hospitality'),
+    (N'Careers', N'Careers | Join the Team at Misk Beirut', N'Open positions at Misk Beirut across kitchen, service and management. See what we are hiring for and apply with your CV.', N'restaurant jobs beirut, careers misk beirut, hospitality jobs lebanon'),
+    (N'Contact', N'Contact & Reservations | Misk Beirut', N'Reserve a table, ask about an event, or find us in Beirut. Phone, WhatsApp, email and directions to Misk Beirut.', N'contact misk beirut, restaurant reservation beirut, book a table beirut'),
+    (N'Events',  N'Events & Private Celebrations | Misk Beirut', N'Live match screenings, birthdays, engagements and company dinners at Misk Beirut -- spaces and planning for gatherings of any size.', N'private events beirut, birthday venue beirut, match screening beirut'),
+    (N'Spaces',  N'Our Spaces | Dining, Terraces & Meeting Areas in Beirut', N'Dining rooms, indoor and outdoor terraces, and quiet corners for work -- the spaces at Misk Beirut and what each one suits.', N'beirut private dining, outdoor terrace beirut, meeting space beirut')
 ) AS src(PageName, MetaTitle, MetaDesc, MetaKeyword)
 ON target.PageName = src.PageName
 WHEN MATCHED THEN UPDATE SET MetaTitle = src.MetaTitle, MetaDesc = src.MetaDesc, MetaKeyword = src.MetaKeyword
@@ -70,10 +75,37 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Global, N'footer_visit_title', 'Text', @ar, N'جاهز للزيارة؟'),
 (@Global, N'footer_cta_label', 'Text', @en, N'Reserve a Table'),
 (@Global, N'footer_cta_label', 'Text', @ar, N'احجز طاولة'),
-(@Global, N'footer_phone', 'Text', @en, N'+961 1 234 567'),
-(@Global, N'footer_phone', 'Text', @ar, N'+961 1 234 567'),
-(@Global, N'footer_email', 'Text', @en, N'concierge@miskbeirut.com'),
-(@Global, N'footer_email', 'Text', @ar, N'concierge@miskbeirut.com'),
+-- Business details: name, address, phone, email. One set, on the Global page, read by
+-- MiskBeirut.Web/Support/BusinessProfile.cs. The footer, the Contact card, the tel: link, the
+-- WhatsApp button and the Restaurant structured data all quote these, so they cannot drift apart
+-- the way footer_phone and the Contact page's own phone rows did.
+(@Global, N'contact_phone', 'Text', @en, N'+961 76 551 204'),
+(@Global, N'contact_phone', 'Text', @ar, N'+961 76 551 204'),
+(@Global, N'contact_whatsapp_url', 'Link', @en, N'https://wa.me/96176551204'),
+(@Global, N'contact_whatsapp_url', 'Link', @ar, N'https://wa.me/96176551204'),
+(@Global, N'contact_email', 'Text', @en, N'hello@miskbeirut.com'),
+(@Global, N'contact_email', 'Text', @ar, N'hello@miskbeirut.com'),
+(@Global, N'address_line', 'Text', @en, N'Gemmayzeh, Pasteur Street, Beirut'),
+(@Global, N'address_line', 'Text', @ar, N'الجميزة، شارع باستور، بيروت'),
+-- The same address broken up the way schema.org/PostalAddress wants it. Not shown anywhere.
+(@Global, N'address_street', 'Text', @en, N'Pasteur Street, Gemmayzeh'),
+(@Global, N'address_street', 'Text', @ar, N'شارع باستور، الجميزة'),
+(@Global, N'address_locality', 'Text', @en, N'Beirut'),
+(@Global, N'address_locality', 'Text', @ar, N'بيروت'),
+(@Global, N'address_country', 'Text', @en, N'LB'),
+(@Global, N'address_country', 'Text', @ar, N'LB'),
+(@Global, N'serves_cuisine', 'Text', @en, N'Lebanese'),
+(@Global, N'serves_cuisine', 'Text', @ar, N'لبناني'),
+-- Left blank on purpose: the structured data omits each field entirely while it is empty. Opening
+-- hours, price range and coordinates are shown to people directly in Google's results, so a
+-- plausible guess is worse than nothing. opening_hours takes schema.org's notation, one span per
+-- line, e.g. "Mo-Th 08:00-23:00".
+(@Global, N'opening_hours', 'Text', @en, N''),
+(@Global, N'opening_hours', 'Text', @ar, N''),
+(@Global, N'price_range', 'Text', @en, N''),
+(@Global, N'price_range', 'Text', @ar, N''),
+(@Global, N'geo_latitude', 'Text', @en, N''),
+(@Global, N'geo_longitude', 'Text', @en, N''),
 (@Global, N'copyright_name', 'Text', @en, N'Misk Beirut'),
 (@Global, N'copyright_name', 'Text', @ar, N'مسك بيروت'),
 (@Global, N'copyright_suffix', 'Text', @en, N'All rights reserved.'),
@@ -117,12 +149,12 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Home, N'menu_title', 'Text', @ar, N'طعم مسك'),
 (@Home, N'menu_subtitle', 'Text', @en, N'Discover our curated selection of Mediterranean cuisine, expertly prepared with the finest ingredients.'),
 (@Home, N'menu_subtitle', 'Text', @ar, N'اكتشف تشكيلتنا المختارة من المأكولات المتوسطية، المُعدّة بخبرة من أجود المكوّنات.'),
-(@Home, N'menu_item_1_label', 'Text', @en, N'Menu Item 1'),
-(@Home, N'menu_item_1_label', 'Text', @ar, N'صنف 1'),
-(@Home, N'menu_item_2_label', 'Text', @en, N'Menu Item 2'),
-(@Home, N'menu_item_2_label', 'Text', @ar, N'صنف 2'),
-(@Home, N'menu_item_3_label', 'Text', @en, N'Menu Item 3'),
-(@Home, N'menu_item_3_label', 'Text', @ar, N'صنف 3'),
+(@Home, N'menu_item_1_label', 'Text', @en, N'From the Wood Oven'),
+(@Home, N'menu_item_1_label', 'Text', @ar, N'من الفرن الحجري'),
+(@Home, N'menu_item_2_label', 'Text', @en, N'Mezze & Grills'),
+(@Home, N'menu_item_2_label', 'Text', @ar, N'المازة والمشاوي'),
+(@Home, N'menu_item_3_label', 'Text', @en, N'Sweets & Coffee'),
+(@Home, N'menu_item_3_label', 'Text', @ar, N'الحلويات والقهوة'),
 (@Home, N'menu_cta_label', 'Text', @en, N'View Full Menu'),
 (@Home, N'menu_cta_label', 'Text', @ar, N'شاهد قائمة الطعام الكاملة'),
 (@Home, N'spaces_title', 'Text', @en, N'Our Spaces'),
@@ -203,12 +235,6 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Home, N'visit_address_map_url', 'Link', @ar, N'https://www.google.com/maps/search/123+Rue+de+Gourmet,+Beirut,+Lebanon'),
 (@Home, N'visit_hours', 'Text', @en, N'12:00 PM - 12:00 AM'),
 (@Home, N'visit_hours', 'Text', @ar, N'12:00 ظهراً - 12:00 منتصف الليل'),
-(@Home, N'visit_phone', 'Text', @en, N'+961 1 234 567'),
-(@Home, N'visit_phone', 'Text', @ar, N'+961 1 234 567'),
-(@Home, N'visit_phone_link', 'Text', @en, N'+9611234567'),
-(@Home, N'visit_phone_link', 'Text', @ar, N'+9611234567'),
-(@Home, N'visit_email', 'Text', @en, N'concierge@miskbeirut.com'),
-(@Home, N'visit_email', 'Text', @ar, N'concierge@miskbeirut.com'),
 (@Home, N'visit_cta_label', 'Text', @en, N'Reserve a Table'),
 (@Home, N'visit_cta_label', 'Text', @ar, N'احجز طاولة'),
 (@Home, N'visit_map_embed_url', 'Link', @en, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3311.834712345678!2d35.5017!3d33.8938!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f17215880a787%3A0x49621703add375d!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2slb!4v1710000000000!5m2!1sen!2slb'),
@@ -376,20 +402,10 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Contact, N'hero_image', 'Image', @ar, N'https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I'),
 (@Contact, N'info_call_title', 'Text', @en, N'Call Us'),
 (@Contact, N'info_call_title', 'Text', @ar, N'اتصل بنا'),
-(@Contact, N'info_call_phone_1', 'Text', @en, N'+961 1 123 456'),
-(@Contact, N'info_call_phone_1', 'Text', @ar, N'+961 1 123 456'),
-(@Contact, N'info_call_phone_2', 'Text', @en, N'+961 3 987 654'),
-(@Contact, N'info_call_phone_2', 'Text', @ar, N'+961 3 987 654'),
-(@Contact, N'info_call_tel_link', 'Text', @en, N'+9611123456'),
-(@Contact, N'info_call_tel_link', 'Text', @ar, N'+9611123456'),
 (@Contact, N'info_email_title', 'Text', @en, N'Email'),
 (@Contact, N'info_email_title', 'Text', @ar, N'البريد الإلكتروني'),
-(@Contact, N'info_email_value', 'Text', @en, N'hello@miskbeirut.com'),
-(@Contact, N'info_email_value', 'Text', @ar, N'hello@miskbeirut.com'),
 (@Contact, N'info_address_title', 'Text', @en, N'Address'),
 (@Contact, N'info_address_title', 'Text', @ar, N'العنوان'),
-(@Contact, N'info_address_value', 'Text', @en, N'Gemmayzeh, Pasteur Street, Beirut'),
-(@Contact, N'info_address_value', 'Text', @ar, N'الجميزة، شارع باستور، بيروت'),
 (@Contact, N'info_address_map_url', 'Link', @en, N'https://www.google.com/maps/search/Gemmayzeh,+Pasteur+Street,+Beirut'),
 (@Contact, N'info_address_map_url', 'Link', @ar, N'https://www.google.com/maps/search/Gemmayzeh,+Pasteur+Street,+Beirut'),
 (@Contact, N'field_full_name', 'Text', @en, N'Full Name *'),
@@ -417,9 +433,7 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Contact, N'success_message', 'Text', @en, N'Thank you for contacting us. We''ll be in touch with you soon.'),
 (@Contact, N'success_message', 'Text', @ar, N'شكراً لتواصلك معنا. سنعاود الاتصال بك قريباً.'),
 (@Contact, N'map_embed_url', 'Link', @en, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13248.847525287515!2d35.51091565!3d33.8966774!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f16f39369670f%3A0xc3b83c50937c050!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2sus!4v1715872145678!5m2!1sen!2sus'),
-(@Contact, N'map_embed_url', 'Link', @ar, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13248.847525287515!2d35.51091565!3d33.8966774!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f16f39369670f%3A0xc3b83c50937c050!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2sus!4v1715872145678!5m2!1sen!2sus'),
-(@Contact, N'fab_whatsapp_url', 'Link', @en, N'https://wa.me/9611123456'),
-(@Contact, N'fab_whatsapp_url', 'Link', @ar, N'https://wa.me/9611123456');
+(@Contact, N'map_embed_url', 'Link', @ar, N'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13248.847525287515!2d35.51091565!3d33.8966774!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151f16f39369670f%3A0xc3b83c50937c050!2sBeirut%2C%20Lebanon!5e0!3m2!1sen!2sus!4v1715872145678!5m2!1sen!2sus');
 
 -- 8) Events ----------------------------------------------------------------------------------
 INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, LangId, Value) VALUES
@@ -431,8 +445,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Events, N'hero_image', 'Image', @ar, N'https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I'),
 (@Events, N'football_title', 'Text', @en, N'Football & Live Match Screenings'),
 (@Events, N'football_title', 'Text', @ar, N'كرة القدم وعرض المباريات المباشرة'),
-(@Events, N'football_body', 'Text', @en, N'Placeholder description — experience the thrill of live sports in our premium viewing spaces with world-class amenities. Final copy to be provided by the client.'),
-(@Events, N'football_body', 'Text', @ar, N'نص مؤقت — عِش إثارة الرياضة المباشرة في أجواء مشاهدة راقية بمرافق عالمية المستوى. سيتم توفير النص النهائي من قبل العميل.'),
+(@Events, N'football_body', 'Text', @en, N'Big matches on the big screen, with the kitchen open and a table held for your group.'),
+(@Events, N'football_body', 'Text', @ar, N'المباريات الكبرى على الشاشة الكبيرة، مع مطبخ مفتوح وطاولة محجوزة لمجموعتك.'),
 (@Events, N'football_gallery_1_caption', 'Text', @en, N'Match Day 1'),
 (@Events, N'football_gallery_1_caption', 'Text', @ar, N'يوم المباراة 1'),
 (@Events, N'football_gallery_2_caption', 'Text', @en, N'Match Day 2'),
@@ -445,8 +459,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Events, N'football_cta_label', 'Text', @ar, N'احجز مكانك'),
 (@Events, N'private_title', 'Text', @en, N'Private Events & Celebrations'),
 (@Events, N'private_title', 'Text', @ar, N'المناسبات الخاصة والاحتفالات'),
-(@Events, N'private_body', 'Text', @en, N'Placeholder description — create unforgettable memories with our bespoke event planning services and luxurious venues. Final copy to be provided by the client.'),
-(@Events, N'private_body', 'Text', @ar, N'نص مؤقت — اصنع ذكريات لا تُنسى مع خدمات تنظيم مناسبات مخصصة وأجواء فاخرة. سيتم توفير النص النهائي من قبل العميل.'),
+(@Events, N'private_body', 'Text', @en, N'Birthdays, engagements and company dinners, planned with you and hosted in the space that fits them.'),
+(@Events, N'private_body', 'Text', @ar, N'أعياد ميلاد وخطوبات وعشاءات عمل، نخطّط لها معك ونستضيفها في المساحة التي تناسبها.'),
 (@Events, N'private_gallery_1_caption', 'Text', @en, N'Weddings'),
 (@Events, N'private_gallery_1_caption', 'Text', @ar, N'حفلات الزفاف'),
 (@Events, N'private_gallery_2_caption', 'Text', @en, N'Corporate Events'),
@@ -474,8 +488,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Spaces, N'tab_3_label', 'Text', @ar, N'العمل واللقاءات غير الرسمية'),
 (@Spaces, N'panel_1_title', 'Text', @en, N'Dining & Shisha'),
 (@Spaces, N'panel_1_title', 'Text', @ar, N'الطعام والأرجيلة'),
-(@Spaces, N'panel_1_body', 'Text', @en, N'Placeholder description — elegant dining spaces with authentic Lebanese hospitality, paired with a curated shisha experience. Final copy to be provided by the client.'),
-(@Spaces, N'panel_1_body', 'Text', @ar, N'نص مؤقت — أجواء طعام أنيقة تجمع بين الضيافة اللبنانية الأصيلة وتجربة أرجيلة مميزة. سيتم توفير النص النهائي من قبل العميل.'),
+(@Spaces, N'panel_1_body', 'Text', @en, N'Dining rooms serving Lebanese cooking and the hospitality that comes with it, alongside a curated shisha selection.'),
+(@Spaces, N'panel_1_body', 'Text', @ar, N'قاعات طعام تقدّم المطبخ اللبناني بضيافته المعهودة، إلى جانب تشكيلة مختارة من الأراكيل.'),
 (@Spaces, N'panel_1_gallery_1_caption', 'Text', @en, N'Dining Area'),
 (@Spaces, N'panel_1_gallery_1_caption', 'Text', @ar, N'منطقة الطعام'),
 (@Spaces, N'panel_1_gallery_2_caption', 'Text', @en, N'Shisha Lounge'),
@@ -486,8 +500,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Spaces, N'panel_1_gallery_4_caption', 'Text', @ar, N'المزيد من الصور'),
 (@Spaces, N'panel_2_title', 'Text', @en, N'Indoor & Outdoor Spaces'),
 (@Spaces, N'panel_2_title', 'Text', @ar, N'أجواء داخلية وخارجية'),
-(@Spaces, N'panel_2_body', 'Text', @en, N'Placeholder description — versatile venues for any gathering, with stunning ambiance inside and out. Final copy to be provided by the client.'),
-(@Spaces, N'panel_2_body', 'Text', @ar, N'نص مؤقت — أجواء متعددة الاستخدامات تناسب كل تجمّع، بأجواء ساحرة داخلياً وخارجياً. سيتم توفير النص النهائي من قبل العميل.'),
+(@Spaces, N'panel_2_body', 'Text', @en, N'Rooms and terraces that suit a table for two or a gathering of thirty, indoors and out.'),
+(@Spaces, N'panel_2_body', 'Text', @ar, N'قاعات وتراسات تتّسع لطاولة لشخصين أو للقاء يضمّ ثلاثين، في الداخل وفي الهواء الطلق.'),
 (@Spaces, N'panel_2_gallery_1_caption', 'Text', @en, N'Indoor Salon'),
 (@Spaces, N'panel_2_gallery_1_caption', 'Text', @ar, N'صالة داخلية'),
 (@Spaces, N'panel_2_gallery_2_caption', 'Text', @en, N'Outdoor Terrace'),
@@ -498,8 +512,8 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Spaces, N'panel_2_gallery_4_caption', 'Text', @ar, N'المزيد من الصور'),
 (@Spaces, N'panel_3_title', 'Text', @en, N'Work & Casual Meetings'),
 (@Spaces, N'panel_3_title', 'Text', @ar, N'العمل واللقاءات غير الرسمية'),
-(@Spaces, N'panel_3_body', 'Text', @en, N'Placeholder description — a calm environment for studying, working, and informal gatherings. Final copy to be provided by the client.'),
-(@Spaces, N'panel_3_body', 'Text', @ar, N'نص مؤقت — بيئة هادئة للدراسة والعمل واللقاءات غير الرسمية. سيتم توفير النص النهائي من قبل العميل.'),
+(@Spaces, N'panel_3_body', 'Text', @en, N'Quiet corners for studying, working and unhurried meetings, with power and Wi-Fi within reach.'),
+(@Spaces, N'panel_3_body', 'Text', @ar, N'زوايا هادئة للدراسة والعمل واللقاءات على مهل، مع الكهرباء والإنترنت في المتناول.'),
 (@Spaces, N'panel_3_gallery_1_caption', 'Text', @en, N'Quiet Corners'),
 (@Spaces, N'panel_3_gallery_1_caption', 'Text', @ar, N'أركان هادئة'),
 (@Spaces, N'panel_3_gallery_2_caption', 'Text', @en, N'Work-Friendly Seating'),
@@ -510,6 +524,53 @@ INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, Lang
 (@Spaces, N'panel_3_gallery_4_caption', 'Text', @ar, N'المزيد من الصور'),
 (@Spaces, N'cta_label', 'Text', @en, N'Reserve a Table'),
 (@Spaces, N'cta_label', 'Text', @ar, N'احجز طاولة');
+
+-- 5) SEO metadata, per language ------------------------------------------------------------------
+-- The English values here match the columns set in step 1; the Arabic ones are why these rows exist
+-- at all. With only the columns, /ar/about served an English title and description to search
+-- engines. The Menu page is seeded separately, in add_menu_page.sql.
+INSERT INTO customer.page_attributes (PageId, AttributeName, AttributeType, LangId, Value) VALUES
+(@Home, N'meta_title', 'Text', @en, N'Misk Beirut | Lebanese Restaurant, Cafe & Event Spaces in Beirut'),
+(@Home, N'meta_title', 'Text', @ar, N'مسك بيروت | مطعم ومقهى ومساحات فعاليات في بيروت'),
+(@Home, N'meta_description', 'Text', @en, N'Lebanese cooking, shisha and event spaces in the heart of Beirut. Book a table, browse the menu, or plan a private celebration at Misk Beirut.'),
+(@Home, N'meta_description', 'Text', @ar, N'مطبخ لبناني وأركيلة ومساحات للفعاليات في قلب بيروت. احجز طاولتك، تصفّح قائمة الطعام، أو خطّط لمناسبتك الخاصة في مسك بيروت.'),
+(@Home, N'meta_keywords', 'Text', @en, N'misk beirut, lebanese restaurant beirut, beirut dining, shisha lounge beirut'),
+(@Home, N'meta_keywords', 'Text', @ar, N'مسك بيروت, مطعم لبناني بيروت, مطاعم بيروت, أركيلة بيروت'),
+
+(@About, N'meta_title', 'Text', @en, N'About Misk Beirut | Our Story and Lebanese Hospitality'),
+(@About, N'meta_title', 'Text', @ar, N'عن مسك بيروت | قصتنا والضيافة اللبنانية'),
+(@About, N'meta_description', 'Text', @en, N'How Misk Beirut began, the family behind it, and the Levantine hospitality that shapes every table we set.'),
+(@About, N'meta_description', 'Text', @ar, N'كيف بدأت مسك بيروت، والعائلة التي تقف خلفها، والضيافة الشامية التي تشكّل كل طاولة نعدّها.'),
+(@About, N'meta_keywords', 'Text', @en, N'about misk beirut, our story, lebanese hospitality'),
+(@About, N'meta_keywords', 'Text', @ar, N'عن مسك بيروت, قصتنا, الضيافة اللبنانية'),
+
+(@Spaces, N'meta_title', 'Text', @en, N'Our Spaces | Dining, Terraces & Meeting Areas in Beirut'),
+(@Spaces, N'meta_title', 'Text', @ar, N'مساحاتنا | قاعات الطعام والتراسات وأماكن اللقاء في بيروت'),
+(@Spaces, N'meta_description', 'Text', @en, N'Dining rooms, indoor and outdoor terraces, and quiet corners for work -- the spaces at Misk Beirut and what each one suits.'),
+(@Spaces, N'meta_description', 'Text', @ar, N'قاعات طعام، وتراسات داخلية وخارجية، وزوايا هادئة للعمل — مساحات مسك بيروت وما يناسب كلاً منها.'),
+(@Spaces, N'meta_keywords', 'Text', @en, N'beirut private dining, outdoor terrace beirut, meeting space beirut'),
+(@Spaces, N'meta_keywords', 'Text', @ar, N'قاعات خاصة بيروت, تراس خارجي بيروت, مساحات اجتماعات بيروت'),
+
+(@Events, N'meta_title', 'Text', @en, N'Events & Private Celebrations | Misk Beirut'),
+(@Events, N'meta_title', 'Text', @ar, N'الفعاليات والمناسبات الخاصة | مسك بيروت'),
+(@Events, N'meta_description', 'Text', @en, N'Live match screenings, birthdays, engagements and company dinners at Misk Beirut -- spaces and planning for gatherings of any size.'),
+(@Events, N'meta_description', 'Text', @ar, N'عرض المباريات، أعياد الميلاد، الخطوبات وعشاءات العمل في مسك بيروت — مساحات وتخطيط للقاءات بمختلف أحجامها.'),
+(@Events, N'meta_keywords', 'Text', @en, N'private events beirut, birthday venue beirut, match screening beirut'),
+(@Events, N'meta_keywords', 'Text', @ar, N'مناسبات خاصة بيروت, قاعة أعياد ميلاد بيروت, عرض مباريات بيروت'),
+
+(@Careers, N'meta_title', 'Text', @en, N'Careers | Join the Team at Misk Beirut'),
+(@Careers, N'meta_title', 'Text', @ar, N'الوظائف | انضم إلى فريق مسك بيروت'),
+(@Careers, N'meta_description', 'Text', @en, N'Open positions at Misk Beirut across kitchen, service and management. See what we are hiring for and apply with your CV.'),
+(@Careers, N'meta_description', 'Text', @ar, N'الوظائف الشاغرة في مسك بيروت في المطبخ والخدمة والإدارة. اطّلع على ما نبحث عنه وقدّم سيرتك الذاتية.'),
+(@Careers, N'meta_keywords', 'Text', @en, N'restaurant jobs beirut, careers misk beirut, hospitality jobs lebanon'),
+(@Careers, N'meta_keywords', 'Text', @ar, N'وظائف مطاعم بيروت, وظائف مسك بيروت, وظائف ضيافة لبنان'),
+
+(@Contact, N'meta_title', 'Text', @en, N'Contact & Reservations | Misk Beirut'),
+(@Contact, N'meta_title', 'Text', @ar, N'التواصل والحجوزات | مسك بيروت'),
+(@Contact, N'meta_description', 'Text', @en, N'Reserve a table, ask about an event, or find us in Beirut. Phone, WhatsApp, email and directions to Misk Beirut.'),
+(@Contact, N'meta_description', 'Text', @ar, N'احجز طاولة، استفسر عن مناسبة، أو تعرّف على موقعنا في بيروت. الهاتف وواتساب والبريد الإلكتروني وطريق الوصول إلى مسك بيروت.'),
+(@Contact, N'meta_keywords', 'Text', @en, N'contact misk beirut, restaurant reservation beirut, book a table beirut'),
+(@Contact, N'meta_keywords', 'Text', @ar, N'تواصل مسك بيروت, حجز مطعم بيروت, احجز طاولة بيروت');
 
 COMMIT TRANSACTION;
 

@@ -18,6 +18,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
+// Generated links are lower-cased, so the public site links to "/en/about" and never to
+// "/en/About". Routing matches either spelling, which is exactly the problem: two spellings of one
+// page is duplicate content to a crawler. PublicUrlMiddleware redirects the mixed-case form to this
+// one, and the canonical tag states it, so all three agree on a single address per page.
+builder.Services.AddRouting(options =>
+{
+    options.LowercaseUrls = true;
+
+    // Names the "lang" constraint the public route pattern below uses, so only the languages the
+    // site publishes can open a page (see LanguageRouteConstraint).
+    options.ConstraintMap["lang"] = typeof(LanguageRouteConstraint);
+});
+
 // Razor HTML-encodes every interpolated value, and the default encoder's allow-list is Basic Latin
 // only — so Arabic copy leaves the server as numeric character references ("&#x627;&#x62E;..."),
 // not as Arabic. A browser decodes those transparently in HTML text, which is why most of the site
@@ -30,6 +43,10 @@ builder.Services.AddWebEncoders(options =>
 
 // Needed by AuditLogManager to capture the caller's IP address on every logged action.
 builder.Services.AddHttpContextAccessor();
+
+// Canonical/hreflang/Open Graph URLs and the sitemap, all built off Site:CanonicalHost rather than
+// off whichever hostname the visitor happened to arrive on.
+builder.Services.AddSingleton<SiteUrls>();
 
 builder.Services.AddDbContext<MiskBeirutDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MiskBeirut")));
@@ -218,6 +235,24 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// One URL per page: canonical host, lower-case spelling, no trailing slash, and a language prefix
+// on everything public. Sits between static files (which it must not touch) and routing (which
+// should only ever see a normalized path).
+app.UseMiddleware<PublicUrlMiddleware>();
+
+// A missing public page has to answer 404 AND look like the site. Without this, ASP.NET returns a
+// bare status code with an empty body: correct to a crawler, a blank white page to a visitor.
+// ReExecute keeps the 404 status while rendering the real view, which is what a redirect to an
+// error page would throw away (that answers 302 then 200, and the broken URL never gets reported).
+//
+// The re-execute path has to name a language because every Customer route now carries one; which
+// language the page actually renders in is decided inside the action, from the visitor's cookie.
+//
+// Public host only: the back-office subdomains are behind a login and have their own chrome, and a
+// marketing 404 with a "Browse our menu" button is not what a missing admin screen should show.
+app.UseWhen(context => PublicUrlMiddleware.IsPublicHost(context.Request.Host),
+    branch => branch.UseStatusCodePagesWithReExecute($"/{SiteLanguages.Default}/home/pagenotfound"));
+
 app.UseRouting();
 
 app.UseAuthentication();
@@ -245,9 +280,24 @@ app.MapControllerRoute(
     defaults: new { area = "Cms" })
     .RequireHost("cms.localhost", "cms.miskbeirut.com");
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}",
-    defaults: new { area = "Customer" });
+// Public pages live under a language segment: /en/about and /ar/about are distinct URLs that a
+// crawler can index, canonicalize and cross-reference with hreflang.
+//
+// This is the ONLY route for the Customer area, deliberately. An unprefixed "{controller}/{action}"
+// route alongside it also satisfies every asp-controller/asp-action link on the site, and link
+// generation picked it — so the Arabic pages rendered a nav full of "/about" links that dropped the
+// visitor back into English on the next click, and gave the crawler an unprefixed duplicate of
+// every page to find. With one route, a generated link cannot lose its language.
+//
+// {lang} deliberately has NO default. Giving it one lets URL generation treat the segment as
+// satisfied and drop it, so every asp-controller link on the site came out as "/about" again —
+// prefix-free, and pointing at a URL that only redirects. Without a default the segment must be
+// filled from the current request's route values, which is what keeps an Arabic page's links
+// Arabic. Where nothing is ambient (the Cms's visual preview renders these public views from a
+// /Pages/Edit/{id} URL) the previewing controller supplies the value itself.
+app.MapAreaControllerRoute(
+    name: "localized",
+    areaName: "Customer",
+    pattern: "{lang:lang}/{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

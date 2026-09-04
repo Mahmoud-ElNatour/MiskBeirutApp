@@ -12,8 +12,8 @@ public class ContactController : PublicContentController
     private readonly InquiryReasonManager _reasons;
     private readonly ContactInquiryManager _inquiries;
 
-    public ContactController(PageContentManager pages, ILanguageRepository languages, InquiryReasonManager reasons, ContactInquiryManager inquiries)
-        : base(pages, languages)
+    public ContactController(PageContentManager pages, ILanguageRepository languages, SiteUrls urls, InquiryReasonManager reasons, ContactInquiryManager inquiries)
+        : base(pages, languages, urls)
     {
         _reasons = reasons;
         _inquiries = inquiries;

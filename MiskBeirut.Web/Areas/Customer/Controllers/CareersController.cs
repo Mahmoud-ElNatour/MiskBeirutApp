@@ -16,8 +16,8 @@ public class CareersController : PublicContentController
     private readonly JobApplicationManager _applications;
     private readonly ILogger<CareersController> _logger;
 
-    public CareersController(PageContentManager pages, ILanguageRepository languages, VacancyManager vacancies, JobApplicationManager applications, ILogger<CareersController> logger)
-        : base(pages, languages)
+    public CareersController(PageContentManager pages, ILanguageRepository languages, SiteUrls urls, VacancyManager vacancies, JobApplicationManager applications, ILogger<CareersController> logger)
+        : base(pages, languages, urls)
     {
         _vacancies = vacancies;
         _applications = applications;

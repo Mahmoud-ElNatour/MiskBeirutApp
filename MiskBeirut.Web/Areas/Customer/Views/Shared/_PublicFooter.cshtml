@@ -15,8 +15,12 @@
     var footerFollowTitle = content.Global("footer_follow_title", "Follow Us");
     var footerVisitTitle = content.Global("footer_visit_title", "Ready to Visit?");
     var footerCtaLabel = content.Global("footer_cta_label", "Reserve a Table");
-    var footerPhone = content.Global("footer_phone", "+961 1 234 567");
-    var footerEmail = content.Global("footer_email", "concierge@miskbeirut.com");
+    // Phone and email come from BusinessProfile, not from footer-only attributes. They used to be
+    // their own "footer_phone"/"footer_email" values, which is how the footer ended up advertising a
+    // different number from the Contact page and from the tel: link next to it.
+    var business = new BusinessProfile(content);
+    var footerPhone = business.Phone;
+    var footerEmail = business.Email;
     var copyrightName = content.Global("copyright_name", "Misk Beirut");
     var copyrightSuffix = content.Global("copyright_suffix", "All rights reserved.");
     var instagramUrl = content.Global("social_instagram_url", "#");

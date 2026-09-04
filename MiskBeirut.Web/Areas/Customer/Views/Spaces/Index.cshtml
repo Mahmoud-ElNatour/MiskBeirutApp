@@ -3,13 +3,37 @@
     ViewData["Active"] = "spaces";
     Layout = "_PublicLayout";
 
+    // Every default below is real copy in both languages. They used to read "Placeholder
+    // description — ... Final copy to be provided by the client", which is what the page served
+    // publicly until an editor happened to fill the field in — so a crawler could and did index a
+    // note addressed to the client. A default that is simply true of the restaurant is safe to
+    // publish while the client's own wording is still being written.
     var panels = new[]
     {
-        (Id: "dining-shisha", DefaultTitle: "Dining & Shisha", DefaultBody: "Placeholder description — elegant dining spaces with authentic Lebanese hospitality, paired with a curated shisha experience. Final copy to be provided by the client.", Icons: new[] { "restaurant", "restaurant", "restaurant", "photo_library" }, Captions: new[] { "Dining Area", "Shisha Lounge", "Evening Ambiance", "More Photos" }),
-        (Id: "indoor-outdoor", DefaultTitle: "Indoor & Outdoor Spaces", DefaultBody: "Placeholder description — versatile venues for any gathering, with stunning ambiance inside and out. Final copy to be provided by the client.", Icons: new[] { "location_city", "deck", "yard", "photo_library" }, Captions: new[] { "Indoor Salon", "Outdoor Terrace", "Garden Seating", "More Photos" }),
-        (Id: "work-casual", DefaultTitle: "Work & Casual Meetings", DefaultBody: "Placeholder description — a calm environment for studying, working, and informal gatherings. Final copy to be provided by the client.", Icons: new[] { "business_center", "wifi", "coffee", "photo_library" }, Captions: new[] { "Quiet Corners", "Work-Friendly Seating", "Casual Meeting Tables", "More Photos" })
+        (Id: "dining-shisha",
+         DefaultTitle: "Dining & Shisha", TitleAr: "المأكولات والأركيلة",
+         DefaultBody: "Dining rooms serving Lebanese cooking and the hospitality that comes with it, alongside a curated shisha selection.",
+         BodyAr: "قاعات طعام تقدّم المطبخ اللبناني بضيافته المعهودة، إلى جانب تشكيلة مختارة من الأراكيل.",
+         Icons: new[] { "restaurant", "restaurant", "restaurant", "photo_library" },
+         Captions: new[] { "Dining Area", "Shisha Lounge", "Evening Ambiance", "More Photos" },
+         CaptionsAr: new[] { "قاعة الطعام", "ركن الأركيلة", "أجواء المساء", "المزيد من الصور" }),
+        (Id: "indoor-outdoor",
+         DefaultTitle: "Indoor & Outdoor Spaces", TitleAr: "المساحات الداخلية والخارجية",
+         DefaultBody: "Rooms and terraces that suit a table for two or a gathering of thirty, indoors and out.",
+         BodyAr: "قاعات وتراسات تتّسع لطاولة لشخصين أو للقاء يضمّ ثلاثين، في الداخل وفي الهواء الطلق.",
+         Icons: new[] { "location_city", "deck", "yard", "photo_library" },
+         Captions: new[] { "Indoor Salon", "Outdoor Terrace", "Garden Seating", "More Photos" },
+         CaptionsAr: new[] { "الصالون الداخلي", "التراس الخارجي", "جلسة الحديقة", "المزيد من الصور" }),
+        (Id: "work-casual",
+         DefaultTitle: "Work & Casual Meetings", TitleAr: "العمل واللقاءات غير الرسمية",
+         DefaultBody: "Quiet corners for studying, working and unhurried meetings, with power and Wi-Fi within reach.",
+         BodyAr: "زوايا هادئة للدراسة والعمل واللقاءات على مهل، مع الكهرباء والإنترنت في المتناول.",
+         Icons: new[] { "business_center", "wifi", "coffee", "photo_library" },
+         Captions: new[] { "Quiet Corners", "Work-Friendly Seating", "Casual Meeting Tables", "More Photos" },
+         CaptionsAr: new[] { "زوايا هادئة", "مقاعد مناسبة للعمل", "طاولات اللقاءات", "المزيد من الصور" })
     };
     var tabDefaults = new[] { "Dining & Shisha", "Indoor & Outdoor Spaces", "Work & Casual Meetings" };
+    var tabDefaultsAr = new[] { "المأكولات والأركيلة", "المساحات الداخلية والخارجية", "العمل واللقاءات غير الرسمية" };
 }
 <!-- PAGE HEADER -->
 <section class="relative mt-24 bg-primary-container/10 pt-[80px] pb-stack-lg px-6 md:px-margin-desktop" id="header">
@@ -19,7 +43,7 @@
 </div>
 <!-- Decorative Element -->
 <div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-40 pointer-events-none hidden lg:block">
-<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
+<img class="w-full h-full object-cover" alt="" aria-hidden="true" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "/img/cms-placeholder.svg")"/>
 </div>
 </section>
 
@@ -30,7 +54,7 @@
 {
     var p = panels[i - 1];
     var isFirst = i == 1;
-    <button id="tab-@p.Id" role="tab" aria-controls="@p.Id" aria-selected="@(isFirst ? "true" : "false")" onclick="selectTab('@p.Id', true)" data-cms-field="tab_@(i)_label" data-cms-type="Text" class="tab-btn whitespace-nowrap px-4 py-4 font-label-lg text-label-lg uppercase tracking-widest border-b-2 -mb-px transition-colors @(isFirst ? "border-brick-red text-primary font-bold" : "border-transparent text-on-surface-variant hover:text-primary")">@Model.Text($"tab_{i}_label", tabDefaults[i - 1])</button>
+    <button id="tab-@p.Id" role="tab" aria-controls="@p.Id" aria-selected="@(isFirst ? "true" : "false")" onclick="selectTab('@p.Id', true)" data-cms-field="tab_@(i)_label" data-cms-type="Text" class="tab-btn whitespace-nowrap px-4 py-4 font-label-lg text-label-lg uppercase tracking-widest border-b-2 -mb-px transition-colors @(isFirst ? "border-brick-red text-primary font-bold" : "border-transparent text-on-surface-variant hover:text-primary")">@Model.Text($"tab_{i}_label", tabDefaults[i - 1], tabDefaultsAr[i - 1])</button>
 }
 </div>
 
@@ -39,9 +63,8 @@
     var p = panels[i - 1];
     var isFirst = i == 1;
     <section id="@p.Id" role="tabpanel" aria-labelledby="tab-@p.Id" class="tab-panel py-[60px]@(isFirst ? "" : " hidden")">
-        <h2 class="font-display-lg text-headline-lg text-primary mb-[16px]" data-cms-field="panel_@(i)_title" data-cms-type="Text">@Model.Text($"panel_{i}_title", p.DefaultTitle)</h2>
-        <!-- PLACEHOLDER: final copy pending from client -->
-        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]" data-cms-field="panel_@(i)_body" data-cms-type="Text">@Model.Text($"panel_{i}_body", p.DefaultBody)</p>
+        <h2 class="font-display-lg text-headline-lg text-primary mb-[16px]" data-cms-field="panel_@(i)_title" data-cms-type="Text">@Model.Text($"panel_{i}_title", p.DefaultTitle, p.TitleAr)</h2>
+        <p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mb-[48px]" data-cms-field="panel_@(i)_body" data-cms-type="Text">@Model.Text($"panel_{i}_body", p.DefaultBody, p.BodyAr)</p>
         <div class="carousel-head flex items-center justify-between mb-[16px]">
             <div class="w-16 h-0.5 bg-brick-red"></div>
 
@@ -52,7 +75,9 @@
             var tileImage = Model.Image($"panel_{i}_gallery_{j}_image");
             var hasTile = j <= 3 || !string.IsNullOrEmpty(tileImage);
             if (!hasTile) { continue; }
-            var captionDefault = j <= p.Captions.Length ? p.Captions[j - 1] : $"Photo {j}";
+            var captionDefault = j <= p.Captions.Length
+                ? (Model.IsRtl ? p.CaptionsAr[j - 1] : p.Captions[j - 1])
+                : (Model.IsRtl ? $"صورة {j}" : $"Photo {j}");
             var iconDefault = j <= p.Icons.Length ? p.Icons[j - 1] : p.Icons[p.Icons.Length - 1];
             var tileCaption = Model.Text($"panel_{i}_gallery_{j}_caption", captionDefault);
             var tileField = $"panel_{i}_gallery_{j}_image";
@@ -75,7 +100,7 @@
         <template id="panel_@(i)GallerySlotTemplate">
             <div class="cms-gallery-slot w-[280px] h-[280px] md:w-[340px] md:h-[320px] flex-shrink-0 snap-start bg-slate-blue/10 border border-outline/20 flex items-center justify-center text-on-surface-variant bg-cover bg-center relative" data-gallery="panel_@i" data-cms-field="panel_@(i)_gallery___INDEX___image" data-cms-type="BackgroundImage" style="background-image:url('/img/cms-placeholder.svg')">
                 <span class="cms-placeholder-badge absolute bottom-2 left-2 right-2 text-center bg-black/60 text-white text-[10px] uppercase tracking-wider px-2 py-1 rounded pointer-events-none">No image set</span>
-                <span data-cms-field="panel_@(i)_gallery___INDEX___caption" data-cms-type="Text">Photo __INDEX__</span>
+                <span data-cms-field="panel_@(i)_gallery___INDEX___caption" data-cms-type="Text">@(Model.IsRtl ? "صورة" : "Photo") __INDEX__</span>
             </div>
         </template>
     </section>

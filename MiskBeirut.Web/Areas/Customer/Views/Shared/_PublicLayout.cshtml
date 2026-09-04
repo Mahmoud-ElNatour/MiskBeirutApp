@@ -1,15 +1,29 @@
+@inject MiskBeirut.Web.Support.SiteUrls Urls
 @{
-    var dir = ViewData["Dir"] as string == "rtl" ? "rtl" : null;
-    var lang = ViewData["Lang"] as string ?? "en";
+    var lang = ViewData["Lang"] as string ?? SiteLanguages.Default;
+    var dir = ViewData["Dir"] as string == "rtl" ? "rtl" : "ltr";
     var metaDescription = ViewData["MetaDescription"] as string;
     var metaKeywords = ViewData["MetaKeywords"] as string;
+    var canonicalUrl = ViewData["CanonicalUrl"] as string;
+    var alternateUrls = ViewData["AlternateUrls"] as IReadOnlyDictionary<string, string>;
+    var ogImage = ViewData["OgImage"] as string;
+    var pageTitle = ViewData["Title"] as string;
+    var isCmsPreview = ViewData["IsCmsPreview"] as bool? == true;
+    var siteName = (ViewData["Content"] as PageContent)?.Global("brand_name", "Misk Beirut") ?? "Misk Beirut";
+
+    // A Cms preview renders these same public views behind a login on the cms subdomain, and the 404
+    // page is a real page at a URL that should never have existed. Neither belongs in an index.
+    var noIndex = isCmsPreview || ViewData["NoIndex"] as bool? == true;
 }
 <!DOCTYPE html>
+@* lang and dir are both stated explicitly rather than left to default on the English side: "no dir
+   attribute" and dir="ltr" mean the same thing to a browser, but only the second one tells a
+   crawler that the omission was a decision. *@
 <html class="scroll-smooth" lang="@lang" dir="@dir">
 <head>
 <meta charset="utf-8" />
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-<title>@ViewData["Title"]</title>
+<title>@pageTitle</title>
 @if (!string.IsNullOrWhiteSpace(metaDescription))
 {
     <meta name="description" content="@metaDescription" />
@@ -17,6 +31,60 @@
 @if (!string.IsNullOrWhiteSpace(metaKeywords))
 {
     <meta name="keywords" content="@metaKeywords" />
+}
+@if (noIndex)
+{
+    <meta name="robots" content="noindex, nofollow" />
+}
+@* Canonical and hreflang are the pair that makes /en/about and /ar/about two versions of one page
+   rather than two competing pages. Each states its OWN URL as canonical -- pointing both at the
+   English one, the easy mistake here, would ask Google to drop the Arabic site from the index --
+   and then lists every language including itself, which is what the reciprocity check expects.
+   x-default names the version someone with no matching language should land on. *@
+@if (!string.IsNullOrWhiteSpace(canonicalUrl))
+{
+    <link rel="canonical" href="@canonicalUrl" />
+}
+@if (alternateUrls is not null)
+{
+    foreach (var (code, url) in alternateUrls)
+    {
+        <link rel="alternate" hreflang="@code" href="@url" />
+    }
+
+    if (alternateUrls.TryGetValue(SiteLanguages.Default, out var defaultUrl))
+    {
+        <link rel="alternate" hreflang="x-default" href="@defaultUrl" />
+    }
+}
+@* Share cards. og:locale carries the language too, so a link pasted from the Arabic site previews
+   in Arabic instead of falling back to whatever the scraper guessed. *@
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="@siteName" />
+<meta property="og:title" content="@pageTitle" />
+<meta property="og:locale" content="@SiteLanguages.OpenGraphLocale(lang)" />
+@foreach (var code in SiteLanguages.All.Where(c => c != lang))
+{
+    <meta property="og:locale:alternate" content="@SiteLanguages.OpenGraphLocale(code)" />
+}
+@if (!string.IsNullOrWhiteSpace(metaDescription))
+{
+    <meta property="og:description" content="@metaDescription" />
+}
+@if (!string.IsNullOrWhiteSpace(canonicalUrl))
+{
+    <meta property="og:url" content="@canonicalUrl" />
+}
+@if (!string.IsNullOrWhiteSpace(ogImage))
+{
+    <meta property="og:image" content="@ogImage" />
+    <meta name="twitter:image" content="@ogImage" />
+}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="@pageTitle" />
+@if (!string.IsNullOrWhiteSpace(metaDescription))
+{
+    <meta name="twitter:description" content="@metaDescription" />
 }
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@@0,400..800;1,400..800&family=Hanken+Grotesk:ital,wght@@0,100..900;1,100..900&display=swap" rel="stylesheet">
@@ -259,6 +327,21 @@
     html[dir="rtl"] .hover\:translate-x-2 { --tw-translate-x: -0.25rem; }
     html[dir="rtl"] .hero-decorative { right: auto; left: 0; }
 </style>
+@* Structured data. One graph rather than a stack of unrelated blocks: the page points at the
+   website, the website at the restaurant, and each job posting names that same restaurant, so the
+   whole site describes one business instead of several with the same name. *@
+<script type="application/ld+json">
+@Html.Raw(StructuredData.Build(
+    ViewData["Content"] as PageContent ?? new PageContent(null, null, 0, lang),
+    lang,
+    Urls.BaseUrl(Context.Request),
+    canonicalUrl,
+    pageTitle,
+    metaDescription,
+    ogImage,
+    Urls.ForLanguage(Context.Request, lang, "/menu"),
+    ViewData["Vacancies"] as IReadOnlyList<VacancyDto>))
+</script>
 @await RenderSectionAsync("Head", required: false)
 </head>
 <body class="bg-marble-white text-on-surface font-body-md overflow-x-hidden@(ViewData["IsCmsPreview"] as bool? == true ? " cms-preview" : "")">
@@ -308,16 +391,15 @@
         }
     }
 
-    // The nav offers both languages as explicit choices rather than one toggle, so switching to the
-    // language you are already reading is a no-op instead of a pointless round trip to the server.
+    // Fallback for the Cms's visual preview only. On the public site the language switcher is a
+    // pair of ordinary links to /en/... and /ar/... — switching language changes which page you are
+    // on, so it has to be shareable, bookmarkable and followable by a crawler, none of which a
+    // cookie-and-reload button is. The preview has no public URL to link to, so it still flips the
+    // cookie; the page it lands on writes the same cookie back (PublicContentController).
     function setLanguage(code) {
         if (document.documentElement.getAttribute('lang') === code) return;
         document.cookie = 'lang=' + code + ';path=/;max-age=31536000';
         location.reload();
-    }
-
-    function toggleLanguage() {
-        setLanguage(document.documentElement.getAttribute('lang') === 'ar' ? 'en' : 'ar');
     }
 
     window.addEventListener('scroll', () => {

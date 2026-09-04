@@ -4,9 +4,13 @@
     ViewData["Active"] = "home";
     Layout = "_PublicLayout";
     var googleReviews = ViewData["GoogleReviews"] as IReadOnlyList<GoogleReviewDto> ?? Array.Empty<GoogleReviewDto>();
+
+    // The "Visit Us" block quotes the phone and email, so it reads the same Global values the
+    // footer and the Contact page do rather than keeping its own visit_phone / visit_email copies.
+    var business = new BusinessProfile(Model);
 }
 @{
-    var heroImageDesktop = Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuBk0plMgb1g9EiKBfiJ_w7OfeWYJyvxPRduMltuI77vrXzTOcxZKxlksbUDZkNLBwiwtUIHoQMcEfvL0vY-iEGXbSOZEpzZ5tmmCnhLNeDwqV-Djx4j1Af8ic7nYPoqZvdv2e6nk1WToioNoh1Q585d9XjIO2ySbMEqqQk-MwdGdjFb4w1tkSH48xAxOC4v5V2n8NkxHH5T1C6GJkWOkq7gKi_i_slmIdRb3CFcQKKTtoKJ0JuUAVCRSosNfa6zYPEv-I78l5bqY3k");
+    var heroImageDesktop = Model.Image("hero_image", "/img/cms-placeholder.svg");
     var heroImageTablet = Model.Image("hero_image_tablet", heroImageDesktop);
     var heroImageMobile = Model.Image("hero_image_mobile", heroImageDesktop);
 }
@@ -38,7 +42,7 @@
 <section class="bg-marble-white py-[120px] pt-[80px]" id="about">
 <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px] grid grid-cols-1 md:grid-cols-12 gap-[24px] items-center">
 <div class="md:col-span-6 relative group overflow-hidden">
-<img alt="About Misk Beirut" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-cms-field="about_image" data-cms-type="Image" src="@Model.Image("about_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuDPzt89bFCPorHZemKwIfi48TgN5a19ZcfWGqzi1jX9c_N_0rIEnuUOhpnA77y5P1XNiVxM036yGmMlreCR4zzTks3JewaXxQWMmd9PlVpIAW7kiSficYMU3qMstRD8M5v6xFaLoTHMvLBCsh_HI52IGzUSkl0X4wUfpRUY36QAttHphl8TplHR5gpd_HxPXsUh9JJYnzhKH_xR85TvrCmH4vSR0UmLNJ_A2HoJaUAt_e1bEzHjGEV3w86-qtQozuF3u3kiV8wWi3A")">
+<img alt="@Model.Text("about_image_alt", "Inside the Misk Beirut dining room", "من داخل قاعة الطعام في مسك بيروت")" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-cms-field="about_image" data-cms-type="Image" src="@Model.Image("about_image", "/img/cms-placeholder.svg")">
 <div class="absolute inset-0 border-[20px] border-white/20 pointer-events-none"></div>
 </div>
 <div class="md:col-span-6 md:col-start-7">
@@ -66,7 +70,7 @@
 <p class="font-headline-md text-headline-md italic text-brick-red border-l-2 border-brick-red pl-6 leading-snug mb-[48px]" data-cms-field="about_quote" data-cms-type="Text">
                     @Model.Text("about_quote", "\"An honest approach to food, focusing on the integrity of ingredients and the warmth of Lebanese tradition.\"")
                 </p>
-<a asp-controller="About" asp-action="Index" class="bg-slate-blue text-white px-10 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-all shadow-md inline-block text-center" data-cms-field="about_cta_label" data-cms-type="Text">@Model.Text("about_cta_label", "Learn More About Us")</a>
+<a asp-controller="About" asp-action="Index" class="bg-slate-blue text-white px-10 py-4 font-label-lg text-label-lg uppercase tracking-widest hover:opacity-90 transition-all shadow-md inline-block text-center" data-cms-field="about_cta_label" data-cms-type="Text">@Model.Text("about_cta_label", "Learn More About Us", "تعرّف علينا أكثر")</a>
 </div>
 </div>
 </section>
@@ -106,7 +110,7 @@
 <div class="max-w-[1280px] mx-auto px-[20px] md:px-[80px]">
 <div class="text-center mb-[48px]">
 <h2 class="font-display-lg text-headline-lg text-primary mb-[16px]" data-cms-field="spaces_title" data-cms-type="Text">@Model.Text("spaces_title", "Our Spaces")</h2>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto" data-cms-field="spaces_subtitle" data-cms-type="Text">@Model.Text("spaces_subtitle", "Explore our diverse venues designed for every occasion and experience.")</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto" data-cms-field="spaces_subtitle" data-cms-type="Text">@Model.Text("spaces_subtitle", "Explore our diverse venues designed for every occasion and experience.", "اكتشف مساحاتنا المتنوّعة، المصمّمة لكل مناسبة ولكل تجربة.")</p>
 <div class="w-24 h-0.5 bg-brick-red mx-auto mt-[16px]"></div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-[24px]">
@@ -127,7 +131,7 @@
 <h3 class="font-headline-md text-white mb-[12px]" data-cms-field="spaces_card_1_title" data-cms-type="Text">@Model.Text("spaces_card_1_title", "Dining & Shisha")</h3>
 <p class="text-primary-fixed text-body-md text-sm max-w-xs mb-[12px]" data-cms-field="spaces_card_1_body" data-cms-type="Text">@Model.Text("spaces_card_1_body", "Elegant dining spaces with authentic Lebanese hospitality.")</p>
 <div class="flex items-center gap-1 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                            <span data-cms-field="spaces_cta_label" data-cms-type="Text">@Model.Text("spaces_cta_label", "Learn More")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            <span data-cms-field="spaces_cta_label" data-cms-type="Text">@Model.Text("spaces_cta_label", "Learn More", "اقرأ المزيد")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
 </div>
 </div>
 </a>
@@ -148,7 +152,7 @@
 <h3 class="font-headline-md text-white mb-[12px]" data-cms-field="spaces_card_2_title" data-cms-type="Text">@Model.Text("spaces_card_2_title", "Indoor & Outdoor Spaces")</h3>
 <p class="text-primary-fixed text-body-md text-sm max-w-xs mb-[12px]" data-cms-field="spaces_card_2_body" data-cms-type="Text">@Model.Text("spaces_card_2_body", "Versatile venues for any gathering, with stunning ambiance.")</p>
 <div class="flex items-center gap-1 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                            <span data-cms-field="spaces_cta_label" data-cms-type="Text">@Model.Text("spaces_cta_label", "Learn More")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            <span data-cms-field="spaces_cta_label" data-cms-type="Text">@Model.Text("spaces_cta_label", "Learn More", "اقرأ المزيد")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
 </div>
 </div>
 </a>
@@ -169,7 +173,7 @@
 <h3 class="font-headline-md text-primary mb-[12px]" data-cms-field="spaces_card_3_title" data-cms-type="Text">@Model.Text("spaces_card_3_title", "Work & Casual Meetings")</h3>
 <p class="text-on-surface-variant text-body-md text-sm max-w-xs mb-[12px]" data-cms-field="spaces_card_3_body" data-cms-type="Text">@Model.Text("spaces_card_3_body", "Perfect environment for productive meetings and informal gatherings.")</p>
 <div class="flex items-center gap-1 text-primary font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                            <span data-cms-field="spaces_cta_label" data-cms-type="Text">@Model.Text("spaces_cta_label", "Learn More")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            <span data-cms-field="spaces_cta_label" data-cms-type="Text">@Model.Text("spaces_cta_label", "Learn More", "اقرأ المزيد")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
 </div>
 </div>
 </a>
@@ -202,7 +206,7 @@
 <h3 class="font-display-lg text-headline-md text-white mb-[16px]" data-cms-field="events_card_1_title" data-cms-type="Text">@Model.Text("events_card_1_title", "Football & Live Match Screenings")</h3>
 <p class="text-primary-fixed text-body-md max-w-sm mb-[16px]" data-cms-field="events_card_1_body" data-cms-type="Text">@Model.Text("events_card_1_body", "Experience the thrill of live sports in our premium viewing spaces with world-class amenities.")</p>
 <div class="flex items-center gap-2 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
-                            Explore Events <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            <span data-cms-field="events_card_1_cta" data-cms-type="Text">@Model.Text("events_card_1_cta", "Explore Events", "اكتشف الفعاليات")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
 </div>
 </div>
 </a>
@@ -223,7 +227,7 @@
 <h3 class="font-display-lg text-headline-md text-white mb-[16px]" data-cms-field="events_card_2_title" data-cms-type="Text">@Model.Text("events_card_2_title", "Private Events & Celebrations")</h3>
 <p class="text-primary-fixed text-body-md max-w-sm mb-[16px]" data-cms-field="events_card_2_body" data-cms-type="Text">@Model.Text("events_card_2_body", "Create unforgettable moments with our bespoke event planning and luxurious venue spaces.")</p>
 <div class="flex items-center gap-2 text-white font-label-lg text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
-                            Plan Event <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                            <span data-cms-field="events_card_2_cta" data-cms-type="Text">@Model.Text("events_card_2_cta", "Plan an Event", "خطّط لمناسبتك")</span> <span class="material-symbols-outlined text-sm">arrow_forward</span>
 </div>
 </div>
 </a>
@@ -338,14 +342,14 @@
 <p class="font-body-md text-sm text-on-surface-variant" data-cms-field="visit_hours" data-cms-type="Text">@Model.Text("visit_hours", "12:00 PM - 12:00 AM")</p>
 </div>
 <!-- Phone -->
-<a href="tel:@Model.Text("visit_phone_link", "+9611234567")" data-cms-field="visit_phone_link" data-cms-type="Link" class="flex items-center gap-3 hover:text-primary transition-colors">
+<a href="tel:@business.PhoneLink" class="flex items-center gap-3 hover:text-primary transition-colors">
 <span class="material-symbols-outlined text-brick-red text-lg">phone</span>
-<p class="font-body-md text-sm text-on-surface-variant" dir="ltr" data-cms-field="visit_phone" data-cms-type="Text">@Model.Text("visit_phone", "+961 1 234 567")</p>
+<p class="font-body-md text-sm text-on-surface-variant" dir="ltr" data-cms-field="contact_phone" data-cms-type="Text" data-cms-scope="global">@business.Phone</p>
 </a>
 <!-- Email -->
-<a href="mailto:@Model.Text("visit_email", "concierge@miskbeirut.com")" data-cms-field="visit_email" data-cms-type="Link" class="flex items-center gap-3 hover:text-primary transition-colors">
+<a href="mailto:@business.Email" class="flex items-center gap-3 hover:text-primary transition-colors">
 <span class="material-symbols-outlined text-brick-red text-lg">mail</span>
-<p class="font-body-md text-sm text-on-surface-variant break-words min-w-0" data-cms-field="visit_email" data-cms-type="Text">@Model.Text("visit_email", "concierge@miskbeirut.com")</p>
+<p class="font-body-md text-sm text-on-surface-variant break-words min-w-0" data-cms-field="contact_email" data-cms-type="Text" data-cms-scope="global">@business.Email</p>
 </a>
 </div>
 <a asp-controller="Contact" asp-action="Index" class="inline-block bg-brick-red text-white px-8 py-3.5 font-label-lg text-label-lg uppercase tracking-[0.2em] hover:bg-opacity-90 transition-all shadow-lg !rounded-none text-center" data-cms-field="visit_cta_label" data-cms-type="Text">

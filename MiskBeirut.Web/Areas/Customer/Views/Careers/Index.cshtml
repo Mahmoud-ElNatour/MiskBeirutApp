@@ -30,7 +30,7 @@
 </div>
 <!-- Decorative Element -->
 <div class="hero-decorative absolute right-0 top-0 w-1/3 h-full opacity-40 pointer-events-none hidden lg:block">
-<img class="w-full h-full object-cover" alt="Architectural detail of a modern Lebanese restaurant interior" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuCrG1HU9jiVr-8Wn2Fm5iex47uAo0h1sHnHlW_uqvIOaesHotr02DT6PDsoSpz2QYySz1W_5Y6jl6ewWoMQGKjhrC0KxodVzbgdRAwS4w8h3FBNDuqvoYfON-hBiR7JuweJvXd8JZ98ruQbemyumsiTQZCwCUFCnoRUU_8oyGSn-yuWU62PZIcVclnmhAmZzexpp81ykRoz5QedPmzUaFaB7xwqdhH_8-iEaeCubM-5UY4gdjQD367JMPITI75ljnUHeXwoqPiil8I")"/>
+<img class="w-full h-full object-cover" alt="" aria-hidden="true" data-cms-field="hero_image" data-cms-type="Image" src="@Model.Image("hero_image", "/img/cms-placeholder.svg")"/>
 </div>
 </section>
 <!-- Value Strip -->
@@ -173,7 +173,7 @@
 <p class="font-body-lg text-body-lg mb-8 opacity-90" data-cms-field="culture_body" data-cms-type="Text">@Model.Text("culture_body", "At Misk Beirut, we believe the best experiences are built by those who value hospitality as an art form. We provide a space where talent is nurtured and culinary dreams are realized.")</p>
 </div>
 <div class="min-h-[400px]">
-<img class="w-full h-full object-cover" alt="Culinary team collaborating in a modern luxury kitchen" data-cms-field="culture_image" data-cms-type="Image" src="@Model.Image("culture_image", "https://lh3.googleusercontent.com/aida-public/AB6AXuBm3jJoNgH5s_rjzKLIalc1OKH9G55ORI52lhD7OeGph-n2gcT5dekQLAYWRpwCa12EvucvrjYgo0cCAG4lDJlj96TyCKzg8f1jJQZQ3VlcJa6BHfZ5cU85A4Z6drunWobaEUcuTeigHzlJKfNOwoW1JK5Th93ZwxpQU9N_SGCu9992NM3FTarqoG2q5zLSNpDJ3MPGjG_8XcUdxCpAFMUPJy0lgcKypJMN5tDH2ca6Av5415pdZeIZGYMYl7u9kVHG2ppuQ0DY5vI")"/>
+<img class="w-full h-full object-cover" alt="@Model.Text("culture_image_alt", "The Misk Beirut kitchen team at work", "فريق مطبخ مسك بيروت أثناء العمل")" data-cms-field="culture_image" data-cms-type="Image" src="@Model.Image("culture_image", "/img/cms-placeholder.svg")"/>
 </div>
 </section>
 </main>
@@ -290,7 +290,7 @@
 
                 submitBtn.disabled = true;
 
-                fetch('@Url.Action("Apply", "Careers")', { method: 'POST', body: new FormData(form) })
+                fetch('@Url.Action("Apply", "Careers", new { area = "Customer", lang = Model.LangCode })', { method: 'POST', body: new FormData(form) })
                     .then(async response => {
                         if (response.ok) {
                             successEl.classList.remove('hidden');

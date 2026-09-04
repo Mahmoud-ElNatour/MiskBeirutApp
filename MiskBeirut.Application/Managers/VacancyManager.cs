@@ -174,7 +174,8 @@ public class VacancyManager
         Description = LocalizedOrNull(vacancy.DescriptionAr, vacancy.Description, isArabic),
         Requirements = LocalizedOrNull(vacancy.RequirementsAr, vacancy.Requirements, isArabic),
         ApplicationDeadline = vacancy.ApplicationDeadline,
-        Icon = vacancy.Icon
+        Icon = vacancy.Icon,
+        CreatedAt = vacancy.CreatedAt
     };
 
     private static VacancyAdminDto ToAdminDto(Vacancy vacancy, int applicationCount) => new()
