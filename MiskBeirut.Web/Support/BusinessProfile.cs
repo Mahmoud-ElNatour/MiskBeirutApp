@@ -32,9 +32,9 @@ public sealed class BusinessProfile
     public string Email => _content.Global("contact_email", "hello@miskbeirut.com");
 
     /// <summary>The address on one line, as the Contact card and the footer print it.</summary>
-    public string AddressLine => _content.Global("address_line", "Gemmayzeh, Pasteur Street, Beirut", "الجميزة، شارع باستور، بيروت");
+    public string AddressLine => _content.Global("address_line", "Ramleh el Bayda, Farid Trad Street, Beirut", "الرملة البيضاء، شارع فريد طراد، بيروت");
 
-    public string AddressStreet => _content.Global("address_street", "Pasteur Street, Gemmayzeh");
+    public string AddressStreet => _content.Global("address_street", "Farid Trad Street, Ramleh el Bayda");
     public string AddressLocality => _content.Global("address_locality", "Beirut", "بيروت");
     public string AddressCountry => _content.Global("address_country", "LB");
     public string? PostalCode => Blank(_content.Global("address_postal_code"));

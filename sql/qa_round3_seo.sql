@@ -138,13 +138,13 @@ INSERT INTO @global_attrs (AttributeName, AttributeType, LangId, Value) VALUES
 (N'contact_whatsapp_url', 'Link', @ar, N'https://wa.me/96176551204'),
 (N'contact_email', 'Text', @en, N'hello@miskbeirut.com'),
 (N'contact_email', 'Text', @ar, N'hello@miskbeirut.com'),
-(N'address_line', 'Text', @en, N'Gemmayzeh, Pasteur Street, Beirut'),
-(N'address_line', 'Text', @ar, N'الجميزة، شارع باستور، بيروت'),
+(N'address_line', 'Text', @en, N'Ramleh el Bayda, Farid Trad Street, Beirut'),
+(N'address_line', 'Text', @ar, N'الرملة البيضاء، شارع فريد طراد، بيروت'),
 
 -- The structured-data breakdown of the same address. Kept as separate fields because
 -- schema.org/PostalAddress wants them separately, not because they are shown anywhere.
-(N'address_street', 'Text', @en, N'Pasteur Street, Gemmayzeh'),
-(N'address_street', 'Text', @ar, N'شارع باستور، الجميزة'),
+(N'address_street', 'Text', @en, N'Farid Trad Street, Ramleh el Bayda'),
+(N'address_street', 'Text', @ar, N'شارع فريد طراد، الرملة البيضاء'),
 (N'address_locality', 'Text', @en, N'Beirut'),
 (N'address_locality', 'Text', @ar, N'بيروت'),
 (N'address_country', 'Text', @en, N'LB'),
